@@ -1,0 +1,15 @@
+.post-list-container {
+    margin: 10px;
+    font-size: 16px;
+}
+
+.post-container {
+    border: 1px solid #ddd;
+}
+
+.post-line {
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
