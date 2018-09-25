@@ -1,15 +1,36 @@
 .post-list-container {
-    margin: 10px;
-    font-size: 16px;
+    margin: 30px auto;
+    width: 90%;
+    max-width: 800px;
 }
 
 .post-container {
     border: 1px solid #ddd;
+    padding: 5px;
 }
 
 .post-line {
-    height: 24px;
+    min-height: 20px;
+    margin: 4px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: flex-start;
+}
+
+.post-field-label {
+    font-weight: bold;
+    width: 100px;
+    text-align: left;
+}
+
+.content-line {
+    height: 20px;
+    margin: 0;
+    text-align: left;
+}
+
+.content-input {
+    margin-top: 20px;
+    width: 100%;
+    max-width: 800px;
 }
