@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
+import { Router, Link } from '@reach/router';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import ThreadList from './ThreadList.js';
 import PostList from './PostList.js';
@@ -44,7 +45,10 @@ class App extends Component {
   }
   render() {
     if (this.state.user === 'unknown') {
-      return <div className="loading-page">loading...</div>
+      return (
+        <div className="loading-page">
+  				<div className="loader loader-big"></div>
+  			</div>);
     } else if (!this.state.user) {
       return (
         <StyledFirebaseAuth
@@ -55,9 +59,20 @@ class App extends Component {
     }
     return (
       <div className="App">
-        <a className="sign-out-button" onClick={() => firebase.auth().signOut()}>Sign-out</a>
-        <ThreadList user={this.state.user} />
-        <PostList user={this.state.user} />
+        <div className="page-header">
+          <div><Link to="/">Home</Link></div>
+          <div>
+            <a
+              className="sign-out-button"
+              onClick={() => firebase.auth().signOut()}>
+                Logout
+            </a>
+          </div>
+        </div>
+        <Router>
+          <ThreadList path="/" user={this.state.user} />
+          <PostList path="thread/:threadId" user={this.state.user} />
+        </Router>
       </div>
     );
   }
