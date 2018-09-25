@@ -96,31 +96,18 @@ class PostList extends Component {
 					}
 					return (
 						<div key={post.id} className="post-container">
-							<div className="post-line">
-								<div className="post-field-label">
-									user:
-								</div>
-								<div className="post-field-value">
+							<div className="post-meta">
+								<div className="post-user">
 									{this.state.usersByUid[post.uid]
 										? this.state.usersByUid[post.uid].displayName
 										: <div className="loader loader-small"></div>}
 								</div>
-							</div>
-							<div className="post-line">
-								<div className="post-field-label">
-									content:
-								</div>
-								<div className="post-field-value">
-									{this.renderContent(post.content)}
-								</div>
-							</div>
-							<div className="post-line">
-								<div className="post-field-label">
-									created:
-								</div>
-								<div className="post-field-value">
+								<div className="post-date">
 									{format(post.createdTime, STANDARD_DATE_FORMAT)}
 								</div>
+							</div>
+							<div className="post-content">
+								{this.renderContent(post.content)}
 							</div>
 						</div>
 					);

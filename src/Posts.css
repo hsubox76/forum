@@ -91,6 +91,27 @@ a.thread-row:hover {
     max-width: 800px;
 }
 
+.post-container .post-meta {
+	display: flex;
+	justify-content: space-between;
+	border-bottom: 1px solid #ccc;
+	padding: 5px;
+}
+
+.post-container .post-meta .post-user {
+	font-weight: 500;
+}
+
+.post-container .post-meta .post-date {
+	font-weight: 400;
+	font-size: 0.9rem;
+}
+
+.post-content {
+	padding: 10px 5px;
+	color: #555;
+}
+
 .post-line {
     min-height: 20px;
     margin: 4px;
@@ -112,9 +133,9 @@ a.thread-row:hover {
 }
 
 .content-line {
-    height: 20px;
-    margin: 0;
-    text-align: left;
+	min-height: 10px;
+  margin: 0;
+  text-align: left;
 }
 
 .content-input {

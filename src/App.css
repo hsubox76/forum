@@ -35,12 +35,51 @@ button:hover {
   padding: 10px;
 }
 
+.page-header a {
+  text-decoration: none;
+  color: steelblue;
+}
+
+.page-header a:hover {
+  color: #3ca6ff;
+}
+
+.account-area > a {
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 2px solid #ccc;
+}
+
 .sign-out-button {
   cursor: pointer;
+  color: #cc7d00;
 }
 
 .sign-out-button:hover {
-  background-color: #eee;
+  color: #ff9c00;
+}
+
+.profile-container {
+  max-width: 400px;
+  margin: auto;
+}
+
+.profile-container > div {
+  margin: 10px 0;
+}
+
+.profile-container .display-name-input {
+  padding: 5px;
+  width: 300px;
+}
+
+.reset-password-link {
+  color: steelblue;
+  cursor: pointer;
+}
+
+.reset-password-link:hover {
+  color: seagreen;
 }
 
 .loading-page {

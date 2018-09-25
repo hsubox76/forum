@@ -4,6 +4,7 @@ import { Router, Link } from '@reach/router';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import ThreadList from './ThreadList.js';
 import PostList from './PostList.js';
+import Profile from './Profile.js';
 import firebase from 'firebase';
 import 'firebase/firestore';
 
@@ -61,7 +62,9 @@ class App extends Component {
       <div className="App">
         <div className="page-header">
           <div><Link to="/">Home</Link></div>
-          <div>
+          <div className="account-area">
+            <span>Logged in as {this.state.user.displayName}</span>
+            <Link to="/profile">Edit profile</Link>
             <a
               className="sign-out-button"
               onClick={() => firebase.auth().signOut()}>
@@ -72,6 +75,7 @@ class App extends Component {
         <Router>
           <ThreadList path="/" user={this.state.user} />
           <PostList path="thread/:threadId" user={this.state.user} />
+          <Profile path="profile" user={this.state.user} />
         </Router>
       </div>
     );
