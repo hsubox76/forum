@@ -30,12 +30,12 @@ class ThreadList extends Component {
         // Get all users associated with this thread, try to avoid duplicate effort
         if (!this.state.usersByUid[thread.createdBy]) {
   	      this.db.collection("users").doc(thread.createdBy).get().then(userDoc => {
-  	        this.setState({ usersByUid: Object.assign(this.state.usersByUid, { [thread.uid]: userDoc.data() }) });
+  	        this.setState({ usersByUid: Object.assign(this.state.usersByUid, { [thread.createdBy]: userDoc.data() }) });
   	      });
         }
 	      if (!this.state.usersByUid[thread.updatedBy] && thread.createdBy !== thread.updatedBy) {
   	      this.db.collection("users").doc(thread.updatedBy).get().then(userDoc => {
-  	        this.setState({ usersByUid: Object.assign(this.state.usersByUid, { [thread.uid]: userDoc.data() }) });
+  	        this.setState({ usersByUid: Object.assign(this.state.usersByUid, { [thread.updatedBy]: userDoc.data() }) });
   	      });
 	      }
 	    });
@@ -53,8 +53,6 @@ class ThreadList extends Component {
 	    createdTime: time
 		})
 		.then((docRef) => {
-				this.contentRef.current.value = '';
-				this.titleRef.current.value = '';
 		    this.db.collection("threads").add({
 			    createdBy: this.props.user.uid,
 		      title: this.titleRef.current.value,
@@ -62,6 +60,9 @@ class ThreadList extends Component {
 		      updatedBy: this.props.user.uid,
 		      createdTime: time,
 		      updatedTime: time
+		    }).then(() => {
+  				this.contentRef.current.value = '';
+  				this.titleRef.current.value = '';
 		    });
 		});
 	};

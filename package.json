@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@reach/router": "^1.2.1",
+    "date-fns": "^1.29.0",
     "firebase": "^5.5.1",
     "lodash": "^4.17.11",
     "react": "^16.5.2",
@@ -16,5 +17,12 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
+  },
+  "now": {
+    "alias": "pwot2",
+    "env": {
+      "FORUM_API_KEY": "@forum_api_key",
+      "FORUM_PROJECT_ID": "@forum_project_id"
+    }
   }
 }

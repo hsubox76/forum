@@ -16,4 +16,3 @@ firebase.initializeApp(config);
 
 ReactDOM.render(<App />, document.getElementById('root'));
 registerServiceWorker();
-console.log();
