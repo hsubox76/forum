@@ -13,7 +13,7 @@ class ThreadList extends Component {
 	  this.db.settings({timestampsInSnapshots: true});
 		this.contentRef = React.createRef();
 		this.titleRef = React.createRef();
-		this.state = { threadIds: null, threadsById: {}, usersByUid: {} };
+		this.state = { threadIds: null, threadsById: {} };
 	}
 	componentDidMount = () => {
 		this.unsubscribe = this.db.collection("threads")
@@ -28,14 +28,14 @@ class ThreadList extends Component {
     	  threadIds.push(doc.id);
         this.setState({ threadIds, threadsById: Object.assign(this.state.threadsById, { [doc.id]: thread }) });
         // Get all users associated with this thread, try to avoid duplicate effort
-        if (!this.state.usersByUid[thread.createdBy]) {
+        if (!this.props.usersByUid[thread.createdBy]) {
   	      this.db.collection("users").doc(thread.createdBy).get().then(userDoc => {
-  	        this.setState({ usersByUid: Object.assign(this.state.usersByUid, { [thread.createdBy]: userDoc.data() }) });
+  	        this.props.addUserByUid(thread.createdBy, userDoc.data());
   	      });
         }
-	      if (!this.state.usersByUid[thread.updatedBy] && thread.createdBy !== thread.updatedBy) {
+	      if (!this.props.usersByUid[thread.updatedBy] && thread.createdBy !== thread.updatedBy) {
   	      this.db.collection("users").doc(thread.updatedBy).get().then(userDoc => {
-  	        this.setState({ usersByUid: Object.assign(this.state.usersByUid, { [thread.updatedBy]: userDoc.data() }) });
+  	        this.props.addUserByUid(thread.updatedBy, userDoc.data());
   	      });
 	      }
 	    });
@@ -92,16 +92,16 @@ class ThreadList extends Component {
 						    <span className="title-text">{thread.title}</span>
 						    <span>started by</span>
   						  <span className="info">
-  						    {this.state.usersByUid[thread.createdBy]
-  						      ? this.state.usersByUid[thread.createdBy].displayName
+  						    {this.props.usersByUid[thread.createdBy]
+  						      ? this.props.usersByUid[thread.createdBy].displayName
   						      : '?'}
 					      </span>
 					    </div>
 						  <div className="thread-meta">
   						  <span>last updated by</span>
   						  <span className="info">
-  						    {this.state.usersByUid[thread.updatedBy]
-  						      ? this.state.usersByUid[thread.updatedBy].displayName
+  						    {this.props.usersByUid[thread.updatedBy]
+  						      ? this.props.usersByUid[thread.updatedBy].displayName
   						      : '?'}
 						      </span>
   						  <span>at</span>

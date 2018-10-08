@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
 import './Posts.css';
+import Post from './Post.js';
 import firebase from 'firebase';
 import 'firebase/firestore';
-import { format } from 'date-fns';
-import { STANDARD_DATE_FORMAT } from './constants';
 
 class PostList extends Component {
 	constructor() {
@@ -11,36 +10,14 @@ class PostList extends Component {
 		this.db = firebase.firestore();
 	  this.db.settings({timestampsInSnapshots: true});
 		this.contentRef = React.createRef();
-		this.state = { postsById: {}, usersByUid: {} };
 		this.unsubscribeList = [];
+		this.state = {};
 	}
 	componentDidMount = () => {
 		const threadSub = this.db.collection("threads")
 			.doc(this.props.threadId)
 			.onSnapshot(threadDoc => {
 				this.setState({ thread: threadDoc.data() });
-				const postIds = threadDoc.data().postIds;
-				const postsById = {};
-				postIds.forEach(postId => {
-					const postSub = this.db.collection("posts")
-						.doc(postId)
-						.onSnapshot(postDoc => {
-							const post = postDoc.data();
-							postsById[postDoc.id] = Object.assign(post, { id: postDoc.id });
-							this.setState({ postsById });
-							this.db.collection("users")
-								.doc(post.uid)
-								.get()
-								.then(userDoc => {
-	        				this.setState({
-	        					usersByUid: Object.assign(
-	        						this.state.usersByUid,
-	        						{ [post.uid]: userDoc.data() })
-	        				});
-								});
-						});
-					this.unsubscribeList.push(postSub);
-				});
 			});
 			this.unsubscribeList.push(threadSub);
 	}
@@ -83,35 +60,17 @@ class PostList extends Component {
 	  }
 		return (
 			<div className="post-list-container">
-			  <div className="section-header">Thread: <span className="thread-title">{this.state.thread.title}</span></div>
+			  <div className="section-header">
+			  	Thread: <span className="thread-title">{this.state.thread.title}</span>
+			  </div>
 				{!this.state.thread.postIds && "loading"}
-				{this.state.thread.postIds && this.state.thread.postIds.map((postId) => {
-					const post = this.state.postsById[postId];
-					if (!post) {
-						return (
-							<div key={postId} className="post-container">
-  							<div className="loader loader-med"></div>
-							</div>
-						);
-					}
-					return (
-						<div key={post.id} className="post-container">
-							<div className="post-meta">
-								<div className="post-user">
-									{this.state.usersByUid[post.uid]
-										? this.state.usersByUid[post.uid].displayName
-										: <div className="loader loader-small"></div>}
-								</div>
-								<div className="post-date">
-									{format(post.createdTime, STANDARD_DATE_FORMAT)}
-								</div>
-							</div>
-							<div className="post-content">
-								{this.renderContent(post.content)}
-							</div>
-						</div>
-					);
-				})}
+				{this.state.thread.postIds && this.state.thread.postIds.map((postId) => (
+					<Post
+						postId={postId}
+						usersByUid={this.props.usersByUid}
+						addUserByUid={this.props.addUserByUid}
+					/>
+				))}
 				<form className="new-post-container" onSubmit={this.handleSubmitPost}>
 					<div className="form-line">
 					  <label>Add a post</label>

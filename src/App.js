@@ -8,14 +8,12 @@ import Profile from './Profile.js';
 import firebase from 'firebase';
 import 'firebase/firestore';
 
-// Configure FirebaseUI.
-
-
 class App extends Component {
   constructor() {
     super();
     this.state = {
-      user: 'unknown'
+      user: 'unknown',
+      usersByUid: {}
     };
 		this.db = firebase.firestore();
 	  this.db.settings({timestampsInSnapshots: true});
@@ -44,6 +42,11 @@ class App extends Component {
         (user) => this.setState({ user })
     );
   }
+  handleAddUserByUid = (uid, userData) => {
+		this.setState({
+			usersByUid: Object.assign({}, this.state.usersByUid, { [uid]: userData })
+		});
+	}
   render() {
     if (this.state.user === 'unknown') {
       return (
@@ -73,8 +76,17 @@ class App extends Component {
           </div>
         </div>
         <Router>
-          <ThreadList path="/" user={this.state.user} />
-          <PostList path="thread/:threadId" user={this.state.user} />
+          <ThreadList
+            path="/" user={this.state.user}
+            usersByUid={this.state.usersByUid}
+            addUserByUid={this.handleAddUserByUid}
+          />
+          <PostList
+            path="thread/:threadId"
+            user={this.state.user}
+            usersByUid={this.state.usersByUid}
+            addUserByUid={this.handleAddUserByUid}
+          />
           <Profile path="profile" user={this.state.user} />
         </Router>
       </div>
