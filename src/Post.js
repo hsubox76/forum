@@ -67,7 +67,7 @@ class Post extends Component {
 			    content: this.contentRef.current.value,
 			    updatedTime: Date.now()
 				})
-				.then(() => console.log(`post ${this.props.postId} deleted`));
+				.then(() => this.setState({ status: LOADING_STATUS.LOADED }));
 	}
 	toggleEditMode = () => {
 		if (this.state.status === LOADING_STATUS.EDITING) {
@@ -75,6 +75,7 @@ class Post extends Component {
 		} else {
 			this.setState({ status: LOADING_STATUS.EDITING });
 		}
+		this.props.toggleEditPost(this.props.postId);
 	}
 	renderContent = (content) => {
 		if (this.state.status === LOADING_STATUS.EDITING) {
@@ -111,11 +112,13 @@ class Post extends Component {
 			<div className="post-footer">
 				<button
 					className="small button-edit"
+					disabled={this.props.isDisabled}
 					onClick={this.toggleEditMode}>
 						edit
 				</button>
 				<button
 					className="small button-delete"
+					disabled={this.props.isDisabled}
 					onClick={this.props.isOnlyPost ? this.props.deleteThread : this.handleDeletePost}>
 						delete
 				</button>
@@ -125,12 +128,14 @@ class Post extends Component {
 			footer = (
 				<div className="post-footer">
 					<button
-						className="small"
+						className="small button-cancel"
+						disabled={this.state.status === LOADING_STATUS.SUBMITTING}
 						onClick={this.toggleEditMode}>
 							cancel
 					</button>
 					<button
 						className="small button-edit"
+						disabled={this.state.status === LOADING_STATUS.SUBMITTING}
 						onClick={this.handleEditPost}>
 							submit
 					</button>
@@ -140,6 +145,9 @@ class Post extends Component {
 		const classes = ['post-container'];
 		if (this.state.status === LOADING_STATUS.EDITING) {
 			classes.push('editing');
+		}
+		if (this.props.isDisabled) {
+			classes.push('disabled');
 		}
 		return (
 			<div key={post.id} className={classes.join(' ')}>

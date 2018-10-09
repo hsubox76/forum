@@ -34,7 +34,7 @@ class Dialog extends Component {
 				<div className="dialog-box">
 					<div className="dialog-message">{this.props.message}</div>
 					<div className="dialog-buttons">
-						<button onClick={this.handleCancelClick}>
+						<button className="button-cancel" onClick={this.handleCancelClick}>
 							{this.props.cancelText}
 						</button>
 						<button className={'button-' + this.props.okClass} onClick={this.handleOkClick}>

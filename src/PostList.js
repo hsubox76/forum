@@ -14,7 +14,7 @@ class PostList extends Component {
 	  this.db.settings({timestampsInSnapshots: true});
 		this.contentRef = React.createRef();
 		this.threadUnsub = null;
-		this.state = { status: LOADING_STATUS.LOADING };
+		this.state = { status: LOADING_STATUS.LOADING, postBeingEdited: null };
 	}
 	componentDidMount = () => {
 		this.threadUnsub = this.db.collection("threads")
@@ -85,6 +85,13 @@ class PostList extends Component {
 				postIds: without(this.state.thread.postIds, postId)
 			});
 	}
+	handleToggleEditPost = (postId) => {
+		if (!this.state.postBeingEdited) {
+			this.setState({ postBeingEdited: postId });
+		} else {
+			this.setState({ postBeingEdited: null });
+		}
+	}
 	renderContent = (content) => {
 		const lines = content.split('\n');
 		return lines.map((line, index) => <p key={index} className="content-line">{line}</p>);
@@ -142,9 +149,11 @@ class PostList extends Component {
 						key={postId}
 						postId={postId}
 						user={this.props.user}
+						isDisabled={this.state.postBeingEdited && this.state.postBeingEdited !== postId}
 						isOnlyPost={this.state.thread.postIds.length === 1}
 						deleteThread={this.handleDeleteThread}
 						deletePostFromThread={this.handleDeletePostFromThread}
+						toggleEditPost={this.handleToggleEditPost}
 						usersByUid={this.props.usersByUid}
 						addUserByUid={this.props.addUserByUid}
 						setDialog={this.props.setDialog}

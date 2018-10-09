@@ -1,3 +1,11 @@
+body {
+  --color-main: #05668D;
+  --color-highlight: #028090;
+  --color-light: #eee;
+  --color-ok: #00A896;
+  --color-danger: #E76F51;
+  --color-neutral: #999;
+}
 .App {
   font-size: 16px;
   font-family: 'Roboto';
@@ -31,21 +39,39 @@ button:hover {
   box-shadow: inset 0 0 0 20px rgba(100,100,100,0.2);
 }
 
+.disabled button {
+  cursor: default;
+}
+
+.disabled button:hover {
+  box-shadow: none;
+}
+
 .button-delete {
-	background-color: #dc3e3e;
-	border-color: #af3535;
+	background-color: var(--color-danger);
+	border-color: var(--color-danger);
 	color: #fff;
 }
 
 .button-edit {
-	background-color: #779a87;
-	border-color: #538e53;
+	background-color: var(--color-ok);
+	border-color: var(--color-ok);
+	color: #fff;
+}
+
+.button-cancel {
+	background-color: var(--color-neutral);
+	border-color: var(--color-neutral);
 	color: #fff;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
+  background-color: var(--color-main);
+  color: white;
+  position: sticky;
+  top: 0;
 }
 
 .page-header > div {
@@ -54,11 +80,11 @@ button:hover {
 
 .page-header a {
   text-decoration: none;
-  color: steelblue;
+  color: white;
 }
 
 .page-header a:hover {
-  color: #3ca6ff;
+  color: #c8efff;
 }
 
 .account-area > a {

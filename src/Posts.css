@@ -17,19 +17,19 @@
 }
 
 .section-header {
+  font-size: 1.5rem;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	color: var(--color-main);
 }
 
 .section-header .thread-label {
-  font-size: 1.5rem;
   font-weight: 500;
   margin-right: 8px;
 }
 
 .section-header .thread-title {
-  font-size: 1.5rem;
 	font-weight: 400;
 }
 
@@ -42,15 +42,20 @@
 .thread-row,
 .post-container {
   width: 100%;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-highlight);
   border-radius: 4px;
   padding: 5px;
   margin: 8px 0;
   box-sizing: border-box;
+  background-color: white;
 }
 
 .post-container.editing {
-	background-color: #ddeefb;
+	background-color: var(--color-light);
+}
+
+.post-container.disabled {
+	opacity: 0.5;
 }
 
 .post-edited {
@@ -58,12 +63,13 @@
 	margin: 0px 5px 10px 5px;
 }
 
-.post-edited span {
-	margin: 0 5px;
+.post-edited span:not(:first-child) {
+	margin-left: 5px;
 }
 
 .post-edited .edit-data {
-	color: steelblue;
+	color: var(--color-ok);
+	font-weight: 500;
 }
 
 a.thread-row {
@@ -98,7 +104,7 @@ a.thread-row:hover {
 }
 
 .thread-row .info {
-	color: steelblue;
+	color: var(--color-main);
 	font-weight: 500;
 }
 
@@ -129,15 +135,15 @@ a.thread-row:hover {
 }
 
 .post-list-container {
-    margin: 30px auto;
-    width: 90%;
-    max-width: 800px;
+  margin: 30px auto;
+  width: 90%;
+  max-width: 800px;
 }
 
 .post-container .post-header {
 	display: flex;
 	justify-content: space-between;
-	border-bottom: 1px solid #ccc;
+	border-bottom: 1px solid var(--color-light);
 	padding: 5px;
 }
 
@@ -151,7 +157,7 @@ a.thread-row:hover {
 }
 
 .post-container .post-footer {
-	border-top: 1px solid #ccc;
+	border-top: 1px solid var(--color-light);
 	padding: 5px 5px 0 5px;
 	display: flex;
 	justify-content: flex-end;
@@ -162,7 +168,7 @@ a.thread-row:hover {
 }
 
 .post-content {
-	padding: 10px 5px;
+	padding: 15px 5px;
 	color: #555;
 }
 
@@ -183,7 +189,7 @@ a.thread-row:hover {
 .new-post-container {
 	margin-top: 20px;
 	padding-top: 10px;
-	border-top: 2px solid steelblue;
+	border-top: 2px solid var(--color-main);
 }
 
 .content-line {
