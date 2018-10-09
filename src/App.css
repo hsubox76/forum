@@ -10,6 +10,7 @@ body {
   font-size: 16px;
   font-family: 'Roboto';
   font-weight: 400;
+  position: relative;
 }
 
 input,
@@ -72,6 +73,7 @@ button:hover {
   color: white;
   position: sticky;
   top: 0;
+  z-index: 1;
 }
 
 .page-header > div {

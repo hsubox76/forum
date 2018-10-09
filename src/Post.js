@@ -67,7 +67,10 @@ class Post extends Component {
 			    content: this.contentRef.current.value,
 			    updatedTime: Date.now()
 				})
-				.then(() => this.setState({ status: LOADING_STATUS.LOADED }));
+				.then(() => {
+					this.setState({ status: LOADING_STATUS.LOADED });
+					this.props.toggleEditPost(this.props.postId);
+				});
 	}
 	toggleEditMode = () => {
 		if (this.state.status === LOADING_STATUS.EDITING) {
@@ -81,9 +84,7 @@ class Post extends Component {
 		if (this.state.status === LOADING_STATUS.EDITING) {
 			return (
 				<form className="edit-post-container" onSubmit={this.handleEditPost}>
-					<textarea ref={this.contentRef} className="content-input">
-					{content}
-					</textarea>
+					<textarea ref={this.contentRef} className="content-input" defaultValue={content} />
 				</form>
 			);
 		}
@@ -108,39 +109,43 @@ class Post extends Component {
 				</div>
 			);
 		}
-		let footer = (
-			<div className="post-footer">
-				<button
-					className="small button-edit"
-					disabled={this.props.isDisabled}
-					onClick={this.toggleEditMode}>
-						edit
-				</button>
-				<button
-					className="small button-delete"
-					disabled={this.props.isDisabled}
-					onClick={this.props.isOnlyPost ? this.props.deleteThread : this.handleDeletePost}>
-						delete
-				</button>
-			</div>
-		);
-		if (this.state.status === LOADING_STATUS.EDITING) {
-			footer = (
-				<div className="post-footer">
-					<button
-						className="small button-cancel"
-						disabled={this.state.status === LOADING_STATUS.SUBMITTING}
-						onClick={this.toggleEditMode}>
-							cancel
-					</button>
-					<button
-						className="small button-edit"
-						disabled={this.state.status === LOADING_STATUS.SUBMITTING}
-						onClick={this.handleEditPost}>
-							submit
-					</button>
-				</div>
-			);
+		let footer = null;
+		if (this.props.isAdmin || this.props.user.uid === post.uid) {
+			if (this.state.status === LOADING_STATUS.EDITING) {
+				footer = (
+					<div className="post-footer">
+						<button
+							className="small button-cancel"
+							disabled={this.state.status === LOADING_STATUS.SUBMITTING}
+							onClick={this.toggleEditMode}>
+								cancel
+						</button>
+						<button
+							className="small button-edit"
+							disabled={this.state.status === LOADING_STATUS.SUBMITTING}
+							onClick={this.handleEditPost}>
+								submit
+						</button>
+					</div>
+				);
+			} else {
+				footer = (
+					<div className="post-footer">
+						<button
+							className="small button-edit"
+							disabled={this.props.isDisabled}
+							onClick={this.toggleEditMode}>
+								edit
+						</button>
+						<button
+							className="small button-delete"
+							disabled={this.props.isDisabled}
+							onClick={this.props.isOnlyPost ? this.props.deleteThread : this.handleDeletePost}>
+								delete
+						</button>
+					</div>
+				);
+			}
 		}
 		const classes = ['post-container'];
 		if (this.state.status === LOADING_STATUS.EDITING) {
@@ -171,7 +176,7 @@ class Post extends Component {
 						<span>by</span>
 						<span className="edit-data">{get(this.props.usersByUid, [post.updatedBy, 'displayName']) || ''}</span>
 					</div>}
-				{this.props.user.isAdmin && footer}
+				{footer}
 			</div>
 		);
 	}
