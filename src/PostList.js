@@ -4,14 +4,8 @@ import Post from './Post.js';
 import { Link } from '@reach/router';
 import firebase from 'firebase';
 import 'firebase/firestore';
-
-const LOADING_STATUS = {
-	LOADING: 'loading',
-	LOADED: 'loaded',
-	DELETING: 'deleting',
-	DELETED: 'deleted',
-	PERMISSIONS_ERROR: 'permissions-error'
-}
+import { LOADING_STATUS } from './constants';
+import without from 'lodash/without';
 
 class PostList extends Component {
 	constructor() {
@@ -76,6 +70,13 @@ class PostList extends Component {
 	    console.log("Document written with ID: ", docRef.id);
 		});
 	};
+	handleDeletePostFromThread = (postId) => {
+			this.db.collection("threads")
+				.doc(this.props.threadId)
+				.update({
+					postIds: without(this.state.thread.postIds, postId)
+				});
+	}
 	renderContent = (content) => {
 		const lines = content.split('\n');
 		return lines.map((line, index) => <p key={index} className="content-line">{line}</p>);
@@ -132,6 +133,7 @@ class PostList extends Component {
 					<Post
 						key={postId}
 						postId={postId}
+						deletePostFromThread={this.handleDeletePostFromThread}
 						usersByUid={this.props.usersByUid}
 						addUserByUid={this.props.addUserByUid}
 					/>

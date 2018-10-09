@@ -3,7 +3,7 @@ import './Posts.css';
 import firebase from 'firebase';
 import 'firebase/firestore';
 import { format } from 'date-fns';
-import { Link } from "@reach/router"
+import { Link, navigate } from "@reach/router"
 import { STANDARD_DATE_FORMAT } from './constants';
 
 class ThreadList extends Component {
@@ -60,9 +60,10 @@ class ThreadList extends Component {
 		      updatedBy: this.props.user.uid,
 		      createdTime: time,
 		      updatedTime: time
-		    }).then(() => {
+		    }).then((threadRef) => {
   				this.contentRef.current.value = '';
   				this.titleRef.current.value = '';
+  				navigate(`/thread/${threadRef.id}`);
 		    });
 		});
 	};

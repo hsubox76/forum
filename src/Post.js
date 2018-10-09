@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import firebase from 'firebase';
 import 'firebase/firestore';
 import { format } from 'date-fns';
-import { STANDARD_DATE_FORMAT } from './constants';
+import { LOADING_STATUS, STANDARD_DATE_FORMAT } from './constants';
 
 class Post extends Component {
 	constructor() {
@@ -10,10 +10,10 @@ class Post extends Component {
 		this.db = firebase.firestore();
 		this.db.settings({timestampsInSnapshots: true});
 		this.state = { post: null };
-		this.unsubscribeList = [];
+		this.postUnsub = null;
 	}
 	componentDidMount = () => {
-		const postSub = this.db.collection("posts")
+		this.postUnsub = this.db.collection("posts")
 			.doc(this.props.postId)
 			.onSnapshot(postDoc => {
 				const post = postDoc.data();
@@ -28,10 +28,25 @@ class Post extends Component {
 						});
 				}
 			});
-		this.unsubscribeList.push(postSub);
 	}
 	componentWillUnmount = () => {
-		this.unsubscribeList.forEach(unsub => unsub());
+		this.postUnsub && this.postUnsub();
+	}
+	handleDeletePost = () => {
+		this.postUnsub && this.postUnsub();
+		this.setState({ status: LOADING_STATUS.DELETING });
+		const deletePromises = [];
+		deletePromises.push(
+			this.db.collection("posts")
+				.doc(this.props.postId)
+				.delete()
+				.then(() => console.log(`post ${this.props.postId} deleted`)));
+		deletePromises.push(this.props.deletePostFromThread(this.props.postId));
+		Promise.all(deletePromises)
+			.then(() => {
+				console.log(`Successfully deleted post ${this.props.postId}`);
+			})
+			.catch(e => this.setState({ status: LOADING_STATUS.PERMISSIONS_ERROR}));
 	}
 	renderContent = (content) => {
 		const lines = content.split('\n');
@@ -39,7 +54,16 @@ class Post extends Component {
 	}
 	render() {	
 		const post = this.state.post;
-		if (!post) {
+		// TODO: Permissions error - popup - unlikely case though.
+		if (this.state.status === LOADING_STATUS.DELETED) {
+			// this shouldn't happen... but just in case
+			return (
+				<div key={this.props.postId} className="post-container">
+					This post has been deleted.
+				</div>
+			);
+		}
+		if (!post || this.state.status === LOADING_STATUS.LOADING || this.state.status === LOADING_STATUS.DELETING) {
 			return (
 				<div key={this.props.postId} className="post-container">
 					<div className="loader loader-med"></div>
@@ -48,7 +72,7 @@ class Post extends Component {
 		}
 		return (
 			<div key={post.id} className="post-container">
-				<div className="post-meta">
+				<div className="post-header">
 					<div className="post-user">
 						{this.props.usersByUid[post.uid]
 							? this.props.usersByUid[post.uid].displayName
@@ -60,6 +84,13 @@ class Post extends Component {
 				</div>
 				<div className="post-content">
 					{this.renderContent(post.content)}
+				</div>
+				<div className="post-footer">
+					<button
+						className="small button-delete"
+						onClick={this.handleDeletePost}>
+							delete
+					</button>
 				</div>
 			</div>
 		);

@@ -122,20 +122,27 @@ a.thread-row:hover {
     max-width: 800px;
 }
 
-.post-container .post-meta {
+.post-container .post-header {
 	display: flex;
 	justify-content: space-between;
 	border-bottom: 1px solid #ccc;
 	padding: 5px;
 }
 
-.post-container .post-meta .post-user {
+.post-container .post-header .post-user {
 	font-weight: 500;
 }
 
-.post-container .post-meta .post-date {
+.post-container .post-header .post-date {
 	font-weight: 400;
 	font-size: 0.9rem;
+}
+
+.post-container .post-footer {
+	border-top: 1px solid #ccc;
+	padding: 5px 5px 0 5px;
+	display: flex;
+	justify-content: flex-end;
 }
 
 .post-content {
