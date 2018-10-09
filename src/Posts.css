@@ -13,6 +13,7 @@
 
 .page-message-container a {
 	color: steelblue;
+	cursor: pointer;
 }
 
 .section-header {
@@ -30,18 +31,6 @@
 .section-header .thread-title {
   font-size: 1.5rem;
 	font-weight: 400;
-}
-
-.button-delete {
-	background-color: #dc3e3e;
-	border-color: #af3535;
-	color: #fff;
-}
-
-.button-edit {
-	background-color: #779a87;
-	border-color: #538e53;
-	color: #fff;
 }
 
 .thread-list-container {
@@ -71,6 +60,10 @@
 
 .post-edited span {
 	margin: 0 5px;
+}
+
+.post-edited .edit-data {
+	color: steelblue;
 }
 
 a.thread-row {

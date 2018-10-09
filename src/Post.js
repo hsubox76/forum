@@ -35,6 +35,14 @@ class Post extends Component {
 		this.postUnsub && this.postUnsub();
 	}
 	handleDeletePost = () => {
+		this.props.setDialog({
+			message: 'Sure you want to delete this post?',
+			okText: 'delete',
+			okClass: 'delete',
+			onOk: this.deletePost
+		});
+	};
+	deletePost = () => {
 		this.postUnsub && this.postUnsub();
 		this.setState({ status: LOADING_STATUS.DELETING });
 		const deletePromises = [];
@@ -108,7 +116,7 @@ class Post extends Component {
 				</button>
 				<button
 					className="small button-delete"
-					onClick={this.handleDeletePost}>
+					onClick={this.props.isOnlyPost ? this.props.deleteThread : this.handleDeletePost}>
 						delete
 				</button>
 			</div>
@@ -150,10 +158,10 @@ class Post extends Component {
 				</div>
 				{post.updatedBy &&
 					<div className="post-edited">
-						Last edited
-						{' ' + format(post.updatedTime, STANDARD_DATE_FORMAT) + ' '}
-						by
-						{' ' + get(this.props.usersByUid, [post.updatedBy, 'displayName']) || ''}
+						<span>Last edited</span>
+						<span className="edit-data">{format(post.updatedTime, STANDARD_DATE_FORMAT)}</span>
+						<span>by</span>
+						<span className="edit-data">{get(this.props.usersByUid, [post.updatedBy, 'displayName']) || ''}</span>
 					</div>}
 				{this.props.user.isAdmin && footer}
 			</div>

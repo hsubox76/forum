@@ -27,6 +27,14 @@ class PostList extends Component {
 		this.threadUnsub && this.threadUnsub();
 	}
 	handleDeleteThread = () => {
+		this.props.setDialog({
+			message: 'Sure you want to delete thread: ' + this.state.thread.title + '?',
+			okText: 'delete',
+			okClass: 'delete',
+			onOk: this.deleteThread
+		});
+	};
+	deleteThread = () => {
 		this.threadUnsub && this.threadUnsub();
 		this.setState({ status: LOADING_STATUS.DELETING });
 		const deletePromises = [];
@@ -101,7 +109,7 @@ class PostList extends Component {
 			return (
 			  <div className="page-message-container">
 		      <div>Sorry, you don't have permission to do that.</div>
-		      <div><a href="#" onClick={() => this.setState({ status: LOADING_STATUS.LOADED })}>Back to thread.</a></div>
+		      <div><a onClick={() => this.setState({ status: LOADING_STATUS.LOADED })}>Back to thread.</a></div>
 				</div>
 			);
 		}
@@ -134,9 +142,12 @@ class PostList extends Component {
 						key={postId}
 						postId={postId}
 						user={this.props.user}
+						isOnlyPost={this.state.thread.postIds.length === 1}
+						deleteThread={this.handleDeleteThread}
 						deletePostFromThread={this.handleDeletePostFromThread}
 						usersByUid={this.props.usersByUid}
 						addUserByUid={this.props.addUserByUid}
+						setDialog={this.props.setDialog}
 					/>
 				))}
 				<form className="new-post-container" onSubmit={this.handleSubmitPost}>

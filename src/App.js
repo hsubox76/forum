@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import './App.css';
 import { Router, Link } from '@reach/router';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
+import Dialog from './Dialog.js';
 import ThreadList from './ThreadList.js';
 import PostList from './PostList.js';
 import Profile from './Profile.js';
@@ -15,7 +16,8 @@ class App extends Component {
       user: 'unknown',
       usersByUid: {},
       threadIds: null,
-      threadsById: {}
+      threadsById: {},
+      dialog: null
     };
 		this.db = firebase.firestore();
 	  this.db.settings({timestampsInSnapshots: true});
@@ -67,6 +69,9 @@ class App extends Component {
 	  }
 	  this.setState(updates);
 	}
+	handleSetDialog = dialog => {
+	  this.setState({dialog});
+	}
   render() {
     if (this.state.user === 'unknown') {
       return (
@@ -107,11 +112,14 @@ class App extends Component {
           <PostList
             path="thread/:threadId"
             user={this.state.user}
+            setDialog={this.handleSetDialog}
             usersByUid={this.state.usersByUid}
             addUserByUid={this.handleAddUserByUid}
           />
           <Profile path="profile" user={this.state.user} />
         </Router>
+        {this.state.dialog &&
+          <Dialog {...this.state.dialog} onClose={() => this.setState({dialog: null})} />}
       </div>
     );
   }

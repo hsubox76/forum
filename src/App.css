@@ -31,6 +31,18 @@ button:hover {
   box-shadow: inset 0 0 0 20px rgba(100,100,100,0.2);
 }
 
+.button-delete {
+	background-color: #dc3e3e;
+	border-color: #af3535;
+	color: #fff;
+}
+
+.button-edit {
+	background-color: #779a87;
+	border-color: #538e53;
+	color: #fff;
+}
+
 .page-header {
   display: flex;
   justify-content: space-between;
