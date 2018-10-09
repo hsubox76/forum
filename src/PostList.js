@@ -1,8 +1,17 @@
 import React, { Component } from 'react';
 import './Posts.css';
 import Post from './Post.js';
+import { Link } from '@reach/router';
 import firebase from 'firebase';
 import 'firebase/firestore';
+
+const LOADING_STATUS = {
+	LOADING: 'loading',
+	LOADED: 'loaded',
+	DELETING: 'deleting',
+	DELETED: 'deleted',
+	PERMISSIONS_ERROR: 'permissions-error'
+}
 
 class PostList extends Component {
 	constructor() {
@@ -10,19 +19,40 @@ class PostList extends Component {
 		this.db = firebase.firestore();
 	  this.db.settings({timestampsInSnapshots: true});
 		this.contentRef = React.createRef();
-		this.unsubscribeList = [];
-		this.state = {};
+		this.threadUnsub = null;
+		this.state = { status: LOADING_STATUS.LOADING };
 	}
 	componentDidMount = () => {
-		const threadSub = this.db.collection("threads")
+		this.threadUnsub = this.db.collection("threads")
 			.doc(this.props.threadId)
 			.onSnapshot(threadDoc => {
-				this.setState({ thread: threadDoc.data() });
+				this.setState({ thread: threadDoc.data(), status: LOADING_STATUS.LOADED });
 			});
-			this.unsubscribeList.push(threadSub);
 	}
 	componentWillUnmount = () => {
-		this.unsubscribeList.forEach(unsub => unsub());
+		this.threadUnsub && this.threadUnsub();
+	}
+	handleDeleteThread = () => {
+		this.threadUnsub && this.threadUnsub();
+		this.setState({ status: LOADING_STATUS.DELETING });
+		const deletePromises = [];
+		this.state.thread.postIds.forEach(postId => {
+			deletePromises.push(
+				this.db.collection("posts")
+					.doc(postId)
+					.delete()
+					.then(() => console.log(`post ${postId} deleted`)));
+		});
+		deletePromises.push(
+			this.db.collection("threads")
+				.doc(this.props.threadId)
+				.delete()
+				.then(() => console.log(`thread ${this.props.threadId} deleted`)));
+		Promise.all(deletePromises)
+			.then(() => {
+				this.setState({ thread: null, status: LOADING_STATUS.DELETED });
+			})
+			.catch(e => this.setState({ status: LOADING_STATUS.PERMISSIONS_ERROR}));
 	}
 	handleSubmitPost = (e) => {
 		e.preventDefault();
@@ -51,21 +81,56 @@ class PostList extends Component {
 		return lines.map((line, index) => <p key={index} className="content-line">{line}</p>);
 	}
 	render() {
-	  if (!this.state.thread) {
+		if (this.state.status === LOADING_STATUS.DELETING) {
 			return (
-			  <div className="post-list-container">
+			  <div className="page-message-container">
+		      <div>deleting</div>
+		      <div className="loader loader-med"></div>
+				</div>
+			);
+		}
+	  if (this.state.status === LOADING_STATUS.LOADING) {
+			return (
+			  <div className="page-message-container">
 		      <div className="loader loader-med"></div>
 				</div>
 			);
 	  }
+		if (this.state.status === LOADING_STATUS.PERMISSIONS_ERROR) {
+			return (
+			  <div className="page-message-container">
+		      <div>Sorry, you don't have permission to do that.</div>
+		      <div><a href="#" onClick={() => this.setState({ status: LOADING_STATUS.LOADED })}>Back to thread.</a></div>
+				</div>
+			);
+		}
+		if (this.state.status === LOADING_STATUS.DELETED || !this.state.thread) {
+			return (
+			  <div className="page-message-container">
+		      <div>This thread has been deleted.</div>
+		      <div><Link to="/">Back to top.</Link></div>
+				</div>
+			);
+		}
 		return (
 			<div className="post-list-container">
 			  <div className="section-header">
-			  	Thread: <span className="thread-title">{this.state.thread.title}</span>
+			  	<div>
+			  		<span className="thread-label">Thread:</span>
+			  		<span className="thread-title">{this.state.thread.title}</span>
+		  		</div>
+		  		<div>
+		  			{this.props.user.isAdmin &&
+		  				<button className="button-delete" onClick={this.handleDeleteThread}>
+		  					delete
+	  					</button>
+		  			}
+		  		</div>
 			  </div>
 				{!this.state.thread.postIds && "loading"}
 				{this.state.thread.postIds && this.state.thread.postIds.map((postId) => (
 					<Post
+						key={postId}
 						postId={postId}
 						usersByUid={this.props.usersByUid}
 						addUserByUid={this.props.addUserByUid}

@@ -21,12 +21,12 @@ class ThreadList extends Component {
 		.onSnapshot((querySnapshot) => {
 			const threadIds = [];
 			if (querySnapshot.empty) {
-			  this.setState({ threadIds: [] });
+			  this.props.setThreadData(threadIds);
 			}
 	    querySnapshot.forEach((doc) => {
 	      const thread = Object.assign(doc.data(), { id: doc.id });
     	  threadIds.push(doc.id);
-        this.setState({ threadIds, threadsById: Object.assign(this.state.threadsById, { [doc.id]: thread }) });
+			  this.props.setThreadData(threadIds, Object.assign(this.props.threadsById, { [doc.id]: thread }));
         // Get all users associated with this thread, try to avoid duplicate effort
         if (!this.props.usersByUid[thread.createdBy]) {
   	      this.db.collection("users").doc(thread.createdBy).get().then(userDoc => {
@@ -67,7 +67,7 @@ class ThreadList extends Component {
 		});
 	};
 	render() {
-	  if (!this.state.threadIds) {
+	  if (!this.props.threadIds) {
 			return (
 			  <div className="thread-list-container">
 		      <div className="loader loader-med"></div>
@@ -77,8 +77,8 @@ class ThreadList extends Component {
 		return (
 			<div className="thread-list-container">
 			  <div className="section-header">Threads:</div>
-				{this.state.threadIds.map((id) => {
-				  const thread = this.state.threadsById[id];
+				{this.props.threadIds.map((id) => {
+				  const thread = this.props.threadsById[id];
 				  if (!thread) {
 				    return (
   						<div key={id} className="thread-row">

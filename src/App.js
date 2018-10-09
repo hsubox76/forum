@@ -13,7 +13,9 @@ class App extends Component {
     super();
     this.state = {
       user: 'unknown',
-      usersByUid: {}
+      usersByUid: {},
+      threadIds: null,
+      threadsById: {}
     };
 		this.db = firebase.firestore();
 	  this.db.settings({timestampsInSnapshots: true});
@@ -39,13 +41,31 @@ class App extends Component {
   }
   componentDidMount = () => {
     this.unregisterAuthObserver = firebase.auth().onAuthStateChanged(
-        (user) => this.setState({ user })
+        (user) => {
+          if (user) {
+        		this.db.collection("users").doc(user.uid)
+        		  .get()
+        		  .then(docRef => {
+        		    if (docRef) {
+        		      user.isAdmin = docRef.data().isAdmin;
+        		    }
+        		  });
+          }
+          this.setState({ user });
+        }
     );
   }
   handleAddUserByUid = (uid, userData) => {
 		this.setState({
 			usersByUid: Object.assign({}, this.state.usersByUid, { [uid]: userData })
 		});
+	}
+	handleSetThreadData = (threadIds, threadsById) => {
+	  const updates = { threadIds };
+	  if (threadsById) {
+	    updates.threadsById = threadsById;
+	  }
+	  this.setState(updates);
 	}
   render() {
     if (this.state.user === 'unknown') {
@@ -79,7 +99,10 @@ class App extends Component {
           <ThreadList
             path="/" user={this.state.user}
             usersByUid={this.state.usersByUid}
+            threadIds={this.state.threadIds}
+            threadsById={this.state.threadsById}
             addUserByUid={this.handleAddUserByUid}
+            setThreadData={this.handleSetThreadData}
           />
           <PostList
             path="thread/:threadId"
