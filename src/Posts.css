@@ -38,6 +38,12 @@
 	color: #fff;
 }
 
+.button-edit {
+	background-color: #779a87;
+	border-color: #538e53;
+	color: #fff;
+}
+
 .thread-list-container {
     margin: 30px auto;
     width: 90%;
@@ -52,6 +58,19 @@
   padding: 5px;
   margin: 8px 0;
   box-sizing: border-box;
+}
+
+.post-container.editing {
+	background-color: #ddeefb;
+}
+
+.post-edited {
+	font-size: 0.875rem;
+	margin: 0px 5px 10px 5px;
+}
+
+.post-edited span {
+	margin: 0 5px;
 }
 
 a.thread-row {
@@ -143,6 +162,10 @@ a.thread-row:hover {
 	padding: 5px 5px 0 5px;
 	display: flex;
 	justify-content: flex-end;
+}
+
+.post-container .post-footer button:not(:last-child) {
+	margin-right: 10px;
 }
 
 .post-content {

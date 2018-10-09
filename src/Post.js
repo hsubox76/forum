@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import firebase from 'firebase';
 import 'firebase/firestore';
 import { format } from 'date-fns';
+import get from 'lodash/get';
 import { LOADING_STATUS, STANDARD_DATE_FORMAT } from './constants';
 
 class Post extends Component {
@@ -10,6 +11,7 @@ class Post extends Component {
 		this.db = firebase.firestore();
 		this.db.settings({timestampsInSnapshots: true});
 		this.state = { post: null };
+		this.contentRef = React.createRef();
 		this.postUnsub = null;
 	}
 	componentDidMount = () => {
@@ -48,7 +50,34 @@ class Post extends Component {
 			})
 			.catch(e => this.setState({ status: LOADING_STATUS.PERMISSIONS_ERROR}));
 	}
+	handleEditPost = () => {
+		this.setState({ status: LOADING_STATUS.SUBMITTING });
+		this.db.collection("posts")
+				.doc(this.props.postId)
+				.update({
+					updatedBy: this.props.user.uid,
+			    content: this.contentRef.current.value,
+			    updatedTime: Date.now()
+				})
+				.then(() => console.log(`post ${this.props.postId} deleted`));
+	}
+	toggleEditMode = () => {
+		if (this.state.status === LOADING_STATUS.EDITING) {
+			this.setState({ status: LOADING_STATUS.LOADED });
+		} else {
+			this.setState({ status: LOADING_STATUS.EDITING });
+		}
+	}
 	renderContent = (content) => {
+		if (this.state.status === LOADING_STATUS.EDITING) {
+			return (
+				<form className="edit-post-container" onSubmit={this.handleEditPost}>
+					<textarea ref={this.contentRef} className="content-input">
+					{content}
+					</textarea>
+				</form>
+			);
+		}
 		const lines = content.split('\n');
 		return lines.map((line, index) => <p key={index} className="content-line">{line}</p>);
 	}
@@ -70,8 +99,42 @@ class Post extends Component {
 				</div>
 			);
 		}
+		let footer = (
+			<div className="post-footer">
+				<button
+					className="small button-edit"
+					onClick={this.toggleEditMode}>
+						edit
+				</button>
+				<button
+					className="small button-delete"
+					onClick={this.handleDeletePost}>
+						delete
+				</button>
+			</div>
+		);
+		if (this.state.status === LOADING_STATUS.EDITING) {
+			footer = (
+				<div className="post-footer">
+					<button
+						className="small"
+						onClick={this.toggleEditMode}>
+							cancel
+					</button>
+					<button
+						className="small button-edit"
+						onClick={this.handleEditPost}>
+							submit
+					</button>
+				</div>
+			);
+		}
+		const classes = ['post-container'];
+		if (this.state.status === LOADING_STATUS.EDITING) {
+			classes.push('editing');
+		}
 		return (
-			<div key={post.id} className="post-container">
+			<div key={post.id} className={classes.join(' ')}>
 				<div className="post-header">
 					<div className="post-user">
 						{this.props.usersByUid[post.uid]
@@ -85,13 +148,14 @@ class Post extends Component {
 				<div className="post-content">
 					{this.renderContent(post.content)}
 				</div>
-				<div className="post-footer">
-					<button
-						className="small button-delete"
-						onClick={this.handleDeletePost}>
-							delete
-					</button>
-				</div>
+				{post.updatedBy &&
+					<div className="post-edited">
+						Last edited
+						{' ' + format(post.updatedTime, STANDARD_DATE_FORMAT) + ' '}
+						by
+						{' ' + get(this.props.usersByUid, [post.updatedBy, 'displayName']) || ''}
+					</div>}
+				{this.props.user.isAdmin && footer}
 			</div>
 		);
 	}

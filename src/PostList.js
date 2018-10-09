@@ -71,11 +71,11 @@ class PostList extends Component {
 		});
 	};
 	handleDeletePostFromThread = (postId) => {
-			this.db.collection("threads")
-				.doc(this.props.threadId)
-				.update({
-					postIds: without(this.state.thread.postIds, postId)
-				});
+		return this.db.collection("threads")
+			.doc(this.props.threadId)
+			.update({
+				postIds: without(this.state.thread.postIds, postId)
+			});
 	}
 	renderContent = (content) => {
 		const lines = content.split('\n');
@@ -133,6 +133,7 @@ class PostList extends Component {
 					<Post
 						key={postId}
 						postId={postId}
+						user={this.props.user}
 						deletePostFromThread={this.handleDeletePostFromThread}
 						usersByUid={this.props.usersByUid}
 						addUserByUid={this.props.addUserByUid}

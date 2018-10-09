@@ -5,5 +5,7 @@ export const LOADING_STATUS = {
 	LOADED: 'loaded',
 	DELETING: 'deleting',
 	DELETED: 'deleted',
+	EDITING: 'editing',
+	SUBMITTING: 'submitting',
 	PERMISSIONS_ERROR: 'permissions-error'
 };
