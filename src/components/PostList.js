@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
-import './Posts.css';
+import '../styles/Posts.css';
 import Post from './Post.js';
 import { Link } from '@reach/router';
 import firebase from 'firebase';
 import 'firebase/firestore';
-import { LOADING_STATUS } from './constants';
+import { LOADING_STATUS } from '../utils/constants';
 import without from 'lodash/without';
 
 class PostList extends Component {

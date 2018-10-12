@@ -3,7 +3,7 @@ import firebase from 'firebase';
 import 'firebase/firestore';
 import { format } from 'date-fns';
 import get from 'lodash/get';
-import { LOADING_STATUS, STANDARD_DATE_FORMAT } from './constants';
+import { LOADING_STATUS, STANDARD_DATE_FORMAT } from '../utils/constants';
 
 class Post extends Component {
 	constructor() {

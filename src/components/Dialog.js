@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import './Dialog.css';
+import '../styles/Dialog.css';
 import PropTypes from 'prop-types';
 
 class Dialog extends Component {

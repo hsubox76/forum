@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
-import './Posts.css';
+import '../styles/Posts.css';
 import firebase from 'firebase';
 import 'firebase/firestore';
 import { format } from 'date-fns';
 import { Link, navigate } from "@reach/router"
-import { STANDARD_DATE_FORMAT } from './constants';
+import { STANDARD_DATE_FORMAT } from '../utils/constants';
 
 class ThreadList extends Component {
 	constructor() {
