@@ -19,6 +19,9 @@ class Post extends Component {
 			.doc(this.props.postId)
 			.onSnapshot(postDoc => {
 				const post = postDoc.data();
+				if (!post) {
+					return;
+				}
 				this.setState({ post: Object.assign(post, { id: postDoc.id }) });
 				if (!this.props.usersByUid[post.uid]) {
 					this.db.collection("users")
@@ -68,6 +71,7 @@ class Post extends Component {
 			    updatedTime: Date.now()
 				})
 				.then(() => {
+					//TODO: update thread "last updated" info
 					this.setState({ status: LOADING_STATUS.LOADED });
 					this.props.toggleEditPost(this.props.postId);
 				});

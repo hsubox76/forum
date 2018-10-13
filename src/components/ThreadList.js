@@ -4,25 +4,30 @@ import firebase from 'firebase';
 import 'firebase/firestore';
 import { format } from 'date-fns';
 import { Link, navigate } from "@reach/router"
-import { STANDARD_DATE_FORMAT } from '../utils/constants';
+import { STANDARD_DATE_FORMAT, LOADING_STATUS } from '../utils/constants';
+import { getForum, updateForum } from '../utils/dbhelpers';
 
 class ThreadList extends Component {
-	constructor() {
-		super();
+	constructor(props) {
+		super(props);
 		this.db = firebase.firestore();
 	  this.db.settings({timestampsInSnapshots: true});
 		this.contentRef = React.createRef();
 		this.titleRef = React.createRef();
-		this.state = { threadIds: null, threadsById: {} };
+		this.state = { status: LOADING_STATUS.LOADING };
 	}
 	componentDidMount = () => {
+		this.props.setThreadData([]);
+	  getForum(this.props);
 		this.unsubscribe = this.db.collection("threads")
-		.orderBy("createdTime")
+		.where("forumId", "==", this.props.forumId)
+		.orderBy("updatedTime", "desc")
 		.onSnapshot((querySnapshot) => {
 			const threadIds = [];
 			if (querySnapshot.empty) {
 			  this.props.setThreadData(threadIds);
 			}
+		  this.setState({ status: LOADING_STATUS.LOADED });
 	    querySnapshot.forEach((doc) => {
 	      const thread = Object.assign(doc.data(), { id: doc.id });
     	  threadIds.push(doc.id);
@@ -53,22 +58,28 @@ class ThreadList extends Component {
 	    createdTime: time
 		})
 		.then((docRef) => {
-		    this.db.collection("threads").add({
-			    createdBy: this.props.user.uid,
-		      title: this.titleRef.current.value,
-		      postIds: [docRef.id],
-		      updatedBy: this.props.user.uid,
-		      createdTime: time,
-		      updatedTime: time
-		    }).then((threadRef) => {
-  				this.contentRef.current.value = '';
-  				this.titleRef.current.value = '';
-  				navigate(`/thread/${threadRef.id}`);
-		    });
+	    this.db.collection("threads").add({
+		    createdBy: this.props.user.uid,
+	      title: this.titleRef.current.value,
+	      postIds: [docRef.id],
+	      updatedBy: this.props.user.uid,
+	      createdTime: time,
+	      updatedTime: time,
+	      forumId: this.props.forumId
+	    }).then((threadRef) => {
+				this.contentRef.current.value = '';
+				this.titleRef.current.value = '';
+				updateForum(this.props.forumId, {
+				  updatedBy: this.props.user.uid,
+				  updatedTime: time
+				});
+				navigate(`/forum/${this.props.forumId}/thread/${threadRef.id}`);
+	    });
 		});
 	};
 	render() {
-	  if (!this.props.threadIds) {
+	  const forum = this.props.forumsById[this.props.forumId];
+	  if (!forum || !this.props.threadIds || this.state.status === LOADING_STATUS.LOADING) {
 			return (
 			  <div className="thread-list-container">
 		      <div className="loader loader-med"></div>
@@ -77,7 +88,15 @@ class ThreadList extends Component {
 	  }
 		return (
 			<div className="thread-list-container">
-			  <div className="section-header">Threads:</div>
+			  <div className="section-header">
+  			  <div>
+  		  		<Link className="thread-label" to="/">
+  		  			Home
+  	  			</Link>
+  	  			<span className="title-caret">&gt;</span>
+  		  		<span className="thread-title">{(forum && forum.name) || ''}</span>
+		  		</div>
+	  		</div>
 				{this.props.threadIds.map((id) => {
 				  const thread = this.props.threadsById[id];
 				  if (!thread) {

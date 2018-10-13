@@ -6,6 +6,7 @@ import firebase from 'firebase';
 import 'firebase/firestore';
 import { LOADING_STATUS } from '../utils/constants';
 import without from 'lodash/without';
+import { getForum, updateThread } from '../utils/dbhelpers';
 
 class PostList extends Component {
 	constructor() {
@@ -17,6 +18,7 @@ class PostList extends Component {
 		this.state = { status: LOADING_STATUS.LOADING, postBeingEdited: null };
 	}
 	componentDidMount = () => {
+	  getForum(this.props);
 		this.threadUnsub = this.db.collection("threads")
 			.doc(this.props.threadId)
 			.onSnapshot(threadDoc => {
@@ -50,6 +52,7 @@ class PostList extends Component {
 				.doc(this.props.threadId)
 				.delete()
 				.then(() => console.log(`thread ${this.props.threadId} deleted`)));
+		// TODO: Update forum based on latest updated thread remaining.
 		Promise.all(deletePromises)
 			.then(() => {
 				this.setState({ thread: null, status: LOADING_STATUS.DELETED });
@@ -68,22 +71,36 @@ class PostList extends Component {
 		})
 		.then((docRef) => {
 			this.contentRef.current.value = '';
-			this.db.collection("threads")
-				.doc(this.props.threadId)
-				.update({
-					postIds: this.state.thread.postIds.concat(docRef.id),
-					updatedTime: now,
-		      updatedBy: this.props.user.uid
-				});
+			updateThread(this.props.threadId, {
+				updatedTime: now,
+				updatedBy: this.props.user.uid,
+				postIds: this.state.thread.postIds.concat(docRef.id)
+			}, this.props.forumId);
 	    console.log("Document written with ID: ", docRef.id);
 		});
 	};
 	handleDeletePostFromThread = (postId) => {
-		return this.db.collection("threads")
-			.doc(this.props.threadId)
-			.update({
-				postIds: without(this.state.thread.postIds, postId)
-			});
+		const postIds = this.state.thread.postIds;
+		const updates = {
+				postIds: without(postIds, postId)
+		};
+		if (postIds[postIds.length - 1] === postId) {
+			// if this was the last post, change updated time to previous post
+			// this isn't perfect - another post might have been edited later
+			// but close enough for now
+			return this.db.collection('posts')
+				.doc(postIds[postIds.length - 2])
+				.get()
+				.then(ref => {
+					const post = ref.data();
+					updates.updatedTime = post.updatedTime || post.createdTime;
+					updates.updatedBy = post.uid;
+					return updates;
+				})
+				.then(updates => updateThread(this.props.threadId, updates, this.props.forumId));
+		} else {
+			return updateThread(this.props.threadId, updates, this.props.forumId);
+		}
 	}
 	handleToggleEditPost = (postId) => {
 		if (!this.state.postBeingEdited) {
@@ -128,11 +145,19 @@ class PostList extends Component {
 				</div>
 			);
 		}
+	  const forum = this.props.forumsById[this.props.forumId] || {};
 		return (
 			<div className="post-list-container">
 			  <div className="section-header">
 			  	<div>
-			  		<span className="thread-label">Thread:</span>
+  		  		<Link className="thread-label" to="/">
+  		  			Home
+  	  			</Link>
+  	  			<span className="title-caret">&gt;</span>
+			  		<Link className="thread-label" to={`/forum/${this.props.forumId}`}>
+			  			{forum.name}
+		  			</Link>
+		  			<span className="title-caret">&gt;</span>
 			  		<span className="thread-title">{this.state.thread.title}</span>
 		  		</div>
 		  		<div>

@@ -3,6 +3,7 @@ import '../styles/App.css';
 import { Router, Link } from '@reach/router';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import Dialog from './Dialog.js';
+import ForumList from './ForumList.js';
 import ThreadList from './ThreadList.js';
 import PostList from './PostList.js';
 import Profile from './Profile.js';
@@ -17,6 +18,8 @@ class App extends Component {
       usersByUid: {},
       threadIds: null,
       threadsById: {},
+      forumIds: null,
+      forumsById: {},
       dialog: null
     };
 		this.db = firebase.firestore();
@@ -69,6 +72,16 @@ class App extends Component {
 	  }
 	  this.setState(updates);
 	}
+	handleSetForumData = (forumIds, forumsById) => {
+	  const updates = {};
+	  if (forumIds) {
+	    updates.forumIds = forumIds;
+	  }
+	  if (forumsById) {
+	    updates.forumsById = forumsById;
+	  }
+	  this.setState(updates);
+	}
 	handleSetDialog = dialog => {
 	  this.setState({dialog});
 	}
@@ -101,20 +114,34 @@ class App extends Component {
           </div>
         </div>
         <Router>
+          <ForumList
+            path="/"
+            user={this.state.user}
+            usersByUid={this.state.usersByUid}
+            forumIds={this.state.forumIds}
+            forumsById={this.state.forumsById}
+            addUserByUid={this.handleAddUserByUid}
+            setForumData={this.handleSetForumData}
+          />
           <ThreadList
-            path="/" user={this.state.user}
+            path="forum/:forumId"
+            forumsById={this.state.forumsById}
+            user={this.state.user}
             usersByUid={this.state.usersByUid}
             threadIds={this.state.threadIds}
             threadsById={this.state.threadsById}
             addUserByUid={this.handleAddUserByUid}
             setThreadData={this.handleSetThreadData}
+            setForumData={this.handleSetForumData}
           />
           <PostList
-            path="thread/:threadId"
+            path="forum/:forumId/thread/:threadId"
             user={this.state.user}
             setDialog={this.handleSetDialog}
             usersByUid={this.state.usersByUid}
             addUserByUid={this.handleAddUserByUid}
+            forumsById={this.state.forumsById}
+            setForumData={this.handleSetForumData}
           />
           <Profile path="profile" user={this.state.user} />
         </Router>
