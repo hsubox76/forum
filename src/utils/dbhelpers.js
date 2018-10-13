@@ -44,3 +44,7 @@ export function updateForum(forumId, forumData) {
 		.doc(forumId)
 		.update(forumData);
 }
+
+export function escapeRegExp(string){
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}

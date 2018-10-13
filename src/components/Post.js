@@ -4,6 +4,7 @@ import 'firebase/firestore';
 import { format } from 'date-fns';
 import get from 'lodash/get';
 import { LOADING_STATUS, STANDARD_DATE_FORMAT } from '../utils/constants';
+import { escapeRegExp } from '../utils/dbhelpers';
 
 class Post extends Component {
 	constructor() {
@@ -93,7 +94,18 @@ class Post extends Component {
 			);
 		}
 		const lines = content.split('\n');
-		return lines.map((line, index) => <p key={index} className="content-line">{line}</p>);
+		const imageRE = new RegExp(/\[img\](.+)\[\/img\]/g);
+		return lines.map((line, index) => {
+			const imgParts = line.split(/(\[img\].+\[\/img\])/g);
+			return imgParts.map((part) => {
+				if (part.substr(0, 5) === '[img]') {
+					return <img src={part.replace(imageRE, '$1')} />
+				} else if (part) {
+					return (<p key={index} className="content-line">{part}</p>);
+				}
+				return null;
+			});
+		});
 	}
 	render() {	
 		const post = this.state.post;
