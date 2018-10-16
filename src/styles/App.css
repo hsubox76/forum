@@ -209,3 +209,7 @@ img {
   max-width: 600px;
   max-height: 400px;
 }
+
+a.user-link {
+  color: var(--color-main);
+}
