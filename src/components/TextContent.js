@@ -1,74 +1,101 @@
 import React from 'react';
 import Linkify from 'linkifyjs/react';
+import escape from 'lodash/escape';
+
+const TAG_TYPES = {
+	'img': { className: 'image' },
+	'url': { className: 'link' },
+	'spoiler': { className: 'spoiler' },
+	'b': { className: 'bold' },
+	'i': { className: 'italic' },
+	'normal': { className: 'normal' },
+};
+
+function linkifyAndLineBreak(text, tokenIndex, tagType) {
+	let contentEls = [];
+	let lines = [];
+	if (text.includes('\n')) {
+		lines = text.split('\n');
+	} else {
+		lines = [text];
+	}
+	lines.forEach((line, lineIndex) => {
+		const options = {
+			className: 'user-link'
+		};
+		const linkifiedLine = (
+			<Linkify
+				key={`${tokenIndex}-${lineIndex}`}
+				className={tagType.className}
+				tagName="span" options={options}
+			>
+				{line}
+			</Linkify>
+			);
+		contentEls.push(linkifiedLine);
+		if (lineIndex !== lines.length - 1) {
+			contentEls.push(<span key={`space-${tokenIndex}-${lineIndex}`} className="space" />);
+		}
+	});
+	return contentEls;
+}
+
+const tagList = Object.keys(TAG_TYPES);
+tagList.push('(?:url=[^\\]]+)');
+const tagRE = tagList.join('|');
 
 const TextContent = ({ content }) => {
-	const rawTokens = content.split(/(\[\/?(?:spoiler|img|b|i)\])/);
-	const tokens = [];
-	for (let i = 0; i < rawTokens.length; i++) {
-		if (!rawTokens[i]) {
+	const tokenDelimiterRE = new RegExp(`(\\[\\/?(?:${tagRE})\\])`);
+	const tokens = content.split(tokenDelimiterRE);
+	let contentEls = [];
+	for (let i = 0; i < tokens.length; i++) {
+		if (!tokens[i]) {
 			continue;
 		}
-		switch(rawTokens[i]) {
-			case '[img]':
-				const url = encodeURI(rawTokens[i + 1]);
-				tokens.push({ type: 'image', key: i, src: url });
-				i += 2;
-				break;
-			case '[b]':
-				tokens.push({ type: 'bold', key: i, text: rawTokens[i + 1] });
-				i += 2;
-				break;
-			case '[i]':
-				tokens.push({ type: 'italic', key: i, text: rawTokens[i + 1] });
-				i += 2;
-				break;
-			case '[spoiler]':
-				tokens.push({ type: 'spoiler', key: i, text: rawTokens[i + 1] });
-				i += 2;
-				break;
-			default:
-				tokens.push({ type: 'normal', key: i, text: rawTokens[i] });
+		const tagMatch = tokens[i].match(/\[([^\[\]]+)\]/);
+		let tag = tagMatch ? tagMatch[1] : 'normal';
+		if (tag.includes('url')) {
+			tag = 'url';
 		}
-	}
-	const contentEls = [];
-	for (let i = 0; i < tokens.length; i++) {
-		const token = tokens[i];
-		let lines = [];
-		switch(token.type) {
-			case 'image':
-				contentEls.push(<img alt="user inserted" key={`${i}`} src={token.src} />);
+		switch(tag) {
+			case 'img':
+				const url = encodeURI(tokens[i + 1]);
+				contentEls.push(<img alt="user inserted" key={`${i}`} src={url} />);
 				break;
-			case 'bold':
-			case 'italic':
-			case 'normal':
-			case 'spoiler':
-				if (token.text.includes('\n')) {
-					lines = token.text.split('\n');
-				} else {
-					lines = [token.text];
-				}
-				lines.forEach((line, lineIndex) => {
-					const options = {
-						className: 'user-link'
-					};
-					const linkifiedLine = (
-						<Linkify
-							key={`${i}-${lineIndex}`}
-							className={token.type}
-							tagName="span" options={options}
-						>
-							{line}
-						</Linkify>
-						);
-					contentEls.push(linkifiedLine);
-					if (lineIndex !== lines.length - 1) {
-						contentEls.push(<span key={`space-${i}-${lineIndex}`} className="space" />);
+			case 'url':
+				const tagParts = tokens[i].split('=');
+				let href = '';
+				if (tagParts && tagParts[1]) {
+					href = tagParts[1].slice(0, -1);
+					if (href[0] === "\"") {
+						href = href.slice(1);
 					}
-				});
+					if (href[href.length - 1] === "\"") {
+						href = href.slice(0, -1);
+					}
+					href = escape(href);
+				} else {
+					href = 'http://' + escape(tokens[i+1]);
+				}
+				contentEls.push(
+					<a key={i} className="user-link" href={href} target="_blank">
+						{tokens[i + 1]}
+					</a>);
+				break;
+			case 'b':
+			case 'i':
+			case 'spoiler':
+				contentEls = contentEls.concat(linkifyAndLineBreak(tokens[i + 1], i, TAG_TYPES[tag]));
+				break;
+			case 'normal':
+				contentEls = contentEls.concat(linkifyAndLineBreak(tokens[i], i, TAG_TYPES[tag]));
 				break;
 			default:
 				// just in case - shouldn't hit this
-				contentEls.push(<span key={i}>{token.text}</span>);
+				contentEls.push(<span key={i}>{tokens[i]}</span>);
+		}
+		if (tag !== 'normal') {
+			i += 2;
 		}
 	}
 	return contentEls;
