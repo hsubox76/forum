@@ -183,3 +183,29 @@ button:hover {
   height: 11px;
   border-width: 2px;
 }
+
+span.bold {
+  font-weight: 500;
+}
+
+span.italic {
+  font-style: italic;
+}
+
+span.spoiler {
+  background-color: #555;
+}
+
+span.spoiler:hover {
+  background-color: #eee;
+}
+
+span.space {
+  display: block;
+  height: 0.8rem;
+}
+
+img {
+  max-width: 600px;
+  max-height: 400px;
+}
