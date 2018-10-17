@@ -5,13 +5,12 @@ import App from './components/App';
 import registerServiceWorker from './registerServiceWorker';
 import firebase from 'firebase';
 
-var config = {
-  apiKey: "AIzaSyBS-cXJxcGlr3_F8yDxCsW4XmLGNr-ThBc",
-  authDomain: "forum-a5979.firebaseapp.com",
-  databaseURL: "https://forum-a5979.firebaseio.com",
-  projectId: "forum-a5979",
-  storageBucket: "forum-a5979.appspot.com",
-  messagingSenderId: "112329939446"
+const config = {
+  apiKey: process.env.REACT_APP_FORUM_API_KEY,
+  authDomain: process.env.REACT_APP_FORUM_PROJECT_ID + ".firebaseapp.com",
+  databaseURL: "https://" + process.env.REACT_APP_FORUM_PROJECT_ID + ".firebaseio.com",
+  projectId: process.env.REACT_APP_FORUM_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FORUM_PROJECT_ID + ".appspot.com"
 };
 
 firebase.initializeApp(config);
