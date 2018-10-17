@@ -86,6 +86,7 @@ class App extends Component {
 	  this.setState({dialog});
 	}
   render() {
+    return (<div>api key {process.env.REACT_APP_FORUM_API_KEY}</div>);
     if (this.state.user === 'unknown') {
       return (
         <div className="loading-page">
