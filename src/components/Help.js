@@ -14,12 +14,21 @@ const Help = () => (
 			<div className="text">[i]italic[/i]</div>
 		</div>
 		<div className="help-row">
-			<div className="label spoiler">spoiler</div>
+			<div className="label">
+				<span className="spoiler" style={{ color: '#555' }}>spoiler</span>
+			</div>
 			<div className="text">[spoiler]spoiler[/spoiler]</div>
 		</div>
 		<div className="help-row">
 			<div className="label">image</div>
-			<div className="text">[img]http://image-site.com/image.jpg[/img]</div>
+			<div className="text">
+				<div className="aside">Specify width, height, both, or neither.</div>
+				<div className="aside">(Note: images above 600 on desktop and 350 on
+					mobile will be shrunk to that size.)</div>
+				<div>[img]http://image-site.com/image.jpg[/img]</div>
+				<div>[img width=400]http://image-site.com/image.jpg[/img]</div>
+				<div>[img width=400 height=300]http://image-site.com/image.jpg[/img]</div>
+				</div>
 		</div>
 		<div className="help-row">
 			<div className="label">link</div>

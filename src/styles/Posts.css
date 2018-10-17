@@ -269,6 +269,7 @@ a.thread-row:hover {
 .post-content {
 	padding: 15px 5px;
 	color: #555;
+	overflow-x: auto;
 }
 
 .post-line {

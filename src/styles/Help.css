@@ -18,10 +18,32 @@
 .help-row {
 	display: flex;
 	border-bottom: 1px solid #ccc;
-	padding: 5px 0;
+	font-size: 1.2rem;
+}
+
+.help-row:first-of-type {
+	border-top: 1px solid #ccc;
 }
 
 .help-row .label {
 	width: 70px;
 	margin-right: 10px;
+	flex-shrink: 0;
+	background-color: var(--color-main);
+	padding: 8px;
+	color: white;
+}
+
+.help-row .text {
+	padding: 8px 5px;
+	border-right: 1px solid #ccc;
+	flex: 1;
+}
+
+.help-row .text > div:not(:last-child) {
+	margin-bottom: 10px;
+}
+
+.help-row .aside {
+	font-size: 1rem;
 }

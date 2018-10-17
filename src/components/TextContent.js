@@ -42,6 +42,7 @@ function linkifyAndLineBreak(text, tokenIndex, tagType) {
 
 const tagList = Object.keys(TAG_TYPES);
 tagList.push('(?:url=[^\\]]+)');
+tagList.push('(?:img [^\\]]+)');
 const tagRE = tagList.join('|');
 
 const TextContent = ({ content }) => {
@@ -57,13 +58,25 @@ const TextContent = ({ content }) => {
 		if (tag.includes('url')) {
 			tag = 'url';
 		}
+		if (tag.includes('img')) {
+			tag = 'img';
+		}
+		let tagParts = [];
 		switch(tag) {
 			case 'img':
 				const url = encodeURI(tokens[i + 1]);
-				contentEls.push(<img alt="user inserted" key={`${i}`} src={url} />);
+				tagParts = tokens[i].split(' ');
+				const attrs = tagParts.reduce((attrLookup, part) => {
+					const pair = part.split('=');
+					if (pair.length > 1) {
+						attrLookup[pair[0]] = pair[1];
+					}
+					return attrLookup;
+				}, {});
+				contentEls.push(<img alt="user inserted" key={i} src={url} width={attrs.width || null} height={attrs.height || null} />);
 				break;
 			case 'url':
-				const tagParts = tokens[i].split('=');
+				tagParts = tokens[i].split('=');
 				let href = '';
 				if (tagParts && tagParts[1]) {
 					href = tagParts[1].slice(0, -1);
