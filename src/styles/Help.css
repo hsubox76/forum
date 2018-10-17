@@ -1,0 +1,19 @@
+.help-page {
+	width: 600px;
+	margin: auto;
+	color: #555;
+}
+
+.help-page h1,
+.help-page h2 {
+	font-weight: 500;
+}
+
+.help-row {
+	display: flex;
+}
+
+.help-row .label {
+	width: 70px;
+	margin-right: 10px;
+}
