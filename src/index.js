@@ -4,6 +4,10 @@ import './styles/index.css';
 import App from './components/App';
 import registerServiceWorker from './registerServiceWorker';
 import firebase from 'firebase';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { faThumbtack } from '@fortawesome/free-solid-svg-icons';
+
+library.add(faThumbtack);
 
 const config = {
   apiKey: process.env.REACT_APP_FORUM_API_KEY,

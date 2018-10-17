@@ -52,7 +52,7 @@ const TextContent = ({ content }) => {
 		if (!tokens[i]) {
 			continue;
 		}
-		const tagMatch = tokens[i].match(/\[([^\[\]]+)\]/);
+		const tagMatch = tokens[i].match(/\[([^\]]+)\]/);
 		let tag = tagMatch ? tagMatch[1] : 'normal';
 		if (tag.includes('url')) {
 			tag = 'url';

@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { Link, navigate } from "@reach/router"
 import { COMPACT_DATE_FORMAT, STANDARD_DATE_FORMAT, LOADING_STATUS } from '../utils/constants';
 import { getForum, updateForum } from '../utils/dbhelpers';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 class ThreadList extends Component {
 	constructor(props) {
@@ -21,6 +22,7 @@ class ThreadList extends Component {
 	  getForum(this.props);
 		this.unsubscribe = this.db.collection("threads")
 		.where("forumId", "==", this.props.forumId)
+		.orderBy("priority", "desc")
 		.orderBy("updatedTime", "desc")
 		.onSnapshot((querySnapshot) => {
 			const threadIds = [];
@@ -65,7 +67,8 @@ class ThreadList extends Component {
 	      updatedBy: this.props.user.uid,
 	      createdTime: time,
 	      updatedTime: time,
-	      forumId: this.props.forumId
+	      forumId: this.props.forumId,
+	      isSticky: false
 	    }).then((threadRef) => {
 				this.contentRef.current.value = '';
 				this.titleRef.current.value = '';
@@ -110,10 +113,18 @@ class ThreadList extends Component {
   						</div>
 				    );
 				  }
+				  const threadClasses = ['thread-row'];
+				  // if (/* unread */) {
+				  //   threadClasses.push('thread-unread');
+				  // }
 					return (
-						<Link to={"thread/" + thread.id} key={thread.id} className="thread-row">
+						<Link to={"thread/" + thread.id} key={thread.id} className={threadClasses.join(' ')}>
 						  <div className="thread-title">
-						    <span className="title-text">{thread.title}</span>
+						    <span className="title-container">
+  			          {thread.priority > 0
+  			            && <FontAwesomeIcon className="icon" icon="thumbtack" />}
+						      <span className="title-text">{thread.title}</span>
+						    </span>
 						    <span>
 						      <span>started by</span>
     						  <span className="info">

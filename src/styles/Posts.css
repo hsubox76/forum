@@ -90,6 +90,10 @@
 	align-items: flex-start;
 }
 
+.thread-row.thread-unread {
+	box-shadow: inset 0 0 0 1px var(--color-highlight);
+}
+
 .forum-row .forum-title {
 	display: flex;
 	align-items: center;
@@ -99,7 +103,9 @@
 }
 
 @media only screen and (min-width: 768px) {
-	min-width: 300px;
+	.forum-row .forum-title {
+		min-width: 300px;
+	}
 }
 
 .post-container.editing {
@@ -154,6 +160,15 @@ a.thread-row:hover {
 .thread-row .thread-title span {
 	font-size: .8rem;
 	margin: 0 2px;
+}
+
+.thread-row .thread-title .title-container {
+	display: flex;
+	align-items: center;
+}
+
+.thread-row .thread-title .icon {
+	margin-right: 5px;
 }
 
 .thread-row .thread-title .title-text {

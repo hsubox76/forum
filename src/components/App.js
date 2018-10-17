@@ -55,6 +55,13 @@ class App extends Component {
         		    if (docRef) {
         		      user.isAdmin = docRef.data().isAdmin;
         		    }
+        		  })
+        		  .catch(e => {
+        		    // If we never got this user into the DB
+            		this.db.collection("users").doc(user.uid).set({
+                    displayName: user.displayName,
+                    email: user.email
+                });
         		  });
           }
           this.setState({ user });
