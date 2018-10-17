@@ -4,6 +4,7 @@ import { Router, Link } from '@reach/router';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import Dialog from './Dialog.js';
 import ForumList from './ForumList.js';
+import Help from './Help.js';
 import ThreadList from './ThreadList.js';
 import PostList from './PostList.js';
 import Profile from './Profile.js';
@@ -143,6 +144,7 @@ class App extends Component {
             forumsById={this.state.forumsById}
             setForumData={this.handleSetForumData}
           />
+          <Help path="help" />
           <Profile path="profile" user={this.state.user} />
         </Router>
         {this.state.dialog &&
