@@ -28,6 +28,7 @@
 .section-header .breadcrumbs {
 	display: flex;
 	flex-wrap: wrap;
+	align-items: center;
 }
 
 .section-header .thread-label {
@@ -304,4 +305,5 @@ a.thread-row:hover {
     padding: 10px;
     box-sizing: border-box;
     font-size: 0.9rem;
+    line-height: 1.2rem;
 }
