@@ -4,7 +4,7 @@ import firebase from 'firebase';
 import 'firebase/firestore';
 import { format } from 'date-fns';
 import { Link } from "@reach/router"
-import { STANDARD_DATE_FORMAT } from '../utils/constants';
+import { COMPACT_DATE_FORMAT, STANDARD_DATE_FORMAT } from '../utils/constants';
 
 class ForumList extends Component {
 	constructor() {
@@ -45,6 +45,10 @@ class ForumList extends Component {
 				</div>
 			);
 	  }
+		const isMobile = window.matchMedia("(max-width: 767px)").matches;
+	  const dateFormat = isMobile
+	  	? COMPACT_DATE_FORMAT
+	  	: STANDARD_DATE_FORMAT;
 		return (
 			<div className="forum-list-container">
 			  <div className="section-header">All Forums</div>
@@ -69,8 +73,8 @@ class ForumList extends Component {
   						      ? this.props.usersByUid[forum.updatedBy].displayName
   						      : '?'}
 						      </span>
-  						  <span>at</span>
-  						  <span className="info">{format(forum.updatedTime, STANDARD_DATE_FORMAT)}</span>
+  						  {!isMobile && <span>at</span>}
+  						  <span className="info">{format(forum.updatedTime, dateFormat)}</span>
 						  </div>
 						</Link>
 					);

@@ -4,7 +4,7 @@ import firebase from 'firebase';
 import 'firebase/firestore';
 import { format } from 'date-fns';
 import { Link, navigate } from "@reach/router"
-import { STANDARD_DATE_FORMAT, LOADING_STATUS } from '../utils/constants';
+import { COMPACT_DATE_FORMAT, STANDARD_DATE_FORMAT, LOADING_STATUS } from '../utils/constants';
 import { getForum, updateForum } from '../utils/dbhelpers';
 
 class ThreadList extends Component {
@@ -86,6 +86,10 @@ class ThreadList extends Component {
 				</div>
 			);
 	  }
+		const isMobile = window.matchMedia("(max-width: 767px)").matches;
+	  const dateFormat = isMobile
+	  	? COMPACT_DATE_FORMAT
+	  	: STANDARD_DATE_FORMAT;
 		return (
 			<div className="thread-list-container">
 			  <div className="section-header">
@@ -110,11 +114,13 @@ class ThreadList extends Component {
 						<Link to={"thread/" + thread.id} key={thread.id} className="thread-row">
 						  <div className="thread-title">
 						    <span className="title-text">{thread.title}</span>
-						    <span>started by</span>
-  						  <span className="info">
-  						    {this.props.usersByUid[thread.createdBy]
-  						      ? this.props.usersByUid[thread.createdBy].displayName
-  						      : '?'}
+						    <span>
+						      <span>started by</span>
+    						  <span className="info">
+    						    {this.props.usersByUid[thread.createdBy]
+    						      ? this.props.usersByUid[thread.createdBy].displayName
+    						      : '?'}
+  					      </span>
 					      </span>
 					    </div>
 						  <div className="thread-meta">
@@ -124,8 +130,8 @@ class ThreadList extends Component {
   						      ? this.props.usersByUid[thread.updatedBy].displayName
   						      : '?'}
 						      </span>
-  						  <span>at</span>
-  						  <span className="info">{format(thread.updatedTime, STANDARD_DATE_FORMAT)}</span>
+  						  {!isMobile && <span>at</span>}
+  						  <span className="info">{format(thread.updatedTime, dateFormat)}</span>
 						  </div>
 						</Link>
 					);

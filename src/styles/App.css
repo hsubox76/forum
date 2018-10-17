@@ -68,6 +68,8 @@ button:hover {
 
 .page-header {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
   background-color: var(--color-main);
   color: white;
@@ -87,6 +89,20 @@ button:hover {
 
 .page-header a:hover {
   color: #c8efff;
+}
+
+.account-area {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.account-area .logged-in-user {
+  font-weight: 500;
+  display: block;
+  padding: 5px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
 }
 
 .account-area > a {
@@ -184,19 +200,19 @@ button:hover {
   border-width: 2px;
 }
 
-span.bold {
+.bold {
   font-weight: 500;
 }
 
-span.italic {
+.italic {
   font-style: italic;
 }
 
-span.spoiler {
+.spoiler {
   background-color: #555;
 }
 
-span.spoiler:hover {
+.spoiler:hover {
   background-color: #eee;
 }
 

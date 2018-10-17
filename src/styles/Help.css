@@ -1,7 +1,13 @@
 .help-page {
-	width: 600px;
+	width: 360px;
 	margin: auto;
 	color: #555;
+}
+
+@media only screen and (min-width: 768px) {
+	.help-page {
+		width: 600px;
+	}
 }
 
 .help-page h1,
@@ -11,6 +17,8 @@
 
 .help-row {
 	display: flex;
+	border-bottom: 1px solid #ccc;
+	padding: 5px 0;
 }
 
 .help-row .label {

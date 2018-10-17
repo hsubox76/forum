@@ -17,6 +17,18 @@ const Help = () => (
 			<div className="label spoiler">spoiler</div>
 			<div className="text">[spoiler]spoiler[/spoiler]</div>
 		</div>
+		<div className="help-row">
+			<div className="label">image</div>
+			<div className="text">[img]http://image-site.com/image.jpg[/img]</div>
+		</div>
+		<div className="help-row">
+			<div className="label">link</div>
+			<div className="text">[url="http://website.com"]check this out[/url]</div>
+		</div>
+		<div className="help-row">
+			<div className="label">plain url</div>
+			<div className="text">paste any url and it will be clickable</div>
+		</div>
 	</div>
 );
 

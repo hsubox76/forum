@@ -105,7 +105,8 @@ class App extends Component {
         <div className="page-header">
           <div><Link to="/">Home</Link></div>
           <div className="account-area">
-            <span>Logged in as {this.state.user.displayName}</span>
+            <span className="logged-in-user">{this.state.user.displayName}</span>
+            <Link to="/help">Help</Link>
             <Link to="/profile">Edit profile</Link>
             <a
               className="sign-out-button"

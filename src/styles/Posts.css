@@ -25,6 +25,11 @@
 	color: var(--color-main);
 }
 
+.section-header .breadcrumbs {
+	display: flex;
+	flex-wrap: wrap;
+}
+
 .section-header .thread-label {
   font-weight: 500;
   margin-right: 8px;
@@ -49,7 +54,14 @@
 .thread-list-container {
     margin: 30px auto;
     width: 90%;
-    max-width: 800px;
+    max-width: 400px;
+}
+
+@media only screen and (min-width: 768px) {
+	.forum-list-container,
+	.thread-list-container {
+	    max-width: 800px;
+	}
 }
 
 .forum-row,
@@ -64,11 +76,30 @@
   background-color: white;
 }
 
+.forum-row,
+.thread-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.forum-row {
+  align-items: center;
+}
+
+.thread-row {
+	align-items: flex-start;
+}
+
 .forum-row .forum-title {
 	display: flex;
 	align-items: center;
 	font-size: 1.2em;
 	font-weight: 500;
+	min-width: 200px;
+}
+
+@media only screen and (min-width: 768px) {
+	min-width: 300px;
 }
 
 .post-container.editing {
@@ -107,6 +138,19 @@ a.thread-row:hover {
 	box-shadow: inset 0 0 0 100px rgba(200, 200, 200, 0.2);
 }
 
+.thread-row .thread-title {
+	margin-top: 2px;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+}
+
+@media only screen and (min-width: 768px) {
+	.thread-row .thread-title {
+		align-items: center;
+	}
+}
+
 .thread-row .thread-title span {
 	font-size: .8rem;
 	margin: 0 2px;
@@ -129,6 +173,15 @@ a.thread-row:hover {
 .forum-row .forum-meta span,
 .thread-row .thread-meta span {
 	margin: 0 2px;
+	display: block;
+}
+
+@media only screen and (min-width: 768px) {
+	.forum-row .forum-meta span,
+	.thread-row .thread-meta span {
+		margin: 0 2px;
+		display: inline;
+	}
 }
 
 .forum-row .info,

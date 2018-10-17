@@ -149,15 +149,19 @@ class PostList extends Component {
 		return (
 			<div className="post-list-container">
 			  <div className="section-header">
-			  	<div>
-  		  		<Link className="thread-label" to="/">
-  		  			Home
-  	  			</Link>
-  	  			<span className="title-caret">&gt;</span>
-			  		<Link className="thread-label" to={`/forum/${this.props.forumId}`}>
-			  			{forum.name}
-		  			</Link>
-		  			<span className="title-caret">&gt;</span>
+			  	<div className="breadcrumbs">
+			  		<span>
+	  		  		<Link className="thread-label" to="/">
+	  		  			Home
+	  	  			</Link>
+	  	  			<span className="title-caret">&gt;</span>
+  	  			</span>
+			  		<span>
+				  		<Link className="thread-label" to={`/forum/${this.props.forumId}`}>
+				  			{forum.name}
+			  			</Link>
+			  			<span className="title-caret">&gt;</span>
+		  			</span>
 			  		<span className="thread-title">{this.state.thread.title}</span>
 		  		</div>
 		  		<div>
