@@ -1,6 +1,8 @@
 import React from 'react';
 import Linkify from 'linkifyjs/react';
 import escape from 'lodash/escape';
+import startsWith from 'lodash/startsWith';
+import trim from 'lodash/trim';
 
 const TAG_TYPES = {
 	'img': { className: 'image' },
@@ -8,6 +10,7 @@ const TAG_TYPES = {
 	'spoiler': { className: 'spoiler' },
 	'b': { className: 'bold' },
 	'i': { className: 'italic' },
+	'quote': { className: 'quote' },
 	'normal': { className: 'normal' },
 };
 
@@ -43,7 +46,31 @@ function linkifyAndLineBreak(text, tokenIndex, tagType) {
 const tagList = Object.keys(TAG_TYPES);
 tagList.push('(?:url=[^\\]]+)');
 tagList.push('(?:img [^\\]]+)');
+tagList.push('(?:quote [^\\]]+)');
 const tagRE = tagList.join('|');
+
+const tagsWithProperties = ['img', 'url', 'quote'];
+
+function extractTag(tag) {
+	for (let i = 0; i < tagsWithProperties.length; i++) {
+		if (startsWith(tag, tagsWithProperties[i])) {
+			return tagsWithProperties[i];
+		}
+	}
+	return tag;
+}
+
+function getTagAttrs(tagString) {
+	const tagParts = tagString.split(' ');
+	const tagAttrs = {};
+	tagParts.forEach(part => {
+		if (part.includes('=')) {
+			const pair = part.split('=');
+			tagAttrs[trim(pair[0], '[]')] = trim(pair[1], '[]"');
+		}
+	});
+	return tagAttrs;
+}
 
 const TextContent = ({ content }) => {
 	const tokenDelimiterRE = new RegExp(`(\\[\\/?(?:${tagRE})\\])`);
@@ -54,39 +81,17 @@ const TextContent = ({ content }) => {
 			continue;
 		}
 		const tagMatch = tokens[i].match(/\[([^\]]+)\]/);
-		let tag = tagMatch ? tagMatch[1] : 'normal';
-		if (tag.includes('url')) {
-			tag = 'url';
-		}
-		if (tag.includes('img')) {
-			tag = 'img';
-		}
-		let tagParts = [];
-		switch(tag) {
+		const tagType = extractTag(tagMatch ? tagMatch[1] : 'normal');
+		const tagAttrs = getTagAttrs(tokens[i]);
+		switch(tagType) {
 			case 'img':
 				const url = encodeURI(tokens[i + 1]);
-				tagParts = tokens[i].split(' ');
-				const attrs = tagParts.reduce((attrLookup, part) => {
-					const pair = part.split('=');
-					if (pair.length > 1) {
-						attrLookup[pair[0]] = pair[1];
-					}
-					return attrLookup;
-				}, {});
-				contentEls.push(<img alt="user inserted" key={i} src={url} width={attrs.width || null} height={attrs.height || null} />);
+				contentEls.push(<img alt="user inserted" key={i} src={url} width={tagAttrs.width || null} height={tagAttrs.height || null} />);
 				break;
 			case 'url':
-				tagParts = tokens[i].split('=');
 				let href = '';
-				if (tagParts && tagParts[1]) {
-					href = tagParts[1].slice(0, -1);
-					if (href[0] === "\"") {
-						href = href.slice(1);
-					}
-					if (href[href.length - 1] === "\"") {
-						href = href.slice(0, -1);
-					}
-					href = escape(href);
+				if (tagAttrs.url) {
+					href = escape(tagAttrs.url);
 				} else {
 					href = 'http://' + escape(tokens[i+1]);
 				}
@@ -95,19 +100,59 @@ const TextContent = ({ content }) => {
 						{tokens[i + 1]}
 					</a>);
 				break;
+			case 'quote':
+				let level = 1;
+				const quoteRoot = { level, children: [], parent: null };
+				let currentNode = quoteRoot;
+				// lookahead for nested quote tags
+				let j;
+				for (j = i + 1; j < tokens.length; j++) {
+					if (startsWith(tokens[j], '[quote')) {
+						const newNode = { level: ++level, children: [], parent: currentNode  };
+						currentNode.children.push(newNode);
+						currentNode = newNode;
+					} else if (tokens[j] === '[/quote]') {
+						if (!currentNode.parent) {
+							break;
+						}
+						currentNode = currentNode.parent;
+						level--;
+					} else {
+						currentNode.children.push(tokens[j]);
+					}
+				}
+				let k = 0;
+				function renderNode(quoteNode) {
+					return (
+						<div key={++k + '-' + level} className="quote-box">
+							{tagAttrs.name && <div>{tagAttrs.name} said:</div>}
+							{quoteNode.children.map((child, childIndex) => {
+									if (typeof child === 'string') {
+										return <TextContent key={i + '-' + childIndex} content={child} />;
+									} else {
+										return renderNode(child);
+									}
+								})
+							}
+						</div>
+					); 
+				}
+				contentEls.push(renderNode(quoteRoot));
+				i = j + 2;
+				break;
 			case 'b':
 			case 'i':
 			case 'spoiler':
-				contentEls = contentEls.concat(linkifyAndLineBreak(tokens[i + 1], i, TAG_TYPES[tag]));
+				contentEls = contentEls.concat(linkifyAndLineBreak(tokens[i + 1], i, TAG_TYPES[tagType]));
 				break;
 			case 'normal':
-				contentEls = contentEls.concat(linkifyAndLineBreak(tokens[i], i, TAG_TYPES[tag]));
+				contentEls = contentEls.concat(linkifyAndLineBreak(tokens[i], i, TAG_TYPES[tagType]));
 				break;
 			default:
 				// just in case - shouldn't hit this
 				contentEls.push(<span key={i}>{tokens[i]}</span>);
 		}
-		if (tag !== 'normal') {
+		if (tagType !== 'normal' && tagType !== 'quote') {
 			i += 2;
 		}
 	}
