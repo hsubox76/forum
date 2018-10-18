@@ -19,6 +19,22 @@ export function getForum(props) {
   }
 }
 
+export function getUser(props, uid) {
+	const db = firebase.firestore();
+	if (props.usersByUid[uid]) {
+		return Promise.resolve(props.usersByUid[uid]);
+	} else {
+		return db.collection("users")
+			.doc(uid)
+			.get()
+			.then(userDoc => {
+				// store this up a level
+				props.addUserByUid(uid, userDoc.data());
+				return userDoc.data();
+			});
+	}
+}
+
 export function updateThread(threadId, threadData, forumId) {
 	const db = firebase.firestore();
 	let forumUpdates = null;

@@ -3,6 +3,7 @@ import Linkify from 'linkifyjs/react';
 import escape from 'lodash/escape';
 import startsWith from 'lodash/startsWith';
 import trim from 'lodash/trim';
+import { getUser } from '../utils/dbhelpers';
 
 const TAG_TYPES = {
 	'img': { className: 'image' },
@@ -78,9 +79,9 @@ function getTagAttrs(tagString) {
 	return tagAttrs;
 }
 
-const TextContent = ({ content }) => {
+const TextContent = (props) => {
 	const tokenDelimiterRE = new RegExp(`(\\[\\/?(?:${tagRE})\\])`);
-	const tokens = content.split(tokenDelimiterRE);
+	const tokens = props.content.split(tokenDelimiterRE);
 		
 	const root = {
 		level: 0,
@@ -164,13 +165,20 @@ const TextContent = ({ content }) => {
 		}
 	}
 	let k = 0;
-	function renderNode(node) {
+	function renderNode (node) {
 		const classes = [];
 		let quoteAuthor = '';
 		if (node.tagType === 'quote') {
 			classes.push('quote-box');
 			if (node.tagAttrs.name) {
 				quoteAuthor = node.tagAttrs.name;
+			}
+			if (node.tagAttrs.uid) {
+				if (props.usersByUid[node.tagAttrs.uid]) {
+					quoteAuthor = props.usersByUid[node.tagAttrs.uid].displayName;
+				} else {
+					getUser(props, node.tagAttrs.uid);
+				}
 			}
 		} else if (node.tagType === 'bold') {
 			classes.push('bold');

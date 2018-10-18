@@ -168,7 +168,12 @@ class Post extends Component {
 								<textarea ref={this.contentRef} className="content-input" defaultValue={post.content} />
 							</form>
 						) : (
-							<TextContent content={post.content} />
+							<TextContent
+								content={post.content}
+								user={this.props.user}
+								usersByUid={this.props.usersByUid}
+								addUserByUid={this.props.addUserByUid}
+							/>
 						)
 					}
 				</div>
