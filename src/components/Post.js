@@ -104,7 +104,7 @@ class Post extends Component {
 			);
 		}
 		let footer = null;
-		if (this.props.isAdmin || this.props.user.uid === post.uid) {
+		if (this.props.user.isAdmin || this.props.user.uid === post.uid) {
 			if (this.state.status === LOADING_STATUS.EDITING) {
 				footer = (
 					<div className="post-footer">
@@ -148,12 +148,14 @@ class Post extends Component {
 		if (this.props.isDisabled) {
 			classes.push('disabled');
 		}
+		const postUser = this.props.usersByUid[post.uid];
 		return (
 			<div key={post.id} className={classes.join(' ')}>
 				<div className="post-header">
 					<div className="post-user">
-						{this.props.usersByUid[post.uid]
-							? this.props.usersByUid[post.uid].displayName
+						{postUser && postUser.avatarUrl && <img className="avatar-post" alt="User's Avatar" src={postUser.avatarUrl} />}
+						{postUser
+							? postUser.displayName
 							: <div className="loader loader-small"></div>}
 					</div>
 					<div className="post-date">

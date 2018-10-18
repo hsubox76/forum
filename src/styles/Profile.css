@@ -1,0 +1,8 @@
+.avatar-profile {
+	width: 120px;
+	height: 120px;
+}
+
+.avatar-error {
+	color: var(--color-danger);
+}

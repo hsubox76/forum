@@ -248,11 +248,21 @@ a.thread-row:hover {
 
 .post-container .post-header .post-user {
 	font-weight: 500;
+	display: flex;
+	align-items: flex-end;
+}
+
+.post-container .avatar-post {
+	width: 60px;
+	height: 60px;
+	margin-right: 5px;
 }
 
 .post-container .post-header .post-date {
 	font-weight: 400;
 	font-size: 0.9rem;
+	display: flex;
+	align-items: flex-end;
 }
 
 .post-container .post-footer {

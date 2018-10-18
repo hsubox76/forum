@@ -48,23 +48,27 @@ class App extends Component {
   componentDidMount = () => {
     this.unregisterAuthObserver = firebase.auth().onAuthStateChanged(
         (user) => {
+          // Set to user or null. Will overwrite later if isAdmin comes
+          // back true.
+          this.setState({ user });
           if (user) {
         		this.db.collection("users").doc(user.uid)
-        		  .get()
-        		  .then(docRef => {
-        		    if (docRef) {
-        		      user.isAdmin = docRef.data().isAdmin;
-        		    }
-        		  })
-        		  .catch(e => {
-        		    // If we never got this user into the DB
-            		this.db.collection("users").doc(user.uid).set({
-                    displayName: user.displayName,
-                    email: user.email
+        		  .onSnapshot(
+        		    docRef => {
+          		    if (docRef) {
+          		      user.isAdmin = docRef.data().isAdmin;
+          		      user.avatarUrl = docRef.data().avatarUrl;
+                    this.setState({ user });
+          		    }
+          		  },
+        		    e => {
+          		    // If we never got this user into the DB
+              		this.db.collection("users").doc(user.uid).set({
+                      displayName: user.displayName,
+                      email: user.email
                 });
         		  });
           }
-          this.setState({ user });
         }
     );
   }
