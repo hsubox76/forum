@@ -338,7 +338,14 @@ a.thread-row:hover {
 .quote-box {
 	border: 1px solid var(--color-highlight);
 	width: calc(100% - 40px);
-	margin: auto;
+	margin: 5px auto;
 	background-color: #efefef;
-	padding: 10px;
+	padding: 5px;
+}
+
+.quote-box .quote-info {
+	font-weight: 500;
+	font-size: 0.9rem;
+	background-color: #ddd;
+	padding: 2px 4px;
 }

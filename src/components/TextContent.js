@@ -14,7 +14,7 @@ const TAG_TYPES = {
 	'normal': { className: 'normal' },
 };
 
-function linkifyAndLineBreak(text, tokenIndex, tagType) {
+function linkifyAndLineBreak(text, tokenIndex, classes) {
 	let contentEls = [];
 	let lines = [];
 	if (text.includes('\n')) {
@@ -23,13 +23,16 @@ function linkifyAndLineBreak(text, tokenIndex, tagType) {
 		lines = [text];
 	}
 	lines.forEach((line, lineIndex) => {
+		if (!line) {
+			return;
+		}
 		const options = {
 			className: 'user-link'
 		};
 		const linkifiedLine = (
 			<Linkify
 				key={`${tokenIndex}-${lineIndex}`}
-				className={tagType.className}
+				className={classes.join(' ')}
 				tagName="span" options={options}
 			>
 				{line}
@@ -56,6 +59,9 @@ function extractTag(tag) {
 		if (startsWith(tag, tagsWithProperties[i])) {
 			return tagsWithProperties[i];
 		}
+		if (startsWith(tag, '/')) {
+			return tag.slice(1);
+		}
 	}
 	return tag;
 }
@@ -75,88 +81,154 @@ function getTagAttrs(tagString) {
 const TextContent = ({ content }) => {
 	const tokenDelimiterRE = new RegExp(`(\\[\\/?(?:${tagRE})\\])`);
 	const tokens = content.split(tokenDelimiterRE);
-	let contentEls = [];
+		
+	const root = {
+		level: 0,
+		tagType: null,
+		children: [],
+		parent: null
+	};
+	let currentNode = root;
+	const tagLevels = Object.keys(TAG_TYPES).reduce((obj, tagType) => {
+		obj[tagType] = 0;
+		return obj;
+	}, {});
+	
+	const tagStates = {
+		'b': false,
+		'i': false,
+		'spoiler': false,
+		currentUrl: null
+	};
+	let currentUrl = null;
+	
 	for (let i = 0; i < tokens.length; i++) {
-		if (!tokens[i]) {
+		const token = tokens[i];
+		if (!token) {
 			continue;
 		}
-		const tagMatch = tokens[i].match(/\[([^\]]+)\]/);
+		const tagMatch = token.match(/\[([^\]]+)\]/);
 		const tagType = extractTag(tagMatch ? tagMatch[1] : 'normal');
-		const tagAttrs = getTagAttrs(tokens[i]);
-		switch(tagType) {
-			case 'img':
-				const url = encodeURI(tokens[i + 1]);
-				contentEls.push(<img alt="user inserted" key={i} src={url} width={tagAttrs.width || null} height={tagAttrs.height || null} />);
-				break;
-			case 'url':
-				let href = '';
-				if (tagAttrs.url) {
-					href = escape(tagAttrs.url);
-				} else {
-					href = 'http://' + escape(tokens[i+1]);
+		const isBlockTag = tagType === 'img' || tagType === 'quote';
+		const isTag = tagType !== 'normal';
+		const isClose = isTag && token[1] === '/';
+		const tagAttrs = getTagAttrs(token);
+		
+		if (isBlockTag) {
+			if (!isClose) {
+				const newNode = {
+					tagType,
+					level: ++tagLevels[tagType],
+					children: [],
+					parent: currentNode,
+					...tagStates,
+					tagAttrs
+				};
+				currentNode.children.push(newNode);
+				currentNode = newNode;
+			} else {
+				if (!currentNode.parent) {
+					break;
 				}
-				contentEls.push(
-					<a key={i} className="user-link" href={href} target="_blank">
-						{tokens[i + 1]}
-					</a>);
-				break;
-			case 'quote':
-				let level = 1;
-				const quoteRoot = { level, children: [], parent: null };
-				let currentNode = quoteRoot;
-				// lookahead for nested quote tags
-				let j;
-				for (j = i + 1; j < tokens.length; j++) {
-					if (startsWith(tokens[j], '[quote')) {
-						const newNode = { level: ++level, children: [], parent: currentNode  };
-						currentNode.children.push(newNode);
-						currentNode = newNode;
-					} else if (tokens[j] === '[/quote]') {
-						if (!currentNode.parent) {
-							break;
-						}
-						currentNode = currentNode.parent;
-						level--;
+				currentNode = currentNode.parent;
+				tagLevels[tagType]--;
+			}
+		} else if (isTag) {
+			if (isClose) {
+				if (['b', 'i', 'spoiler'].includes(tagType)) {
+					tagStates[tagType] = false;
+				}
+				if (tagType === 'url') {
+					currentUrl = null;
+				}
+			} else {
+				if (['b', 'i', 'spoiler'].includes(tagType)) {
+					tagStates[tagType] = true;
+				}
+				if (tagType === 'url') {
+					if (tagAttrs.url) {
+						currentUrl = escape(tagAttrs.url);
 					} else {
-						currentNode.children.push(tokens[j]);
+						currentUrl = 'http://' + escape(tokens[i+1]);
 					}
 				}
-				let k = 0;
-				function renderNode(quoteNode) {
-					return (
-						<div key={++k + '-' + level} className="quote-box">
-							{tagAttrs.name && <div>{tagAttrs.name} said:</div>}
-							{quoteNode.children.map((child, childIndex) => {
-									if (typeof child === 'string') {
-										return <TextContent key={i + '-' + childIndex} content={child} />;
-									} else {
-										return renderNode(child);
-									}
-								})
-							}
-						</div>
-					); 
-				}
-				contentEls.push(renderNode(quoteRoot));
-				i = j + 2;
-				break;
-			case 'b':
-			case 'i':
-			case 'spoiler':
-				contentEls = contentEls.concat(linkifyAndLineBreak(tokens[i + 1], i, TAG_TYPES[tagType]));
-				break;
-			case 'normal':
-				contentEls = contentEls.concat(linkifyAndLineBreak(tokens[i], i, TAG_TYPES[tagType]));
-				break;
-			default:
-				// just in case - shouldn't hit this
-				contentEls.push(<span key={i}>{tokens[i]}</span>);
-		}
-		if (tagType !== 'normal' && tagType !== 'quote') {
-			i += 2;
+			}
+		} else {
+			currentNode.children.push({
+				tagType: 'text',
+				level: tagLevels[tagType],
+				text: token,
+				...tagStates,
+				currentUrl
+			});
 		}
 	}
-	return contentEls;
+	let k = 0;
+	function renderNode(node) {
+		const classes = [];
+		let quoteAuthor = '';
+		if (node.tagType === 'quote') {
+			classes.push('quote-box');
+			if (node.tagAttrs.name) {
+				quoteAuthor = node.tagAttrs.name;
+			}
+		} else if (node.tagType === 'bold') {
+			classes.push('bold');
+		} else if (node.tagType === 'italic') {
+			classes.push('italic');
+		} else if (node.tagType === 'img') {
+			const url = encodeURI(node.children[0].text);
+			return (
+				<img
+					alt="user inserted"
+					key={'image-' + k++}
+					src={url}
+					width={node.tagAttrs.width || null}
+					height={node.tagAttrs.height || null}
+				/>);
+		}
+		return (
+			<div key={node.level + '-' + k++} className={classes.join(' ')} >
+				{node.tagType === 'quote' &&
+					<div className="quote-info">{quoteAuthor} said:</div>
+				}
+				{node.children.map((child, childIndex) => {
+						if (child.tagType === 'text') {
+							if (!child.text) {
+								return null;
+							}
+							const classes = [];
+							let elementType = 'span';
+							if (child.b) {
+								classes.push('bold');
+							}
+							if (child.i) {
+								classes.push('italic');
+							}
+							if (child.spoiler) {
+								classes.push('spoiler');
+							}
+							const props = {
+								key: node.level + '-' + k + '-' + childIndex,
+								className: classes.join(' ')
+							};
+							if (child.currentUrl) {
+								elementType = 'a';
+								props.href = child.currentUrl;
+							}
+							return React.createElement(
+								elementType,
+								props,
+								linkifyAndLineBreak(child.text, k, classes));
+						} else {
+							return renderNode(child);
+						}
+					})
+				}
+			</div>
+		); 
+	}
+	return renderNode(root);
 }
 
 export default TextContent;
