@@ -103,44 +103,64 @@ class Post extends Component {
 				</div>
 			);
 		}
-		let footer = null;
+		const footerButtons = [];
+		if (this.state.status !== LOADING_STATUS.EDITING) {
+			footerButtons.push(
+				<button
+					key="quote"
+					className="small button-edit"
+					disabled={this.state.status === LOADING_STATUS.SUBMITTING}
+					onClick={() => this.props.handleQuote(post)}>
+						quote
+				</button>
+			);
+		}
 		if (this.props.user.isAdmin || this.props.user.uid === post.uid) {
 			if (this.state.status === LOADING_STATUS.EDITING) {
-				footer = (
-					<div className="post-footer">
-						<button
-							className="small button-cancel"
-							disabled={this.state.status === LOADING_STATUS.SUBMITTING}
-							onClick={this.toggleEditMode}>
-								cancel
-						</button>
-						<button
-							className="small button-edit"
-							disabled={this.state.status === LOADING_STATUS.SUBMITTING}
-							onClick={this.handleEditPost}>
-								submit
-						</button>
-					</div>
+				footerButtons.push(
+					<button
+						key="cancel"
+						className="small button-cancel"
+						disabled={this.state.status === LOADING_STATUS.SUBMITTING}
+						onClick={this.toggleEditMode}>
+							cancel
+					</button>
+				);
+				footerButtons.push(
+					<button
+						key="edit"
+						className="small button-edit"
+						disabled={this.state.status === LOADING_STATUS.SUBMITTING}
+						onClick={this.handleEditPost}>
+							submit
+					</button>
 				);
 			} else {
-				footer = (
-					<div className="post-footer">
-						<button
-							className="small button-edit"
-							disabled={this.props.isDisabled}
-							onClick={this.toggleEditMode}>
-								edit
-						</button>
-						<button
-							className="small button-delete"
-							disabled={this.props.isDisabled}
-							onClick={this.props.isOnlyPost ? this.props.deleteThread : this.handleDeletePost}>
-								delete
-						</button>
-					</div>
+				footerButtons.push(
+					<button
+						key="edit"
+						className="small button-edit"
+						disabled={this.props.isDisabled}
+						onClick={this.toggleEditMode}>
+							edit
+					</button>
+				);
+				footerButtons.push(
+					<button
+						key="delete"
+						className="small button-delete"
+						disabled={this.props.isDisabled}
+						onClick={this.props.isOnlyPost ? this.props.deleteThread : this.handleDeletePost}>
+							delete
+					</button>
 				);
 			}
 		}
+		const footer = (
+			<div className="post-footer">
+				{footerButtons}
+			</div>
+		);
 		const classes = ['post-container'];
 		if (this.state.status === LOADING_STATUS.EDITING) {
 			classes.push('editing');

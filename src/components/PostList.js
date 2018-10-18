@@ -36,6 +36,10 @@ class PostList extends Component {
 			onOk: this.deleteThread
 		});
 	};
+	handleQuote = ({ content, uid }) => {
+		this.contentRef.current.value =
+			`[quote uid=${uid}]${content}[/quote]\n` + this.contentRef.current.value;
+	}
 	deleteThread = () => {
 		this.threadUnsub && this.threadUnsub();
 		this.setState({ status: LOADING_STATUS.DELETING });
@@ -186,6 +190,7 @@ class PostList extends Component {
 						usersByUid={this.props.usersByUid}
 						addUserByUid={this.props.addUserByUid}
 						setDialog={this.props.setDialog}
+						handleQuote={this.handleQuote}
 					/>
 				))}
 				<form className="new-post-container" onSubmit={this.handleSubmitPost}>

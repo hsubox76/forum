@@ -15,7 +15,7 @@ const TAG_TYPES = {
 	'normal': { className: 'normal' },
 };
 
-function linkifyAndLineBreak(text, tokenIndex, classes) {
+function linkifyAndLineBreak(text, tokenIndex, classes, currentUrl) {
 	let contentEls = [];
 	let lines = [];
 	if (text.includes('\n')) {
@@ -27,19 +27,23 @@ function linkifyAndLineBreak(text, tokenIndex, classes) {
 		if (!line) {
 			return;
 		}
-		const options = {
-			className: 'user-link'
-		};
-		const linkifiedLine = (
-			<Linkify
-				key={`${tokenIndex}-${lineIndex}`}
-				className={classes.join(' ')}
-				tagName="span" options={options}
-			>
-				{line}
-			</Linkify>
-			);
-		contentEls.push(linkifiedLine);
+		if (currentUrl) {
+			contentEls.push(<span key={`${tokenIndex}-${lineIndex}`}>{line}</span>);
+		} else {
+			const options = {
+				className: 'user-link'
+			};
+			const linkifiedLine = (
+				<Linkify
+					key={`${tokenIndex}-${lineIndex}`}
+					className={classes.join(' ')}
+					tagName="span" options={options}
+				>
+					{line}
+				</Linkify>
+				);
+			contentEls.push(linkifiedLine);
+		}
 		if (lineIndex !== lines.length - 1) {
 			contentEls.push(<span key={`space-${tokenIndex}-${lineIndex}`} className="space" />);
 		}
@@ -227,7 +231,7 @@ const TextContent = (props) => {
 							return React.createElement(
 								elementType,
 								props,
-								linkifyAndLineBreak(child.text, k, classes));
+								linkifyAndLineBreak(child.text, k, classes, child.currentUrl));
 						} else {
 							return renderNode(child);
 						}
