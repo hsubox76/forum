@@ -68,7 +68,7 @@ class ForumList extends Component {
 					    </div>
 						  <div className="forum-meta">
   						  <span>last updated by</span>
-  						  <span className="info">
+  						  <span className="info truncatable-name">
   						    {this.props.usersByUid[forum.updatedBy]
   						      ? this.props.usersByUid[forum.updatedBy].displayName
   						      : '?'}

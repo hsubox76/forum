@@ -127,7 +127,7 @@ class ThreadList extends Component {
 						    </span>
 						    <span>
 						      <span>started by</span>
-    						  <span className="info">
+    						  <span className="info truncatable-name">
     						    {this.props.usersByUid[thread.createdBy]
     						      ? this.props.usersByUid[thread.createdBy].displayName
     						      : '?'}
@@ -136,7 +136,7 @@ class ThreadList extends Component {
 					    </div>
 						  <div className="thread-meta">
   						  <span>last updated by</span>
-  						  <span className="info">
+  						  <span className="info truncatable-name">
   						    {this.props.usersByUid[thread.updatedBy]
   						      ? this.props.usersByUid[thread.updatedBy].displayName
   						      : '?'}

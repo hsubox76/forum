@@ -186,6 +186,14 @@ a.thread-row:hover {
 	font-size: 1rem;
 }
 
+@media only screen and (min-width: 768px) {
+	.forum-row .forum-meta,
+	.thread-row .thread-meta {
+    display: flex;
+    align-items: flex-end;
+	}
+}
+
 .forum-row .forum-meta span,
 .thread-row .thread-meta span {
 	margin: 0 2px;
@@ -196,7 +204,7 @@ a.thread-row:hover {
 	.forum-row .forum-meta span,
 	.thread-row .thread-meta span {
 		margin: 0 2px;
-		display: inline;
+		display: inline-block;
 	}
 }
 
@@ -204,6 +212,14 @@ a.thread-row:hover {
 .thread-row .info {
 	color: var(--color-main);
 	font-weight: 500;
+}
+
+.forum-row .truncatable-name,
+.thread-row .truncatable-name {
+	max-width: 100px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .forum-row .loader,
