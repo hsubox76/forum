@@ -68,6 +68,7 @@ class ThreadList extends Component {
 	      createdTime: time,
 	      updatedTime: time,
 	      forumId: this.props.forumId,
+	      priority: 0,
 	      isSticky: false
 	    }).then((threadRef) => {
 				this.contentRef.current.value = '';
