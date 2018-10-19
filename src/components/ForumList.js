@@ -16,7 +16,7 @@ class ForumList extends Component {
 	}
 	componentDidMount = () => {
 		this.unsubscribe = this.db.collection("forums")
-		// .orderBy("createdTime")
+		.orderBy("order")
 		.onSnapshot((querySnapshot) => {
 			const forumIds = [];
 			if (querySnapshot.empty) {
