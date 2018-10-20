@@ -72,12 +72,12 @@ function extractTag(tag) {
 }
 
 function getTagAttrs(tagString) {
-	const tagParts = tagString.split(' ');
+	const tagParts = trim(tagString, '[]').split(' ');
 	const tagAttrs = {};
 	tagParts.forEach(part => {
 		if (part.includes('=')) {
-			const pair = part.split('=');
-			tagAttrs[trim(pair[0], '[]')] = trim(pair[1], '[]"');
+			const pair = part.split(/=(.+)/, 2);
+			tagAttrs[pair[0]] = trim(pair[1], '"');
 		}
 	});
 	return tagAttrs;
