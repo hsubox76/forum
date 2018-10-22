@@ -4,8 +4,10 @@ import Post from './Post.js';
 import { Link } from '@reach/router';
 import firebase from 'firebase';
 import 'firebase/firestore';
-import { LOADING_STATUS } from '../utils/constants';
+import { LOADING_STATUS, POSTS_PER_PAGE } from '../utils/constants';
 import without from 'lodash/without';
+import trim from 'lodash/trim';
+import range from 'lodash/range';
 import { getForum, updateThread } from '../utils/dbhelpers';
 
 class PostList extends Component {
@@ -113,10 +115,6 @@ class PostList extends Component {
 			this.setState({ postBeingEdited: null });
 		}
 	}
-	renderContent = (content) => {
-		const lines = content.split('\n');
-		return lines.map((line, index) => <p key={index} className="content-line">{line}</p>);
-	}
 	render() {
 		if (this.state.status === LOADING_STATUS.DELETING) {
 			return (
@@ -150,6 +148,40 @@ class PostList extends Component {
 			);
 		}
 	  const forum = this.props.forumsById[this.props.forumId] || {};
+	  let { posts = POSTS_PER_PAGE, page = 0 } = this.props.location.search.split('&')
+	  	.reduce((lookup, pairString) => {
+	  		const pair = trim(pairString, '?').split('=');
+	  		lookup[pair[0]] = pair[1];
+	  		return lookup;
+	  	}, {});
+	  page = parseInt(page, 10);
+	  const start = posts * page;
+	  const end = posts * (page + 1);
+	  const pages = Math.ceil(this.state.thread.postIds.length / posts);
+	  const postList = this.state.thread.postIds &&
+	  	this.state.thread.postIds
+	  		.slice(start, end)
+	  		.map((postId, index) => ({ id: postId, index: index + start }));
+	  const paginationBox = (
+		  <div className="pagination-control">
+		  	page
+		  	{range(pages)
+		  		.map(pageNum => {
+		  			const pageLink = `/forum/${this.props.forumId}` +
+		  				`/thread/${this.props.threadId}` +
+		  				`?page=${pageNum}&posts=${posts}`;
+		  			const classes = ['page-link'];
+		  			if (pageNum === page) {
+		  				classes.push('selected');
+		  			}
+			  		return (
+			  			<Link className={classes.join(' ')} to={pageLink}>
+			  			{pageNum}</Link>
+			  		);
+		  			
+		  		})}
+		  </div>
+	  );
 		return (
 			<div className="post-list-container">
 			  <div className="section-header">
@@ -176,13 +208,15 @@ class PostList extends Component {
 		  			}
 		  		</div>
 			  </div>
+			  {paginationBox}
 				{!this.state.thread.postIds && "loading"}
-				{this.state.thread.postIds && this.state.thread.postIds.map((postId) => (
+				{postList && postList.map(({ id, index }) => (
 					<Post
-						key={postId}
-						postId={postId}
+						key={id}
+						postId={id}
 						user={this.props.user}
-						isDisabled={this.state.postBeingEdited && this.state.postBeingEdited !== postId}
+						index={index}
+						isDisabled={this.state.postBeingEdited && this.state.postBeingEdited !== id}
 						isOnlyPost={this.state.thread.postIds.length === 1}
 						deleteThread={this.handleDeleteThread}
 						deletePostFromThread={this.handleDeletePostFromThread}
@@ -193,6 +227,7 @@ class PostList extends Component {
 						handleQuote={this.handleQuote}
 					/>
 				))}
+			  {paginationBox}
 				<form className="new-post-container" onSubmit={this.handleSubmitPost}>
 					<div className="form-line">
 					  <label>Add a post</label>

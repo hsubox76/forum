@@ -121,29 +121,33 @@ class ThreadList extends Component {
 					return (
 						<Link to={"thread/" + thread.id} key={thread.id} className={threadClasses.join(' ')}>
 						  <div className="thread-title">
-						    <span className="title-container">
+						    <div className="title-container">
   			          {thread.priority > 0
   			            && <FontAwesomeIcon className="icon" icon="thumbtack" />}
 						      <span className="title-text">{thread.title}</span>
-						    </span>
-						    <span>
+						    </div>
+						    <div>
 						      <span>started by</span>
     						  <span className="info truncatable-name">
     						    {this.props.usersByUid[thread.createdBy]
     						      ? this.props.usersByUid[thread.createdBy].displayName
     						      : '?'}
   					      </span>
-					      </span>
+					      </div>
 					    </div>
 						  <div className="thread-meta">
-  						  <span>last updated by</span>
-  						  <span className="info truncatable-name">
-  						    {this.props.usersByUid[thread.updatedBy]
-  						      ? this.props.usersByUid[thread.updatedBy].displayName
-  						      : '?'}
-						      </span>
-  						  {!isMobile && <span>at</span>}
-  						  <span className="info">{format(thread.updatedTime, dateFormat)}</span>
+						  	<div className="post-count">
+						  		<span className="post-num">{thread.postIds.length}</span> posts</div>
+						  	<div className="last-updated-info">
+	  						  <span>last updated by</span>
+	  						  <span className="info truncatable-name">
+	  						    {this.props.usersByUid[thread.updatedBy]
+	  						      ? this.props.usersByUid[thread.updatedBy].displayName
+	  						      : '?'}
+							      </span>
+	  						  {!isMobile && <span>at</span>}
+	  						  <span className="info">{format(thread.updatedTime, dateFormat)}</span>
+							  </div>
 						  </div>
 						</Link>
 					);

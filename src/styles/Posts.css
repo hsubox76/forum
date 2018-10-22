@@ -88,7 +88,7 @@
 }
 
 .thread-row {
-	align-items: flex-start;
+	align-items: stretch;
 }
 
 .thread-row.thread-unread {
@@ -148,14 +148,9 @@ a.thread-row:hover {
 .thread-row .thread-title {
 	margin-top: 2px;
 	display: flex;
-	flex-wrap: wrap;
+	flex-direction: column;
 	align-items: flex-start;
-}
-
-@media only screen and (min-width: 768px) {
-	.thread-row .thread-title {
-		align-items: center;
-	}
+	justify-content: flex-start;
 }
 
 .thread-row .thread-title span {
@@ -179,7 +174,17 @@ a.thread-row:hover {
 
 .thread-row .thread-meta {
 	font-size: .8rem;
-	padding-top: 3px;
+}
+
+.thread-meta .post-count {
+	font-size: .9rem;
+	flex-wrap: none;
+}
+
+.thread-meta .post-count .post-num {
+	font-weight: 500;
+	color: var(--color-main);
+	display: inline-block;
 }
 
 .forum-row .forum-meta {
@@ -188,9 +193,16 @@ a.thread-row:hover {
 
 @media only screen and (min-width: 768px) {
 	.forum-row .forum-meta,
-	.thread-row .thread-meta {
+	.thread-row .thread-meta .last-updated-info {
     display: flex;
     align-items: flex-end;
+	}
+	
+	.thread-row .thread-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
 	}
 }
 
@@ -282,6 +294,13 @@ a.thread-row:hover {
 	align-items: flex-end;
 }
 
+.post-header-right {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	align-items: flex-end;
+}
+
 .post-container .post-footer {
 	border-top: 1px solid var(--color-light);
 	padding: 5px 5px 0 5px;
@@ -349,4 +368,28 @@ a.thread-row:hover {
 	font-size: 0.9rem;
 	background-color: #ddd;
 	padding: 2px 4px;
+}
+
+.pagination-control {
+	font-weight: 400;
+	font-size: 1rem;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	background-color: var(--color-main);
+	color: white;
+	padding: 4px 8px;
+	border-radius: 5px;
+	flex-wrap: wrap;
+}
+
+.pagination-control .page-link {
+	margin-left: 3px;
+	text-decoration: none;
+	color: white;
+	padding: 0 2px;
+}
+
+.pagination-control .page-link.selected {
+	border: 1px solid white;
 }

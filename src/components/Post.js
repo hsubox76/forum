@@ -178,8 +178,9 @@ class Post extends Component {
 							? postUser.displayName
 							: <div className="loader loader-small"></div>}
 					</div>
-					<div className="post-date">
-						{format(post.createdTime, STANDARD_DATE_FORMAT)}
+					<div className="post-header-right">
+						<div>#{this.props.index}</div>
+						<div className="post-date">{format(post.createdTime, STANDARD_DATE_FORMAT)}</div>
 					</div>
 				</div>
 				<div className="post-content">
