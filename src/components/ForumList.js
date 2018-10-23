@@ -3,8 +3,10 @@ import '../styles/Posts.css';
 import firebase from 'firebase';
 import 'firebase/firestore';
 import { format } from 'date-fns';
+import get from 'lodash/get';
 import { Link } from "@reach/router"
 import { COMPACT_DATE_FORMAT, STANDARD_DATE_FORMAT } from '../utils/constants';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 class ForumList extends Component {
 	constructor() {
@@ -61,9 +63,17 @@ class ForumList extends Component {
   						</div>
 				    );
 				  }
+				  const classes = ['forum-row'];
+				  const isUnread = forum.updatedTime >
+				  	(get(forum, ['readBy', this.props.user.uid]) || 0);
+				  if (isUnread) {
+				  	classes.push('unread');
+				  }
 					return (
-						<Link to={"forum/" + forum.id} key={forum.id} className="forum-row">
+						<Link to={"forum/" + forum.id} key={forum.id} className={classes.join(' ')}>
 						  <div className="forum-title">
+  			          {isUnread
+  			            && <FontAwesomeIcon className="icon icon-comment" icon="comment" />}
 						    <span className="title-text">{forum.name}</span>
 					    </div>
 						  <div className="forum-meta">

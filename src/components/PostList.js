@@ -8,7 +8,8 @@ import { LOADING_STATUS, POSTS_PER_PAGE } from '../utils/constants';
 import without from 'lodash/without';
 import trim from 'lodash/trim';
 import range from 'lodash/range';
-import { getForum, updateThread } from '../utils/dbhelpers';
+import get from 'lodash/get';
+import { getForum, updatePost, updateThread } from '../utils/dbhelpers';
 
 class PostList extends Component {
 	constructor() {
@@ -67,23 +68,10 @@ class PostList extends Component {
 	}
 	handleSubmitPost = (e) => {
 		e.preventDefault();
-		const now = Date.now();
-		this.db.collection("posts").add({
-			uid: this.props.user.uid,
-	    content: this.contentRef.current.value,
-	    parentThread: this.props.threadId,
-	    createdTime: now,
-	    updatedTime: now
-		})
-		.then((docRef) => {
-			this.contentRef.current.value = '';
-			updateThread(this.props.threadId, {
-				updatedTime: now,
-				updatedBy: this.props.user.uid,
-				postIds: this.state.thread.postIds.concat(docRef.id)
-			}, this.props.forumId);
-	    console.log("Document written with ID: ", docRef.id);
-		});
+		updatePost(this.contentRef.current.value,
+			this.state.thread.postIds,
+			this.props,
+			() => this.contentRef.current.value = '');
 	};
 	handleDeletePostFromThread = (postId) => {
 		const postIds = this.state.thread.postIds;
@@ -114,6 +102,14 @@ class PostList extends Component {
 		} else {
 			this.setState({ postBeingEdited: null });
 		}
+	}
+	
+	handleUpdateLastRead = (postId, timestamp) => {
+		updateThread(
+			this.props.threadId,
+			{ ['readBy.' + this.props.user.uid]: timestamp },
+			this.props.forumId,
+			{ ['readBy.' + this.props.user.uid]: Date.now() });
 	}
 	render() {
 		if (this.state.status === LOADING_STATUS.DELETING) {
@@ -154,10 +150,19 @@ class PostList extends Component {
 	  		lookup[pair[0]] = pair[1];
 	  		return lookup;
 	  	}, {});
-	  page = parseInt(page, 10);
-	  const start = posts * page;
-	  const end = posts * (page + 1);
+	  let start;
+	  let end;
 	  const pages = Math.ceil(this.state.thread.postIds.length / posts);
+	  if (page === 'last') {
+	  	// get last page
+		start = posts * (pages - 1);
+		end = Math.min(posts * pages, this.state.thread.postIds.length);
+		page = pages - 1;
+	  } else {
+	  	page = parseInt(page, 10);
+		start = posts * page;
+		end = Math.min(posts * (page + 1), this.state.thread.postIds.length);
+	  }
 	  const postList = this.state.thread.postIds &&
 	  	this.state.thread.postIds
 	  		.slice(start, end)
@@ -175,7 +180,7 @@ class PostList extends Component {
 		  				classes.push('selected');
 		  			}
 			  		return (
-			  			<Link className={classes.join(' ')} to={pageLink}>
+			  			<Link key={'page-' + pageNum} className={classes.join(' ')} to={pageLink}>
 			  			{pageNum}</Link>
 			  		);
 		  			
@@ -225,6 +230,9 @@ class PostList extends Component {
 						addUserByUid={this.props.addUserByUid}
 						setDialog={this.props.setDialog}
 						handleQuote={this.handleQuote}
+						isLastOnPage={index === end - 1}
+						lastReadTime={get(this.state, ['thread', 'readBy', this.props.user.uid]) || 0}
+						updateLastRead={this.handleUpdateLastRead}
 					/>
 				))}
 			  {paginationBox}

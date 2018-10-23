@@ -268,6 +268,20 @@ a.thread-row:hover {
   max-width: 800px;
 }
 
+.post-container.unread,
+.thread-row.unread,
+.forum-row.unread {
+	box-shadow: inset 0 0 0 2px var(--color-highlight);
+}
+
+.icon-comment {
+	color: var(--color-highlight);
+}
+
+.forum-title .icon-comment {
+	margin-right: 5px;
+}
+
 .post-container .post-header {
 	display: flex;
 	justify-content: space-between;

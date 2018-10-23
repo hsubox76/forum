@@ -3,8 +3,13 @@ import '../styles/Posts.css';
 import firebase from 'firebase';
 import 'firebase/firestore';
 import { format } from 'date-fns';
+import get from 'lodash/get';
 import { Link, navigate } from "@reach/router"
-import { COMPACT_DATE_FORMAT, STANDARD_DATE_FORMAT, LOADING_STATUS } from '../utils/constants';
+import {
+	COMPACT_DATE_FORMAT,
+	STANDARD_DATE_FORMAT,
+	LOADING_STATUS,
+	POSTS_PER_PAGE } from '../utils/constants';
 import { getForum, updateForum } from '../utils/dbhelpers';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -114,16 +119,21 @@ class ThreadList extends Component {
   						</div>
 				    );
 				  }
+				  const isUnread = thread.updatedTime > (get(thread, ['readBy', this.props.user.uid]) || 0);
 				  const threadClasses = ['thread-row'];
-				  // if (/* unread */) {
-				  //   threadClasses.push('thread-unread');
-				  // }
+				  let link = "thread/" + thread.id;
+				  if (isUnread) {
+				    threadClasses.push('unread');
+				    link += `?posts=${POSTS_PER_PAGE}&page=last`;
+				  }
 					return (
-						<Link to={"thread/" + thread.id} key={thread.id} className={threadClasses.join(' ')}>
+						<Link to={link} key={thread.id} className={threadClasses.join(' ')}>
 						  <div className="thread-title">
 						    <div className="title-container">
   			          {thread.priority > 0
   			            && <FontAwesomeIcon className="icon" icon="thumbtack" />}
+  			          {isUnread
+  			            && <FontAwesomeIcon className="icon icon-comment" icon="comment" />}
 						      <span className="title-text">{thread.title}</span>
 						    </div>
 						    <div>

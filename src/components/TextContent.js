@@ -84,6 +84,9 @@ function getTagAttrs(tagString) {
 }
 
 const TextContent = (props) => {
+	if (!props.content || typeof props.content !== 'string') {
+		return null;
+	}
 	const tokenDelimiterRE = new RegExp(`(\\[\\/?(?:${tagRE})\\])`);
 	const tokens = props.content.split(tokenDelimiterRE);
 		

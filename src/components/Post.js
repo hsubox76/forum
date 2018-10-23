@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import get from 'lodash/get';
 import TextContent from './TextContent';
 import { LOADING_STATUS, STANDARD_DATE_FORMAT } from '../utils/constants';
+import { getUser, updatePost } from '../utils/dbhelpers';
 
 class Post extends Component {
 	constructor() {
@@ -24,19 +25,21 @@ class Post extends Component {
 					return;
 				}
 				this.setState({ post: Object.assign(post, { id: postDoc.id }) });
-				if (!this.props.usersByUid[post.uid]) {
-					this.db.collection("users")
-						.doc(post.uid)
-						.get()
-						.then(userDoc => {
-							// store this up a level
-							this.props.addUserByUid(post.uid, userDoc.data());
-						});
+				getUser(this.props, post.uid);
+				if (this.props.isLastOnPage) {
+					if (this.props.lastReadTime < post.createdTime) {
+							this.updateReadOnClose =
+								() => {
+									this.props.updateLastRead(
+										this.props.postId, post.updatedTime || post.createdTime);
+								}
+					}
 				}
 			});
 	}
 	componentWillUnmount = () => {
 		this.postUnsub && this.postUnsub();
+		this.updateReadOnClose && this.updateReadOnClose();
 	}
 	handleDeletePost = () => {
 		this.props.setDialog({
@@ -64,18 +67,11 @@ class Post extends Component {
 	}
 	handleEditPost = () => {
 		this.setState({ status: LOADING_STATUS.SUBMITTING });
-		this.db.collection("posts")
-				.doc(this.props.postId)
-				.update({
-					updatedBy: this.props.user.uid,
-			    content: this.contentRef.current.value,
-			    updatedTime: Date.now()
-				})
-				.then(() => {
+		updatePost(this.contentRef.current.value, null, this.props, () => {
 					//TODO: update thread "last updated" info
 					this.setState({ status: LOADING_STATUS.LOADED });
 					this.props.toggleEditPost(this.props.postId);
-				});
+		});
 	}
 	toggleEditMode = () => {
 		if (this.state.status === LOADING_STATUS.EDITING) {
@@ -167,6 +163,9 @@ class Post extends Component {
 		}
 		if (this.props.isDisabled) {
 			classes.push('disabled');
+		}
+		if (post.createdTime > (this.props.lastReadTime || 0)) {
+			classes.push('unread');
 		}
 		const postUser = this.props.usersByUid[post.uid];
 		return (
