@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import '../styles/App.css';
 import { Router, Link } from '@reach/router';
+import isEmpty from 'lodash/isEmpty';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import Dialog from './Dialog.js';
 import ForumList from './ForumList.js';
@@ -48,29 +49,51 @@ class App extends Component {
   componentDidMount = () => {
     this.unregisterAuthObserver = firebase.auth().onAuthStateChanged(
         (user) => {
-          // Set to user or null. Will overwrite later if isAdmin comes
-          // back true.
+          // Set to user or null. Will overwrite after getting more db info
           this.setState({ user });
-          if (user) {
-        		this.db.collection("users").doc(user.uid)
-        		  .onSnapshot(
-        		    docRef => {
-          		    if (docRef) {
-          		      user.isAdmin = docRef.data().isAdmin;
-          		      user.avatarUrl = docRef.data().avatarUrl;
-                    this.setState({ user });
-          		    }
-          		  },
-        		    e => {
-          		    // If we never got this user into the DB
-              		this.db.collection("users").doc(user.uid).set({
-                      displayName: user.displayName,
-                      email: user.email
-                });
-        		  });
-          }
+          this.updateUserData(user);
         }
     );
+  }
+  componentDidUpdate = () => {
+    if (!this.unregisterProfileObserver && this.state.user) {
+      this.updateUserData(this.state.user);
+    }
+  }
+  componentWillUnmount = () => {
+    this.unregisterAuthObserver && this.unregisterAuthObserver();
+    this.unregisterProfileObserver && this.unregisterProfileObserver();
+  }
+  updateUserData = (user) => {
+    if (user) {
+  		this.unregisterProfileObserver = this.db.collection("users").doc(user.uid)
+  		  .onSnapshot(
+  		    docRef => {
+    		    if (docRef) {
+    		      user.isAdmin = docRef.data().isAdmin;
+    		      user.avatarUrl = user.photoURL || docRef.data().avatarUrl;
+              // migrate avatar url from db to user profile if not there
+              const profileUpdates = {};
+    		      if (!user.photoURL && docRef.data().avatarUrl) {
+    		        profileUpdates.photoURL = docRef.data().avatarUrl;
+    		      }
+    		      if (user.displayName !== docRef.data().displayName) {
+    		        profileUpdates.displayName = docRef.data().displayName;
+    		      }
+    		      if (!isEmpty(profileUpdates)) {
+                user.updateProfile(profileUpdates);
+    		      }
+              this.setState({ user });
+    		    }
+    		  },
+  		    e => {
+    		    // If we never got this user into the DB
+        		this.db.collection("users").doc(user.uid).set({
+                displayName: user.displayName,
+                email: user.email
+          });
+  		  });
+    }
   }
   handleAddUserByUid = (uid, userData) => {
 		this.setState({
