@@ -319,7 +319,7 @@ a.thread-row:hover {
 	border-top: 1px solid var(--color-light);
 	padding: 5px 5px 0 5px;
 	display: flex;
-	justify-content: flex-end;
+	justify-content: space-between;
 }
 
 .post-container .post-footer button:not(:last-child) {
@@ -406,4 +406,67 @@ a.thread-row:hover {
 
 .pagination-control .page-link.selected {
 	border: 1px solid white;
+}
+
+.reactions-container {
+	display: flex;
+}
+
+.reaction-button {
+	background-color: var(--color-neutral);
+	border-radius: 15px;
+	color: white;
+	padding: 5px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: none;
+	position: relative;
+	transition: width 300ms;
+	width: 28px;
+}
+
+.reaction-button.has-count {
+	width: 40px;
+}
+
+button.reaction-button:hover {
+	box-shadow: inset 0 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+.reaction-button:not(:first-child) {
+	margin-left: 5px;
+}
+
+.reaction-button.user-selected {
+	background-color: var(--color-main);
+}
+
+.reaction-tooltip {
+	position: absolute;
+  top: 25px;
+  left: 0;
+  border-radius: 8px;
+  background-color: rgba(0, 60, 100, 0.9);
+  padding: 8px;
+  z-index: 10;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 500ms;
+}
+
+.reaction-button {
+  outline: 0;
+}
+
+.reaction-button:hover .reaction-tooltip {
+	opacity: 1;
+}
+
+.icon-reaction {
+	color: white;
+}
+
+.reaction-count {
+	margin-left: 5px;
 }

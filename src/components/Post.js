@@ -3,10 +3,60 @@ import firebase from 'firebase';
 import 'firebase/firestore';
 import { format } from 'date-fns';
 import get from 'lodash/get';
+import findKey from 'lodash/findKey';
 import TextContent from './TextContent';
 import { LOADING_STATUS, STANDARD_DATE_FORMAT } from '../utils/constants';
-import { getUser, updatePost } from '../utils/dbhelpers';
+import { getUser, updatePost, updateReaction } from '../utils/dbhelpers';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+const reactions = [
+	{ faName: 'laugh-beam', desc: 'laugh' },
+	{ faName: 'angry', desc: 'angry' },
+	{ faName: 'surprise', desc: 'surprised' },
+	{ faName: 'sad-tear', desc: 'sad' },
+	{ faName: 'heart', desc: 'love' },
+	{ faName: 'thumbs-up', desc: 'thumbs up' },
+	{ faName: 'thumbs-down', desc: 'thumbs down' },
+];
+
+class ReactionButton extends Component {
+	constructor() {
+		super();
+		this.state = { showTip: false };
+	}
+	handleClick = (userSelected) => {
+		updateReaction(this.props.user.uid, this.props.postId, this.props.reaction.faName, !userSelected);
+		if (this.props.currentReaction && !userSelected) {
+			updateReaction(this.props.user.uid, this.props.postId, this.props.currentReaction, false);
+		}
+		this.setState({ showTip: false });
+	}
+	render() {
+		const post = this.props.post;
+		const responses = get(post, ['reactions', this.props.reaction.faName]) || [];
+		const classes = ['reaction-button'];
+		const userSelected = this.props.currentReaction === this.props.reaction.faName;
+		if (userSelected) {
+			classes.push('user-selected');
+		}
+		if (responses.length) {
+			classes.push('has-count');
+		}
+		const tooltip = <div className="reaction-tooltip">{this.props.reaction.desc}</div>
+		return (
+			<button
+				className={classes.join(' ')}
+				onClick={() => this.handleClick(userSelected)}
+				onMouseEnter={() => this.setState({ showTip: true })}
+				onMouseLeave={() => this.setState({ showTip: false })}
+			>
+				{tooltip}
+				<FontAwesomeIcon className="icon icon-reaction" icon={this.props.reaction.faName} size="lg" />
+				{responses.length > 0 && <span className="reaction-count">{responses.length}</span>}
+			</button>
+		);
+	}
+}
 class Post extends Component {
 	constructor() {
 		super();
@@ -81,6 +131,63 @@ class Post extends Component {
 		}
 		this.props.toggleEditPost(this.props.postId);
 	}
+	renderAdminButtons = () => {
+		const post = this.state.post;
+		const adminButtons = [];
+		if (this.state.status !== LOADING_STATUS.EDITING) {
+			adminButtons.push(
+				<button
+					key="quote"
+					className="small button-edit"
+					disabled={this.state.status === LOADING_STATUS.SUBMITTING}
+					onClick={() => this.props.handleQuote(post)}>
+						quote
+				</button>
+			);
+		}
+		if (this.props.user.isAdmin || this.props.user.uid === post.uid) {
+			if (this.state.status === LOADING_STATUS.EDITING) {
+				adminButtons.push(
+					<button
+						key="cancel"
+						className="small button-cancel"
+						disabled={this.state.status === LOADING_STATUS.SUBMITTING}
+						onClick={this.toggleEditMode}>
+							cancel
+					</button>
+				);
+				adminButtons.push(
+					<button
+						key="edit"
+						className="small button-edit"
+						disabled={this.state.status === LOADING_STATUS.SUBMITTING}
+						onClick={this.handleEditPost}>
+							submit
+					</button>
+				);
+			} else {
+				adminButtons.push(
+					<button
+						key="edit"
+						className="small button-edit"
+						disabled={this.props.isDisabled}
+						onClick={this.toggleEditMode}>
+							edit
+					</button>
+				);
+				adminButtons.push(
+					<button
+						key="delete"
+						className="small button-delete"
+						disabled={this.props.isDisabled}
+						onClick={this.props.isOnlyPost ? this.props.deleteThread : this.handleDeletePost}>
+							delete
+					</button>
+				);
+			}
+		}
+		return adminButtons;
+	}
 	render() {	
 		const post = this.state.post;
 		// TODO: Permissions error - popup - unlikely case though.
@@ -99,62 +206,24 @@ class Post extends Component {
 				</div>
 			);
 		}
-		const footerButtons = [];
-		if (this.state.status !== LOADING_STATUS.EDITING) {
-			footerButtons.push(
-				<button
-					key="quote"
-					className="small button-edit"
-					disabled={this.state.status === LOADING_STATUS.SUBMITTING}
-					onClick={() => this.props.handleQuote(post)}>
-						quote
-				</button>
-			);
-		}
-		if (this.props.user.isAdmin || this.props.user.uid === post.uid) {
-			if (this.state.status === LOADING_STATUS.EDITING) {
-				footerButtons.push(
-					<button
-						key="cancel"
-						className="small button-cancel"
-						disabled={this.state.status === LOADING_STATUS.SUBMITTING}
-						onClick={this.toggleEditMode}>
-							cancel
-					</button>
-				);
-				footerButtons.push(
-					<button
-						key="edit"
-						className="small button-edit"
-						disabled={this.state.status === LOADING_STATUS.SUBMITTING}
-						onClick={this.handleEditPost}>
-							submit
-					</button>
-				);
-			} else {
-				footerButtons.push(
-					<button
-						key="edit"
-						className="small button-edit"
-						disabled={this.props.isDisabled}
-						onClick={this.toggleEditMode}>
-							edit
-					</button>
-				);
-				footerButtons.push(
-					<button
-						key="delete"
-						className="small button-delete"
-						disabled={this.props.isDisabled}
-						onClick={this.props.isOnlyPost ? this.props.deleteThread : this.handleDeletePost}>
-							delete
-					</button>
-				);
-			}
+		let currentReaction = null;
+		if (post.reactions) {
+			currentReaction = findKey(post.reactions, uids => uids.includes(this.props.user.uid));
 		}
 		const footer = (
 			<div className="post-footer">
-				{footerButtons}
+				<div className="reactions-container">
+					{reactions.map(reaction => (
+						<ReactionButton
+							key={reaction.faName}
+							currentReaction={currentReaction}
+							reaction={reaction}
+							post={this.state.post}
+							{...this.props} />
+						)
+					)}
+				</div>
+				<div>{this.renderAdminButtons()}</div>
 			</div>
 		);
 		const classes = ['post-container'];

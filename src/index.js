@@ -5,10 +5,27 @@ import App from './components/App';
 import registerServiceWorker from './registerServiceWorker';
 import firebase from 'firebase';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faThumbtack, faComment } from '@fortawesome/free-solid-svg-icons';
+import {
+  faThumbtack,
+  faComment,
+  faLaughBeam,
+  faAngry,
+  faSurprise,
+  faSadTear,
+  faHeart,
+  faThumbsUp,
+  faThumbsDown
+} from '@fortawesome/free-solid-svg-icons';
 
 library.add(faThumbtack);
 library.add(faComment);
+library.add(faLaughBeam);
+library.add(faAngry);
+library.add(faSurprise);
+library.add(faSadTear);
+library.add(faHeart);
+library.add(faThumbsUp);
+library.add(faThumbsDown);
 
 const config = {
   apiKey: process.env.REACT_APP_FORUM_API_KEY,

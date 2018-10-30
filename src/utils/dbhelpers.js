@@ -35,6 +35,19 @@ export function getUser(props, uid) {
 	}
 }
 
+export function updateReaction(uid, postId, reactionType, shouldAdd) {
+	const db = firebase.firestore();
+	if (shouldAdd) {
+		db.collection("posts").doc(postId).update({
+			    [`reactions.${reactionType}`]: firebase.firestore.FieldValue.arrayUnion(uid)
+		});
+	} else {
+		db.collection("posts").doc(postId).update({
+			    [`reactions.${reactionType}`]: firebase.firestore.FieldValue.arrayRemove(uid)
+		});
+	}
+}
+
 export function updatePost(content, postIds, props, onDone) {
 	const db = firebase.firestore();
 	const now = Date.now();
