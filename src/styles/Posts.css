@@ -453,6 +453,7 @@ button.reaction-button:hover {
   white-space: nowrap;
   opacity: 0;
   transition: opacity 500ms;
+  pointer-events: none;
 }
 
 .reaction-button {
