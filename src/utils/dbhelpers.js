@@ -48,31 +48,37 @@ export function updateReaction(uid, postId, reactionType, shouldAdd) {
 	}
 }
 
-export function updatePost(content, postIds, props, onDone) {
+export function updatePost(content, postIds, props) {
 	const db = firebase.firestore();
 	const now = Date.now();
-	db.collection("posts").add({
+	const postData = {
 				uid: props.user.uid,
 		    content,
 		    parentThread: props.threadId,
 		    createdTime: now,
 		    updatedTime: now
-	})
-	.then((docRef) => {
-		onDone();
-		if (postIds) {
-			// this means it was a new post
-			updateThread(props.threadId, {
-				updatedTime: now,
-				updatedBy: props.user.uid,
-				postIds: postIds.concat(docRef.id),
-				['readBy.' + props.user.uid]: now
-			}, props.forumId, {
-				['readBy.' + props.user.uid]: now
+	};
+	if (postIds) {
+		// new post
+		return db.collection("posts").add(postData)
+			.then((docRef) => {
+				if (postIds) {
+					updateThread(props.threadId, {
+						updatedTime: now,
+						updatedBy: props.user.uid,
+						postIds: postIds.concat(docRef.id),
+						['readBy.' + props.user.uid]: now
+					}, props.forumId, {
+						['readBy.' + props.user.uid]: now
+					});
+				}
+		    	console.log("Document written with ID: ", docRef.id);
 			});
-		}
-    console.log("Document written with ID: ", docRef.id);
-	});
+	} else {
+		return db.collection("posts")
+			.doc(props.postId)
+			.update(postData);
+	}
 }
 
 export function updateThread(threadId, threadData, forumId, forumData) {

@@ -68,10 +68,11 @@ class PostList extends Component {
 	}
 	handleSubmitPost = (e) => {
 		e.preventDefault();
-		updatePost(this.contentRef.current.value,
-			this.state.thread.postIds,
-			this.props,
-			() => this.contentRef.current.value = '');
+		updatePost(
+				this.contentRef.current.value,
+				this.state.thread.postIds,
+				this.props)
+			.then(() => this.contentRef.current.value = '');
 	};
 	handleDeletePostFromThread = (postId) => {
 		const postIds = this.state.thread.postIds;
@@ -226,6 +227,7 @@ class PostList extends Component {
 						deleteThread={this.handleDeleteThread}
 						deletePostFromThread={this.handleDeletePostFromThread}
 						toggleEditPost={this.handleToggleEditPost}
+						threadId={this.props.threadId}
 						usersByUid={this.props.usersByUid}
 						addUserByUid={this.props.addUserByUid}
 						setDialog={this.props.setDialog}

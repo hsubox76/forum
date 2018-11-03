@@ -117,11 +117,12 @@ class Post extends Component {
 	}
 	handleEditPost = () => {
 		this.setState({ status: LOADING_STATUS.SUBMITTING });
-		updatePost(this.contentRef.current.value, null, this.props, () => {
+		updatePost(this.contentRef.current.value, null, this.props)
+			.then(() => {
 					//TODO: update thread "last updated" info
 					this.setState({ status: LOADING_STATUS.LOADED });
 					this.props.toggleEditPost(this.props.postId);
-		});
+			});
 	}
 	toggleEditMode = () => {
 		if (this.state.status === LOADING_STATUS.EDITING) {

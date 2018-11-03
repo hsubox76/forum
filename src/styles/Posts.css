@@ -320,6 +320,11 @@ a.thread-row:hover {
 	padding: 5px 5px 0 5px;
 	display: flex;
 	justify-content: space-between;
+	flex-wrap: wrap;
+}
+
+.post-container .post-footer > div {
+	margin: 2px 0;
 }
 
 .post-container .post-footer button:not(:last-child) {
