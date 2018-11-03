@@ -43,6 +43,7 @@ class PostList extends Component {
 	handleQuote = ({ content, uid }) => {
 		this.contentRef.current.value =
 			`[quote uid=${uid}]${content}[/quote]\n` + this.contentRef.current.value;
+		this.newPostRef.current.scrollIntoView({ behavior: "smooth" });
 	}
 	deleteThread = () => {
 		this.threadUnsub && this.threadUnsub();
