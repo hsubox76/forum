@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import '../styles/Posts.css';
 import Post from './Post.js';
-import { Link } from '@reach/router';
+import { Link, navigate } from '@reach/router';
 import firebase from 'firebase';
 import 'firebase/firestore';
 import { LOADING_STATUS, POSTS_PER_PAGE } from '../utils/constants';
@@ -17,6 +17,7 @@ class PostList extends Component {
 		this.db = firebase.firestore();
 	  this.db.settings({timestampsInSnapshots: true});
 		this.contentRef = React.createRef();
+		this.newPostRef = React.createRef();
 		this.threadUnsub = null;
 		this.state = { status: LOADING_STATUS.LOADING, postBeingEdited: null };
 	}
@@ -72,7 +73,13 @@ class PostList extends Component {
 				this.contentRef.current.value,
 				this.state.thread.postIds,
 				this.props)
-			.then(() => this.contentRef.current.value = '');
+			.then(() => {
+				this.contentRef.current.value = '';
+				navigate(`/forum/${this.props.forumId}` +
+		  				`/thread/${this.props.threadId}` +
+		  				`?page=last&posts=${POSTS_PER_PAGE}`);
+		  	this.newPostRef.current.scrollIntoView({ behavior: "smooth" });
+			});
 	};
 	handleDeletePostFromThread = (postId) => {
 		const postIds = this.state.thread.postIds;
@@ -156,13 +163,13 @@ class PostList extends Component {
 	  const pages = Math.ceil(this.state.thread.postIds.length / posts);
 	  if (page === 'last') {
 	  	// get last page
-		start = posts * (pages - 1);
-		end = Math.min(posts * pages, this.state.thread.postIds.length);
-		page = pages - 1;
+			start = posts * (pages - 1);
+			end = Math.min(posts * pages, this.state.thread.postIds.length);
+			page = pages - 1;
 	  } else {
 	  	page = parseInt(page, 10);
-		start = posts * page;
-		end = Math.min(posts * (page + 1), this.state.thread.postIds.length);
+			start = posts * page;
+			end = Math.min(posts * (page + 1), this.state.thread.postIds.length);
 	  }
 	  const postList = this.state.thread.postIds &&
 	  	this.state.thread.postIds
@@ -238,7 +245,7 @@ class PostList extends Component {
 					/>
 				))}
 			  {paginationBox}
-				<form className="new-post-container" onSubmit={this.handleSubmitPost}>
+				<form className="new-post-container" ref={this.newPostRef} onSubmit={this.handleSubmitPost}>
 					<div className="form-line">
 					  <label>Add a post</label>
 						<textarea ref={this.contentRef} className="content-input" placeholder="Type new post here" />
