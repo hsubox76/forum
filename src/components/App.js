@@ -6,6 +6,7 @@ import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import Dialog from './Dialog.js';
 import ForumList from './ForumList.js';
 import Help from './Help.js';
+import Admin from './Admin.js';
 import ThreadList from './ThreadList.js';
 import PostList from './PostList.js';
 import Profile from './Profile.js';
@@ -247,6 +248,7 @@ class App extends Component {
           />
           <Help path="help" />
           <Profile path="profile" user={this.state.user} />
+          <Admin path="admin" user={this.state.user} />
         </Router>
         {this.state.dialog &&
           <Dialog {...this.state.dialog} onClose={() => this.setState({dialog: null})} />}

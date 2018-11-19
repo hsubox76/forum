@@ -35,6 +35,33 @@ export function getUser(props, uid) {
 	}
 }
 
+export function getAllUsers() {
+	const db = firebase.firestore();
+	return db.collection("users")
+		.get()
+		.then(querySnapshot => {
+			const users = [];
+			querySnapshot.forEach(doc => users.push(
+				Object.assign(doc.data(), { uid: doc.id })
+			));
+			return users;
+		});
+}
+
+export function verifyAllUsers() {
+	const db = firebase.firestore();
+	return db.collection("users")
+		.get()
+		.then(querySnapshot => {
+			querySnapshot.forEach(doc => {
+				db.collection("users").doc(doc.id).update({
+					verifiedWithCode: true,
+					verifiedDate: Date.now()
+				});
+			});
+		});
+}
+
 export function updateReaction(uid, postId, reactionType, shouldAdd) {
 	const db = firebase.firestore();
 	if (shouldAdd) {
