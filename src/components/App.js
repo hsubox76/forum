@@ -24,6 +24,7 @@ class App extends Component {
       forumsById: {},
       dialog: null
     };
+		this.inviteCodeRef = React.createRef();
 		this.db = firebase.firestore();
 	  this.db.settings({timestampsInSnapshots: true});
 	  this.uiConfig = {
@@ -49,9 +50,12 @@ class App extends Component {
   componentDidMount = () => {
     this.unregisterAuthObserver = firebase.auth().onAuthStateChanged(
         (user) => {
-          // Set to user or null. Will overwrite after getting more db info
-          this.setState({ user });
-          this.updateUserData(user);
+          // Set if null, otherwise get more data
+          if (!user) {
+            this.setState({ user });
+          } else {
+            this.updateUserData(user);
+          }
         }
     );
   }
@@ -64,36 +68,45 @@ class App extends Component {
     this.unregisterAuthObserver && this.unregisterAuthObserver();
     this.unregisterProfileObserver && this.unregisterProfileObserver();
   }
+  createUserProfile = (user) => {
+		this.db.collection("users").doc(user.uid).set({
+        displayName: user.displayName,
+        email: user.email,
+        verifiedWithCode: false
+    });
+  }
   updateUserData = (user) => {
-    if (user) {
-  		this.unregisterProfileObserver = this.db.collection("users").doc(user.uid)
-  		  .onSnapshot(
-  		    docRef => {
-    		    if (docRef) {
-    		      user.isAdmin = docRef.data().isAdmin;
-    		      user.avatarUrl = user.photoURL || docRef.data().avatarUrl;
-              // migrate avatar url from db to user profile if not there
-              const profileUpdates = {};
-    		      if (!user.photoURL && docRef.data().avatarUrl) {
-    		        profileUpdates.photoURL = docRef.data().avatarUrl;
-    		      }
-    		      if (user.displayName !== docRef.data().displayName) {
-    		        profileUpdates.displayName = docRef.data().displayName;
-    		      }
-    		      if (!isEmpty(profileUpdates)) {
-                user.updateProfile(profileUpdates);
-    		      }
-              this.setState({ user });
-    		    }
-    		  },
-  		    e => {
-    		    // If we never got this user into the DB
-        		this.db.collection("users").doc(user.uid).set({
-                displayName: user.displayName,
-                email: user.email
-          });
-  		  });
-    }
+    if (!user) return;
+		this.unregisterProfileObserver = this.db.collection("users").doc(user.uid)
+		  .onSnapshot(
+		    docRef => {
+  		    if (docRef && docRef.data()) {
+  		      user.isAdmin = docRef.data().isAdmin;
+  		      user.avatarUrl = user.photoURL || docRef.data().avatarUrl;
+            // migrate avatar url from db to user profile if not there
+            const profileUpdates = {};
+  		      if (!user.photoURL && docRef.data().avatarUrl) {
+  		        profileUpdates.photoURL = docRef.data().avatarUrl;
+  		      }
+  		      if (user.displayName !== docRef.data().displayName) {
+  		        profileUpdates.displayName = docRef.data().displayName;
+  		      }
+  		      if (!isEmpty(profileUpdates)) {
+              user.updateProfile(profileUpdates);
+  		      }
+  		      // Don't try to update the firebase auth profile with this.
+  		      // Just used locally.
+  		      user.verifiedWithCode = docRef.data().verifiedWithCode;
+            this.setState({ user });
+  		    } else {
+  		      // no profile?
+      		  this.createUserProfile(user);
+  		    }
+  		  },
+		    e => {
+  		    // If we never got this user into the DB
+      		this.createUserProfile(user);
+		  });
   }
   handleAddUserByUid = (uid, userData) => {
 		this.setState({
@@ -120,6 +133,47 @@ class App extends Component {
 	handleSetDialog = dialog => {
 	  this.setState({dialog});
 	}
+	handleCodeSubmit = (e) => {
+	  e.preventDefault();
+	  const code = this.inviteCodeRef.current.value;
+	  
+	  if (!code || !this.state.user) return;
+	  
+    this.setState({ inviteError: null });
+	  this.db.collection("invites").doc(code).get()
+	    .then(ref => {
+	      if (!ref.data()) {
+	        throw new Error(`Code ${code} not found.`);
+	      }
+	      if (ref.data().wasUsed === false) {
+	        const user =
+	          Object.assign({}, this.state.user, { verifiedWithCode: true });
+	        return user;
+	      } else {
+	        throw new Error(`Code ${code} has already been used.`);
+	      }
+	    })
+	    .then(user => {
+	      const userUpdate = this.db.collection("users")
+	        .doc(this.state.user.uid)
+	        .update({
+  	        verifiedWithCode: true
+  	      });
+	      const inviteUpdate = this.db.collection("invites")
+	        .doc(code)
+	        .update({
+  	        wasUsed: true
+  	      });
+	      Promise.all([userUpdate, inviteUpdate]).then(() => {
+	        this.setState({ user });
+	      });
+	    })
+	    .catch((e) => {
+        this.setState({
+          inviteError: e.message
+        });
+	    });
+	}
   render() {
     if (this.state.user === 'unknown') {
       return (
@@ -132,6 +186,18 @@ class App extends Component {
           uiConfig={this.uiConfig}
           firebaseAuth={firebase.auth()}
         />
+      );
+    } else if (!this.state.user.verifiedWithCode) {
+      return (
+        <div className="App">
+          <form className="invite-code-container" onSubmit={this.handleCodeSubmit}>
+            <label>enter code</label>
+            <input className="invite-input" ref={this.inviteCodeRef} />
+            <button className="button-edit">ok</button>
+            {this.state.inviteError &&
+              <div className="invite-error">{this.state.inviteError}</div>}
+          </form>
+        </div>
       );
     }
     return (

@@ -143,6 +143,26 @@ button:hover {
   color: seagreen;
 }
 
+.invite-code-container {
+  width: 250px;
+  margin: 20px auto;
+  border: 1px solid grey;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.invite-input {
+  margin: 5px 0;
+  font-size: 1rem;
+  padding: 0 5px;
+  height: 24px;
+  width: calc(100% - 20px);
+}
+
+.invite-error {
+  color: var(--color-danger);
+}
+
 .loading-page {
   width: 100vw;
   height: 100vh;
