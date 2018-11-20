@@ -48,6 +48,47 @@ export function getAllUsers() {
 		});
 }
 
+export function getAllInvites() {
+	const db = firebase.firestore();
+	return db.collection("invites")
+		.get()
+		.then(querySnapshot => {
+			const invites = [];
+			querySnapshot.forEach(doc => invites.push(
+				Object.assign(doc.data(), { id: doc.id })
+			));
+			return invites;
+		});
+}
+
+export function getAllInvitesFor(uid) {
+	const db = firebase.firestore();
+	return db.collection("invites")
+		.where("createdByUid", "==", uid)
+		.get()
+		.then(querySnapshot => {
+			const invites = [];
+			querySnapshot.forEach(doc => invites.push(
+				Object.assign(doc.data(), { id: doc.id })
+			));
+			return invites;
+		});
+}
+
+export function generateInviteCode(createdByName, createdByUid) {
+	const db = firebase.firestore();
+	return db.collection("invites")
+		.add({
+			wasUsed: false,
+			createdAt: Date.now(),
+			createdByName: createdByName,
+			createdByUid: createdByUid
+		})
+		.then(docRef => {
+			return docRef.id;
+		});
+}
+
 export function verifyAllUsers() {
 	const db = firebase.firestore();
 	return db.collection("users")

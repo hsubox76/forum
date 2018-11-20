@@ -7,6 +7,7 @@ import Dialog from './Dialog.js';
 import ForumList from './ForumList.js';
 import Help from './Help.js';
 import Admin from './Admin.js';
+import Invite from './Invite.js';
 import ThreadList from './ThreadList.js';
 import PostList from './PostList.js';
 import Profile from './Profile.js';
@@ -160,10 +161,13 @@ class App extends Component {
 	        .update({
   	        verifiedWithCode: true
   	      });
+  	    const { displayName, email }  = this.state.user;
 	      const inviteUpdate = this.db.collection("invites")
 	        .doc(code)
 	        .update({
-  	        wasUsed: true
+  	        wasUsed: true,
+  	        usedAt: Date.now(),
+  	        usedBy: `${displayName} (${email})`
   	      });
 	      Promise.all([userUpdate, inviteUpdate]).then(() => {
 	        this.setState({ user });
@@ -208,6 +212,7 @@ class App extends Component {
           <div className="account-area">
             <span className="logged-in-user">{this.state.user.displayName}</span>
             <Link to="/help">Help</Link>
+            <Link to="/invite">Invite</Link>
             <Link to="/profile">Edit profile</Link>
             <a
               className="sign-out-button"
@@ -249,6 +254,7 @@ class App extends Component {
           <Help path="help" />
           <Profile path="profile" user={this.state.user} />
           <Admin path="admin" user={this.state.user} />
+          <Invite path="invite" user={this.state.user} />
         </Router>
         {this.state.dialog &&
           <Dialog {...this.state.dialog} onClose={() => this.setState({dialog: null})} />}
