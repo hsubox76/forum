@@ -102,12 +102,21 @@ class App extends Component {
             this.setState({ user });
   		    } else {
   		      // no profile?
-      		  this.createUserProfile(user);
+      		  let error = 'unknown';
+      		  if (!docRef) {
+      		    error = 'no docRef';
+      		  }
+      		  if (docRef && !docRef.data()) {
+      		    error = 'no docRef.data()';
+      		    this.createUserProfile(user);
+      		  }
+      		  this.db.collection("errors").add({ error, timestamp: Date.now(), userId: user.uid });
   		    }
   		  },
 		    e => {
   		    // If we never got this user into the DB
-      		this.createUserProfile(user);
+      		// this.createUserProfile(user);
+      		this.db.collection("errors").add({ error: 'onSnapshot error callback', timestamp: Date.now(), message: e.message, userId: user.uid });
 		  });
   }
   handleAddUserByUid = (uid, userData) => {
