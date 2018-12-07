@@ -36,10 +36,7 @@ class App extends Component {
         // Avoid redirects after sign-in.
         signInSuccessWithAuthResult: (result) => {
           if (result.additionalUserInfo.isNewUser) {
-        		this.db.collection("users").doc(result.user.uid).set({
-                displayName: result.user.displayName,
-                email: result.user.email
-            });
+        		this.createUserProfile(result.user);
           }
         }
       },
@@ -108,7 +105,7 @@ class App extends Component {
       		  }
       		  if (docRef && !docRef.data()) {
       		    error = 'no docRef.data()';
-      		    this.createUserProfile(user);
+      		    // this.createUserProfile(user);
       		  }
       		  this.db.collection("errors").add({ error, timestamp: Date.now(), userId: user.uid });
   		    }
@@ -201,7 +198,7 @@ class App extends Component {
           firebaseAuth={firebase.auth()}
         />
       );
-    } else if (!this.state.user.verifiedWithCode) {
+    } /* else if (!this.state.user.verifiedWithCode) {
       return (
         <div className="App">
           <form className="invite-code-container" onSubmit={this.handleCodeSubmit}>
@@ -213,7 +210,7 @@ class App extends Component {
           </form>
         </div>
       );
-    }
+    } */
     return (
       <div className="App">
         <div className="page-header">
