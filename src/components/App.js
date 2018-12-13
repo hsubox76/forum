@@ -64,8 +64,8 @@ class App extends Component {
     }
   }
   componentWillUnmount = () => {
-    this.unregisterAuthObserver && this.unregisterAuthObserver();
     this.unregisterProfileObserver && this.unregisterProfileObserver();
+    this.unregisterAuthObserver && this.unregisterAuthObserver();
   }
   createUserProfile = (user) => {
 		this.db.collection("users").doc(user.uid).set({
