@@ -283,9 +283,7 @@ class App extends Component {
         {this.state.dialog &&
           <Dialog {...this.state.dialog} onClose={() => this.setState({dialog: null})} />}
         <div className="footer">
-          <div>HEAD: {process.env.REACT_APP_HEAD}</div>
-          <div>COMMIT_REF: {process.env.REACT_APP_COMMIT_REF}</div>
-          <div>BRANCH: {process.env.REACT_APP_BRANCH}</div>
+          <div>COMMIT_REF: {process.env.REACT_APP_COMMIT_REF && process.env.REACT_APP_COMMIT_REF.substr(0, 7)}</div>
         </div>
       </div>
     );
