@@ -271,3 +271,17 @@ img {
 a.user-link {
   color: var(--color-main);
 }
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px;
+  font-size: 0.9em;
+}
+
+.footer > div {
+  margin: 0 10px;
+  border: 1px solid var(--color-neutral);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
