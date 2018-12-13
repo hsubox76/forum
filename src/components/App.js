@@ -25,7 +25,8 @@ class App extends Component {
       threadsById: {},
       forumIds: null,
       forumsById: {},
-      dialog: null
+      dialog: null,
+      hasNewContent: false
     };
 		this.inviteCodeRef = React.createRef();
 		this.db = firebase.firestore();
@@ -60,6 +61,29 @@ class App extends Component {
           }
         }
     );
+    if (navigator) {
+      const registration = navigator.serviceWorker.getRegistration();
+      registration.onupdatefound = () => {
+        const installingWorker = registration.installing;
+        installingWorker.onstatechange = () => {
+          if (installingWorker.state === 'installed') {
+            if (navigator.serviceWorker.controller) {
+              // At this point, the old content will have been purged and
+              // the fresh content will have been added to the cache.
+              // It's the perfect time to display a "New content is
+              // available; please refresh." message in your web app.
+              this.setState({ hasNewContent: true });
+              console.log('New content is available; please refresh.');
+            } else {
+              // At this point, everything has been precached.
+              // It's the perfect time to display a
+              // "Content is cached for offline use." message.
+              console.log('Content is cached for offline use.');
+            }
+          }
+        };
+      };
+    }
   }
   componentDidUpdate = () => {
     if (!this.unregisterProfileObserver && this.state.user) {
@@ -246,6 +270,14 @@ class App extends Component {
             </a>
           </div>
         </div>
+        {this.state.hasNewContent &&
+          <div className="message-banner">
+            <div>New content available, please refresh.</div>
+            <button type="none" onClick={() => window.location.reload()}>
+              reload page
+            </button>
+          </div>
+        }
         <Router>
           <ForumList
             path="/"

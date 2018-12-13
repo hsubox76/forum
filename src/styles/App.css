@@ -285,3 +285,23 @@ a.user-link {
   padding: 2px 5px;
   border-radius: 4px;
 }
+
+.message-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-ok);
+  color: var(--color-light);
+  padding: 5px;
+}
+
+.message-banner button {
+  margin-left: 10px;
+  color: var(--color-light);
+  background-color: var(--color-main);
+  border-color: var(--color-light);
+}
+
+.message-banner button:hover {
+  background-color: var(--color-highlight);
+}
