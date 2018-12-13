@@ -14,6 +14,7 @@ import Profile from './Profile.js';
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
+import registerServiceWorker from '../registerServiceWorker';
 
 class App extends Component {
   constructor() {
@@ -61,29 +62,7 @@ class App extends Component {
           }
         }
     );
-    if (navigator) {
-      const registration = navigator.serviceWorker.getRegistration();
-      registration.onupdatefound = () => {
-        const installingWorker = registration.installing;
-        installingWorker.onstatechange = () => {
-          if (installingWorker.state === 'installed') {
-            if (navigator.serviceWorker.controller) {
-              // At this point, the old content will have been purged and
-              // the fresh content will have been added to the cache.
-              // It's the perfect time to display a "New content is
-              // available; please refresh." message in your web app.
-              this.setState({ hasNewContent: true });
-              console.log('New content is available; please refresh.');
-            } else {
-              // At this point, everything has been precached.
-              // It's the perfect time to display a
-              // "Content is cached for offline use." message.
-              console.log('Content is cached for offline use.');
-            }
-          }
-        };
-      };
-    }
+    registerServiceWorker(() => this.setState({ hasNewContent: true }));
   }
   componentDidUpdate = () => {
     if (!this.unregisterProfileObserver && this.state.user) {
