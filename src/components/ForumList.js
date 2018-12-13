@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import '../styles/Posts.css';
-import firebase from 'firebase';
+import firebase from 'firebase/app';
 import 'firebase/firestore';
 import { format } from 'date-fns';
 import get from 'lodash/get';

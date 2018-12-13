@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import '../styles/Posts.css';
 import Post from './Post.js';
 import { Link, navigate } from '@reach/router';
-import firebase from 'firebase';
+import firebase from 'firebase/app';
 import 'firebase/firestore';
 import { LOADING_STATUS, POSTS_PER_PAGE } from '../utils/constants';
 import without from 'lodash/without';

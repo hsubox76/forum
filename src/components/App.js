@@ -11,7 +11,8 @@ import Invite from './Invite.js';
 import ThreadList from './ThreadList.js';
 import PostList from './PostList.js';
 import Profile from './Profile.js';
-import firebase from 'firebase';
+import firebase from 'firebase/app';
+import 'firebase/auth';
 import 'firebase/firestore';
 
 class App extends Component {
