@@ -51,6 +51,8 @@ class App extends Component {
         (user) => {
           // Set if null, otherwise get more data
           if (!user) {
+            this.unregisterProfileObserver && this.unregisterProfileObserver();
+            this.unregisterProfileObserver = null;
             this.setState({ user });
           } else {
             this.updateUserData(user);
@@ -107,13 +109,29 @@ class App extends Component {
       		    error = 'no docRef.data()';
       		    // this.createUserProfile(user);
       		  }
-      		  this.db.collection("errors").add({ error, timestamp: Date.now(), userId: user.uid });
+      		  const timestamp = Date.now();
+      		  this.db.collection("errors").add({
+      		    error,
+      		    timestamp,
+      		    date: new Date(timestamp).toString(),
+      		    userId: user.uid,
+      		    name: user.displayName,
+      		    docRef: docRef || 'none'
+      		  });
   		    }
   		  },
 		    e => {
   		    // If we never got this user into the DB
       		// this.createUserProfile(user);
-      		this.db.collection("errors").add({ error: 'onSnapshot error callback', timestamp: Date.now(), message: e.message, userId: user.uid });
+      		const timestamp = Date.now();
+      		this.db.collection("errors").add({
+      		  error: 'onSnapshot error callback',
+      		  timestamp,
+      		  date: new Date(timestamp).toString(),
+      		  message: e.message,
+      		  userId: user.uid,
+      		  name: user.displayName
+      		});
 		  });
   }
   handleAddUserByUid = (uid, userData) => {
