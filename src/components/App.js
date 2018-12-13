@@ -108,12 +108,8 @@ class App extends Component {
 		    docRef => {
   		    if (docRef && docRef.data()) {
   		      user.isAdmin = docRef.data().isAdmin;
-  		      user.avatarUrl = user.photoURL || docRef.data().avatarUrl;
-            // migrate avatar url from db to user profile if not there
+  		      user.avatarUrl = docRef.data().avatarUrl;
             const profileUpdates = {};
-  		      if (!user.photoURL && docRef.data().avatarUrl) {
-  		        profileUpdates.photoURL = docRef.data().avatarUrl;
-  		      }
   		      if (user.displayName !== docRef.data().displayName) {
   		        profileUpdates.displayName = docRef.data().displayName;
   		      }
