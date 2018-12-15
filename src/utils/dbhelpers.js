@@ -61,6 +61,30 @@ export function getAllInvites() {
 		});
 }
 
+export function getRoles() {
+	const db = firebase.firestore();
+	return db.collection("roles")
+		.get()
+		.then(querySnapshot => {
+			const roles = {};
+			querySnapshot.forEach(doc => roles[doc.id] = doc.data());
+			return roles;
+		});
+}
+
+export function toggleBan(uid, shouldBan) {
+	const db = firebase.firestore();
+	if (shouldBan) {
+		db.collection("roles").doc("bannedUsers").update({
+			    ids: firebase.firestore.FieldValue.arrayUnion(uid)
+		});
+	} else {
+		db.collection("roles").doc("bannedUsers").update({
+			    ids: firebase.firestore.FieldValue.arrayRemove(uid)
+		});
+	}
+}
+
 export function getAllInvitesFor(uid) {
 	const db = firebase.firestore();
 	return db.collection("invites")

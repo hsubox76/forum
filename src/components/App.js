@@ -56,6 +56,8 @@ class App extends Component {
           if (!user) {
             this.unregisterProfileObserver && this.unregisterProfileObserver();
             this.unregisterProfileObserver = null;
+            this.unregisterRolesObserver && this.unregisterRolesObserver();
+            this.unregisterRolesObserver = null;
             this.setState({ user });
           } else {
             this.updateUserData(user);
@@ -70,6 +72,7 @@ class App extends Component {
     }
   }
   componentWillUnmount = () => {
+    this.unregisterRolesObserver && this.unregisterRolesObserver();
     this.unregisterProfileObserver && this.unregisterProfileObserver();
     this.unregisterAuthObserver && this.unregisterAuthObserver();
   }
@@ -82,12 +85,33 @@ class App extends Component {
   }
   updateUserData = (user) => {
     if (!user) return;
+    this.unregisterRolesObserver = this.db.collection("roles")
+      .onSnapshot(
+        querySnapshot => {
+          const userUpdates = { rolesLoaded: true };
+          querySnapshot.forEach(docRef => {
+            if (docRef && docRef.data()) {
+              if (docRef.id === 'admins') {
+                if (docRef.data().ids.includes(user.uid)) {
+                  userUpdates.isAdmin = true;
+                }
+              }
+              if (docRef.id === 'bannedUsers') {
+                if (docRef.data().ids.includes(user.uid)) {
+                  userUpdates.isBanned = true;
+                }
+              }
+            }
+          });
+          this.setState({ user: Object.assign({}, user, this.state.user, userUpdates) });
+        }
+      );
 		this.unregisterProfileObserver = this.db.collection("users").doc(user.uid)
 		  .onSnapshot(
 		    docRef => {
   		    if (docRef && docRef.data()) {
-  		      user.isAdmin = docRef.data().isAdmin;
-  		      user.avatarUrl = docRef.data().avatarUrl;
+  		      const userUpdates = { profileLoaded: true };
+  		      userUpdates.avatarUrl = docRef.data().avatarUrl;
             const profileUpdates = {};
   		      if (user.displayName !== docRef.data().displayName) {
   		        profileUpdates.displayName = docRef.data().displayName;
@@ -97,8 +121,8 @@ class App extends Component {
   		      }
   		      // Don't try to update the firebase auth profile with this.
   		      // Just used locally.
-  		      user.verifiedWithCode = docRef.data().verifiedWithCode;
-            this.setState({ user });
+  		      userUpdates.verifiedWithCode = docRef.data().verifiedWithCode;
+            this.setState({ user: Object.assign({}, this.state.user, userUpdates) });
   		    } else {
   		      // no profile?
       		  let error = 'unknown';
@@ -216,7 +240,18 @@ class App extends Component {
           firebaseAuth={firebase.auth()}
         />
       );
-    } /* else if (!this.state.user.verifiedWithCode) {
+    } else if (!this.state.user.profileLoaded || !this.state.user.rolesLoaded) {
+      return (
+        <div className="loading-page">
+  				<div className="loader loader-big"></div>
+  			</div>);
+    } else if (this.state.user.isBanned) {
+      return (
+        <div className="loading-page">
+  				this user has been banned
+  			</div>);
+    }
+    /* else if (!this.state.user.verifiedWithCode) {
       return (
         <div className="App">
           <form className="invite-code-container" onSubmit={this.handleCodeSubmit}>
