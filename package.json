@@ -13,10 +13,10 @@
     "linkifyjs": "^2.1.7",
     "lodash": "^4.17.11",
     "npm": "^6.4.1",
-    "react": "^16.5.2",
-    "react-dom": "^16.5.2",
+    "react": "^16.7.0-alpha.2",
+    "react-dom": "^16.7.0-alpha.2",
     "react-firebaseui": "^3.0.7",
-    "react-scripts": "1.1.5"
+    "react-scripts": "2.1.1"
   },
   "scripts": {
     "start": "REACT_APP_FORUM_API_KEY=$FORUM_API_KEY REACT_APP_FORUM_PROJECT_ID=$FORUM_PROJECT_ID REACT_APP_COMMIT_REF=$COMMIT_REF react-scripts start",
@@ -30,5 +30,11 @@
       "FORUM_API_KEY": "@forum_api_key",
       "FORUM_PROJECT_ID": "@forum_project_id"
     }
-  }
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }

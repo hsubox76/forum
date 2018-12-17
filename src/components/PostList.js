@@ -140,7 +140,7 @@ class PostList extends Component {
       return (
         <div className="page-message-container">
           <div>Sorry, you don't have permission to do that.</div>
-          <div><a onClick={() => this.setState({ status: LOADING_STATUS.LOADED })}>Back to thread.</a></div>
+          <div><span onClick={() => this.setState({ status: LOADING_STATUS.LOADED })}>Back to thread.</span></div>
         </div>
       );
     }
@@ -228,6 +228,7 @@ class PostList extends Component {
           <Post
             key={id}
             postId={id}
+            db={this.db}
             user={this.props.user}
             index={index}
             isDisabled={this.state.postBeingEdited && this.state.postBeingEdited !== id}

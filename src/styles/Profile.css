@@ -6,3 +6,7 @@
 .avatar-error {
 	color: var(--color-danger);
 }
+
+.reset-password-link {
+	text-decoration: underline;
+}

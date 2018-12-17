@@ -120,7 +120,7 @@ button:hover {
   border-radius: 5px;
 }
 
-.account-area > a {
+.account-area > a, .sign-out-button {
   margin-left: 10px;
   padding-left: 10px;
   border-left: 2px solid #ccc;
@@ -128,11 +128,11 @@ button:hover {
 
 .sign-out-button {
   cursor: pointer;
-  color: #cc7d00;
+  color: #fff;
 }
 
 .sign-out-button:hover {
-  color: #ff9c00;
+  color: #c8efff;
 }
 
 .profile-container {

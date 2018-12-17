@@ -94,14 +94,14 @@ class Profile extends Component {
   render() {
     let passwordResetEl = (
       <div>
-        <a className="reset-password-link" onClick={this.handleResetPassword}>Reset password</a>
+        <span className="reset-password-link" onClick={this.handleResetPassword}>Reset password</span>
       </div>
     );
     if (this.state.passwordEmailState === 'sent') {
       passwordResetEl = (
         <div>
           <div>Password reset link sent to {this.props.user.email}.</div>
-          <div><a className="reset-password-link" onClick={this.handleResetPassword}>Send again</a></div>
+          <div><span className="reset-password-link" onClick={this.handleResetPassword}>Send again</span></div>
         </div>
       );
     } else if (this.state.passwordEmailState === 'sending') {

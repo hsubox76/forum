@@ -273,11 +273,11 @@ class App extends Component {
             <Link to="/help">Help</Link>
             <Link to="/invite">Invite</Link>
             <Link to="/profile">Edit profile</Link>
-            <a
+            <span
               className="sign-out-button"
               onClick={() => firebase.auth().signOut()}>
                 Logout
-            </a>
+            </span>
           </div>
         </div>
         {this.state.hasNewContent &&

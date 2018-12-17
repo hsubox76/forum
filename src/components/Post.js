@@ -1,13 +1,11 @@
-import React, { Component } from 'react';
-import firebase from 'firebase/app';
-import 'firebase/firestore';
+import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import get from 'lodash/get';
 import findKey from 'lodash/findKey';
 import TextContent from './TextContent';
 import { LOADING_STATUS, STANDARD_DATE_FORMAT } from '../utils/constants';
-import { getUser, updatePost, updateReaction } from '../utils/dbhelpers';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { getUser, updatePost } from '../utils/dbhelpers';
+import ReactionButton from './ReactionButton';
 
 const reactions = [
 	{ faName: 'laugh-beam', desc: 'laugh' },
@@ -19,143 +17,101 @@ const reactions = [
 	{ faName: 'thumbs-down', desc: 'thumbs down' },
 ];
 
-class ReactionButton extends Component {
-	constructor() {
-		super();
-		this.state = { showTip: false };
-	}
-	handleClick = (userSelected) => {
-		updateReaction(this.props.user.uid, this.props.postId, this.props.reaction.faName, !userSelected);
-		if (this.props.currentReaction && !userSelected) {
-			updateReaction(this.props.user.uid, this.props.postId, this.props.currentReaction, false);
-		}
-		this.setState({ showTip: false });
-	}
-	render() {
-		const post = this.props.post;
-		const responses = get(post, ['reactions', this.props.reaction.faName]) || [];
-		const classes = ['reaction-button'];
-		const userSelected = this.props.currentReaction === this.props.reaction.faName;
-		if (userSelected) {
-			classes.push('user-selected');
-		}
-		if (responses.length) {
-			classes.push('has-count');
-		}
-		const tooltip = <div className="reaction-tooltip">{this.props.reaction.desc}</div>
-		return (
-			<button
-				className={classes.join(' ')}
-				onClick={() => this.handleClick(userSelected)}
-				onMouseEnter={() => this.setState({ showTip: true })}
-				onMouseLeave={() => this.setState({ showTip: false })}
-			>
-				{tooltip}
-				<FontAwesomeIcon className="icon icon-reaction" icon={this.props.reaction.faName} size="lg" />
-				{responses.length > 0 && <span className="reaction-count">{responses.length}</span>}
-			</button>
-		);
-	}
-}
-class Post extends Component {
-	constructor() {
-		super();
-		this.db = firebase.firestore();
-		this.db.settings({timestampsInSnapshots: true});
-		this.state = { post: null };
-		this.postRef = React.createRef();
-		this.contentRef = React.createRef();
-		this.postUnsub = null;
-	}
-	componentDidMount = () => {
-		this.postUnsub = this.db.collection("posts")
-			.doc(this.props.postId)
-			.onSnapshot(postDoc => {
-				const post = postDoc.data();
-				if (!post) {
-					return;
-				}
-				this.setState({ post: Object.assign(post, { id: postDoc.id }) });
-				getUser(this.props, post.uid);
-				if (this.props.isLastOnPage) {
-					this.postRef.current && this.postRef.current.scrollIntoView();
-					if (this.props.lastReadTime < post.createdTime) {
-							this.updateReadOnClose =
-								() => {
-									this.props.updateLastRead(
-										this.props.postId, post.updatedTime || post.createdTime);
-								}
+function Post(props) {
+	const [post, setPost] = useState(null);
+	const [status, setStatus] = useState(null);
+	const postRef = useRef();
+	const contentRef = useRef();
+	const db = props.db;
+	let unsub = null;
+	
+	useEffect(() => {
+		unsub = db.collection("posts")
+				.doc(props.postId)
+				.onSnapshot(postDoc => {
+					const post = postDoc.data();
+					if (!post) {
+						return;
 					}
-				}
-			});
+					setPost(Object.assign(post, { id: postDoc.id }));
+					getUser(props, post.uid);
+					if (props.isLastOnPage) {
+						postRef.current && postRef.current.scrollIntoView();
+					}
+				});
+		return () => {
+			unsub && unsub();
+			post && props.updateLastRead(
+				props.postId, post.updatedTime || post.createdTime);
+		};
+	}, []);
+	
+	function toggleEditMode() {
+		if (status === LOADING_STATUS.EDITING) {
+			setStatus(LOADING_STATUS.LOADED);
+		} else {
+			setStatus(LOADING_STATUS.EDITING);
+		}
+		props.toggleEditPost(props.postId);
 	}
-	componentWillUnmount = () => {
-		this.postUnsub && this.postUnsub();
-		this.updateReadOnClose && this.updateReadOnClose();
+	
+	function deletePost () {
+		unsub && unsub();
+		setStatus(LOADING_STATUS.DELETING);
+		const deletePromises = [];
+		deletePromises.push(
+			db.collection("posts")
+				.doc(props.postId)
+				.delete()
+				.then(() => console.log(`post ${props.postId} deleted`)));
+		deletePromises.push(props.deletePostFromThread(props.postId));
+		Promise.all(deletePromises)
+			.then(() => {
+				console.log(`Successfully deleted post ${props.postId}`);
+			})
+			.catch(e => setStatus(LOADING_STATUS.PERMISSIONS_ERROR));
 	}
-	handleDeletePost = () => {
-		this.props.setDialog({
+	
+	function handleDeletePost() {
+		props.setDialog({
 			message: 'Sure you want to delete this post?',
 			okText: 'delete',
 			okClass: 'delete',
-			onOk: this.deletePost
+			onOk: deletePost
 		});
 	};
-	deletePost = () => {
-		this.postUnsub && this.postUnsub();
-		this.setState({ status: LOADING_STATUS.DELETING });
-		const deletePromises = [];
-		deletePromises.push(
-			this.db.collection("posts")
-				.doc(this.props.postId)
-				.delete()
-				.then(() => console.log(`post ${this.props.postId} deleted`)));
-		deletePromises.push(this.props.deletePostFromThread(this.props.postId));
-		Promise.all(deletePromises)
-			.then(() => {
-				console.log(`Successfully deleted post ${this.props.postId}`);
-			})
-			.catch(e => this.setState({ status: LOADING_STATUS.PERMISSIONS_ERROR}));
-	}
-	handleEditPost = () => {
-		this.setState({ status: LOADING_STATUS.SUBMITTING });
-		updatePost(this.contentRef.current.value, null, this.props)
+	
+	function handleEditPost() {
+		setStatus(LOADING_STATUS.SUBMITTING);
+		updatePost(contentRef.current.value, null, props)
 			.then(() => {
 					//TODO: update thread "last updated" info
-					this.setState({ status: LOADING_STATUS.LOADED });
-					this.props.toggleEditPost(this.props.postId);
+					setStatus(LOADING_STATUS.LOADED);
+					props.toggleEditPost(props.postId);
 			});
 	}
-	toggleEditMode = () => {
-		if (this.state.status === LOADING_STATUS.EDITING) {
-			this.setState({ status: LOADING_STATUS.LOADED });
-		} else {
-			this.setState({ status: LOADING_STATUS.EDITING });
-		}
-		this.props.toggleEditPost(this.props.postId);
-	}
-	renderAdminButtons = () => {
-		const post = this.state.post;
+	
+	function renderAdminButtons() {
 		const adminButtons = [];
-		if (this.state.status !== LOADING_STATUS.EDITING) {
+		if (status !== LOADING_STATUS.EDITING) {
 			adminButtons.push(
 				<button
 					key="quote"
 					className="small button-edit"
-					disabled={this.state.status === LOADING_STATUS.SUBMITTING}
-					onClick={() => this.props.handleQuote(post)}>
+					disabled={status === LOADING_STATUS.SUBMITTING}
+					onClick={() => props.handleQuote(post)}>
 						quote
 				</button>
 			);
 		}
-		if (this.props.user.isAdmin || this.props.user.uid === post.uid) {
-			if (this.state.status === LOADING_STATUS.EDITING) {
+		if (props.user.isAdmin || props.user.uid === post.uid) {
+			if (status === LOADING_STATUS.EDITING) {
 				adminButtons.push(
 					<button
 						key="cancel"
 						className="small button-cancel"
-						disabled={this.state.status === LOADING_STATUS.SUBMITTING}
-						onClick={this.toggleEditMode}>
+						disabled={status === LOADING_STATUS.SUBMITTING}
+						onClick={toggleEditMode}>
 							cancel
 					</button>
 				);
@@ -163,8 +119,8 @@ class Post extends Component {
 					<button
 						key="edit"
 						className="small button-edit"
-						disabled={this.state.status === LOADING_STATUS.SUBMITTING}
-						onClick={this.handleEditPost}>
+						disabled={status === LOADING_STATUS.SUBMITTING}
+						onClick={handleEditPost}>
 							submit
 					</button>
 				);
@@ -173,8 +129,8 @@ class Post extends Component {
 					<button
 						key="edit"
 						className="small button-edit"
-						disabled={this.props.isDisabled}
-						onClick={this.toggleEditMode}>
+						disabled={props.isDisabled}
+						onClick={toggleEditMode}>
 							edit
 					</button>
 				);
@@ -182,8 +138,8 @@ class Post extends Component {
 					<button
 						key="delete"
 						className="small button-delete"
-						disabled={this.props.isDisabled}
-						onClick={this.props.isOnlyPost ? this.props.deleteThread : this.handleDeletePost}>
+						disabled={props.isDisabled}
+						onClick={props.isOnlyPost ? props.deleteThread : handleDeletePost}>
 							delete
 					</button>
 				);
@@ -191,95 +147,93 @@ class Post extends Component {
 		}
 		return adminButtons;
 	}
-	render() {	
-		const post = this.state.post;
-		// TODO: Permissions error - popup - unlikely case though.
-		if (this.state.status === LOADING_STATUS.DELETED) {
-			// this shouldn't happen... but just in case
-			return (
-				<div key={this.props.postId} className="post-container">
-					This post has been deleted.
-				</div>
-			);
-		}
-		if (!post || this.state.status === LOADING_STATUS.LOADING || this.state.status === LOADING_STATUS.DELETING) {
-			return (
-				<div key={this.props.postId} className="post-container">
-					<div className="loader loader-med"></div>
-				</div>
-			);
-		}
-		let currentReaction = null;
-		if (post.reactions) {
-			currentReaction = findKey(post.reactions, uids => uids.includes(this.props.user.uid));
-		}
-		const footer = (
-			<div className="post-footer">
-				<div className="reactions-container">
-					{reactions.map(reaction => (
-						<ReactionButton
-							key={reaction.faName}
-							currentReaction={currentReaction}
-							reaction={reaction}
-							post={this.state.post}
-							{...this.props} />
-						)
-					)}
-				</div>
-				<div>{this.renderAdminButtons()}</div>
-			</div>
-		);
-		const classes = ['post-container'];
-		if (this.state.status === LOADING_STATUS.EDITING) {
-			classes.push('editing');
-		}
-		if (this.props.isDisabled) {
-			classes.push('disabled');
-		}
-		if (post.createdTime > (this.props.lastReadTime || 0)) {
-			classes.push('unread');
-		}
-		const postUser = this.props.usersByUid[post.uid];
+	
+	// TODO: Permissions error - popup - unlikely case though.
+	if (status === LOADING_STATUS.DELETED) {
+		// this shouldn't happen... but just in case
 		return (
-			<div key={post.id} ref={this.postRef} className={classes.join(' ')}>
-				<div className="post-header">
-					<div className="post-user">
-						{postUser && postUser.avatarUrl && <img className="avatar-post" alt="User's Avatar" src={postUser.avatarUrl} />}
-						{postUser
-							? postUser.displayName
-							: <div className="loader loader-small"></div>}
-					</div>
-					<div className="post-header-right">
-						<div>#{this.props.index}</div>
-						<div className="post-date">{format(post.createdTime, STANDARD_DATE_FORMAT)}</div>
-					</div>
-				</div>
-				<div className="post-content">
-					{this.state.status === LOADING_STATUS.EDITING ? (
-							<form className="edit-post-container" onSubmit={this.handleEditPost}>
-								<textarea ref={this.contentRef} className="content-input" defaultValue={post.content} />
-							</form>
-						) : (
-							<TextContent
-								content={post.content}
-								user={this.props.user}
-								usersByUid={this.props.usersByUid}
-								addUserByUid={this.props.addUserByUid}
-							/>
-						)
-					}
-				</div>
-				{post.updatedBy &&
-					<div className="post-edited">
-						<span>Last edited</span>
-						<span className="edit-data">{format(post.updatedTime, STANDARD_DATE_FORMAT)}</span>
-						<span>by</span>
-						<span className="edit-data">{get(this.props.usersByUid, [post.updatedBy, 'displayName']) || ''}</span>
-					</div>}
-				{footer}
+			<div key={props.postId} className="post-container">
+				This post has been deleted.
 			</div>
 		);
 	}
+	if (!post || status === LOADING_STATUS.LOADING || status === LOADING_STATUS.DELETING) {
+		return (
+			<div key={props.postId} className="post-container">
+				<div className="loader loader-med"></div>
+			</div>
+		);
+	}
+	let currentReaction = null;
+	if (post.reactions) {
+		currentReaction = findKey(post.reactions, uids => uids.includes(props.user.uid));
+	}
+	const footer = (
+		<div className="post-footer">
+			<div className="reactions-container">
+				{reactions.map(reaction => (
+					<ReactionButton
+						key={reaction.faName}
+						currentReaction={currentReaction}
+						reaction={reaction}
+						post={post}
+						{...props} />
+					)
+				)}
+			</div>
+			<div>{renderAdminButtons()}</div>
+		</div>
+	);
+	const classes = ['post-container'];
+	if (status === LOADING_STATUS.EDITING) {
+		classes.push('editing');
+	}
+	if (props.isDisabled) {
+		classes.push('disabled');
+	}
+	if (post.createdTime > (props.lastReadTime || 0)) {
+		classes.push('unread');
+	}
+	const postUser = props.usersByUid[post.uid];
+	return (
+		<div key={post.id} ref={postRef} className={classes.join(' ')}>
+			<div className="post-header">
+				<div className="post-user">
+					{postUser && postUser.avatarUrl && <img className="avatar-post" alt="User's Avatar" src={postUser.avatarUrl} />}
+					{postUser
+						? postUser.displayName
+						: <div className="loader loader-small"></div>}
+				</div>
+				<div className="post-header-right">
+					<div>#{props.index}</div>
+					<div className="post-date">{format(post.createdTime, STANDARD_DATE_FORMAT)}</div>
+				</div>
+			</div>
+			<div className="post-content">
+				{status === LOADING_STATUS.EDITING ? (
+						<form className="edit-post-container" onSubmit={handleEditPost}>
+							<textarea ref={contentRef} className="content-input" defaultValue={post.content} />
+						</form>
+					) : (
+						<TextContent
+							content={post.content}
+							user={props.user}
+							usersByUid={props.usersByUid}
+							addUserByUid={props.addUserByUid}
+						/>
+					)
+				}
+			</div>
+			{post.updatedBy &&
+				<div className="post-edited">
+					<span>Last edited</span>
+					<span className="edit-data">{format(post.updatedTime, STANDARD_DATE_FORMAT)}</span>
+					<span>by</span>
+					<span className="edit-data">{get(props.usersByUid, [post.updatedBy, 'displayName']) || ''}</span>
+				</div>}
+			{footer}
+		</div>
+	);
 }
 
 export default Post;
