@@ -159,8 +159,7 @@ a.thread-row:hover {
 }
 
 .thread-row .thread-title .title-container {
-	display: flex;
-	align-items: center;
+	display: inline-block;
 }
 
 .thread-row .thread-title .icon {
@@ -169,6 +168,16 @@ a.thread-row:hover {
 
 .thread-row .thread-title .title-text {
 	font-size: 1rem;
+	font-weight: 500;
+}
+
+.thread-row .thread-title .title-page-link {
+	margin-left: 5px;
+	color: var(--color-main);
+	text-decoration: underline;
+}
+
+.thread-row .thread-title .title-page-link:hover {
 	font-weight: 500;
 }
 

@@ -63,6 +63,7 @@ class Post extends Component {
 		this.db = firebase.firestore();
 		this.db.settings({timestampsInSnapshots: true});
 		this.state = { post: null };
+		this.postRef = React.createRef();
 		this.contentRef = React.createRef();
 		this.postUnsub = null;
 	}
@@ -77,6 +78,7 @@ class Post extends Component {
 				this.setState({ post: Object.assign(post, { id: postDoc.id }) });
 				getUser(this.props, post.uid);
 				if (this.props.isLastOnPage) {
+					this.postRef.current && this.postRef.current.scrollIntoView();
 					if (this.props.lastReadTime < post.createdTime) {
 							this.updateReadOnClose =
 								() => {
@@ -239,7 +241,7 @@ class Post extends Component {
 		}
 		const postUser = this.props.usersByUid[post.uid];
 		return (
-			<div key={post.id} className={classes.join(' ')}>
+			<div key={post.id} ref={this.postRef} className={classes.join(' ')}>
 				<div className="post-header">
 					<div className="post-user">
 						{postUser && postUser.avatarUrl && <img className="avatar-post" alt="User's Avatar" src={postUser.avatarUrl} />}
