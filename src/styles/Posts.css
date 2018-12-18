@@ -485,3 +485,15 @@ button.reaction-button:hover {
 .reaction-count {
 	margin-left: 5px;
 }
+
+.role-icon {
+	border-radius: 50%;
+	color: var(--color-main);
+	border: 2px solid var(--color-main);
+	width: 1rem;
+	margin-left: 5px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.8rem;
+}

@@ -85,6 +85,19 @@ export function toggleBan(uid, shouldBan) {
 	}
 }
 
+export function toggleMod(uid, shouldMod) {
+	const db = firebase.firestore();
+	if (shouldMod) {
+		db.collection("roles").doc("moderators").update({
+			    ids: firebase.firestore.FieldValue.arrayUnion(uid)
+		});
+	} else {
+		db.collection("roles").doc("moderators").update({
+			    ids: firebase.firestore.FieldValue.arrayRemove(uid)
+		});
+	}
+}
+
 export function getAllInvitesFor(uid) {
 	const db = firebase.firestore();
 	return db.collection("invites")

@@ -22,3 +22,9 @@ export const reactions = [
 	{ faName: 'thumbs-up', desc: 'thumbs up' },
 	{ faName: 'thumbs-down', desc: 'thumbs down' },
 ];
+
+export const ROLE_PROP = {
+  'admins': 'isAdmin',
+  'moderators': 'isMod',
+  'bannedUsers': 'isBanned'
+};

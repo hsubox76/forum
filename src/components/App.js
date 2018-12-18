@@ -15,6 +15,7 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import registerServiceWorker from '../registerServiceWorker';
+import { ROLE_PROP } from '../utils/constants';
 
 class App extends Component {
   constructor() {
@@ -91,15 +92,8 @@ class App extends Component {
           const userUpdates = { rolesLoaded: true };
           querySnapshot.forEach(docRef => {
             if (docRef && docRef.data()) {
-              if (docRef.id === 'admins') {
-                if (docRef.data().ids.includes(user.uid)) {
-                  userUpdates.isAdmin = true;
-                }
-              }
-              if (docRef.id === 'bannedUsers') {
-                if (docRef.data().ids.includes(user.uid)) {
-                  userUpdates.isBanned = true;
-                }
+              if (docRef.data().ids.includes(user.uid)) {
+                userUpdates[ROLE_PROP[docRef.id]] = true;
               }
             }
           });
@@ -311,6 +305,7 @@ class App extends Component {
           />
           <PostList
             path="forum/:forumId/thread/:threadId"
+            db={this.db}
             user={this.state.user}
             setDialog={this.handleSetDialog}
             usersByUid={this.state.usersByUid}

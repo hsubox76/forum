@@ -4,8 +4,8 @@ import get from 'lodash/get';
 import findKey from 'lodash/findKey';
 import TextContent from './TextContent';
 import { LOADING_STATUS, STANDARD_DATE_FORMAT, reactions } from '../utils/constants';
-import { getUser, updatePost } from '../utils/dbhelpers';
-import { usePostDocument } from '../utils/hooks';
+import { updatePost } from '../utils/dbhelpers';
+import { useSubscribeToDocument, useGetUser, useGetRoles } from '../utils/hooks';
 import ReactionButton from './ReactionButton';
 
 function Post(props) {
@@ -14,13 +14,12 @@ function Post(props) {
 	const contentRef = useRef();
 	const db = props.db;
 	
-	const { post, unsub } = usePostDocument(db, "posts", props.postId, props);
+	const { doc: post, unsub: postUnsub } =
+		useSubscribeToDocument("posts", props.postId, props);
 	const uid = post ? post.uid : null;
-	
-	// get user if uid changes
-	useEffect(() => {
-		uid && getUser(props, uid);
-	}, [uid]);
+
+	const postUser = useGetUser(uid);
+	const postUserRoles = useGetRoles(uid);
 	
 	// scroll to bottom and update last read if/when post updates and is last post
 	useEffect(() => {
@@ -31,7 +30,7 @@ function Post(props) {
 	}, [post || '', props.isLastOnPage || false]);
 	
 	useEffect(() => {
-		unsub && unsub();
+		postUnsub && postUnsub();
 	}, []);
 	
 	function toggleEditMode() {
@@ -44,7 +43,7 @@ function Post(props) {
 	}
 	
 	function deletePost () {
-		unsub && unsub();
+		postUnsub && postUnsub();
 		setStatus(LOADING_STATUS.DELETING);
 		const deletePromises = [];
 		deletePromises.push(
@@ -158,15 +157,16 @@ function Post(props) {
 	if (post.createdTime > (props.lastReadTime || 0)) {
 		classes.push('unread');
 	}
-	const postUser = props.usersByUid[post.uid];
 	return (
 		<div key={post.id} ref={postRef} className={classes.join(' ')}>
 			<div className="post-header">
 				<div className="post-user">
 					{postUser && postUser.avatarUrl && <img className="avatar-post" alt="User's Avatar" src={postUser.avatarUrl} />}
 					{postUser
-						? postUser.displayName
+						? <div>{postUser.displayName}</div>
 						: <div className="loader loader-small"></div>}
+					{postUserRoles && postUserRoles.isAdmin && <div className="role-icon">A</div>}
+					{postUserRoles && postUserRoles.isMod && <div className="role-icon">M</div>}
 				</div>
 				<div className="post-header-right">
 					<div>#{props.index}</div>
