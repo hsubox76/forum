@@ -441,6 +441,7 @@ a.thread-row:hover {
 }
 
 .reaction-button.has-count {
+	background-color: var(--color-main);
 	width: 40px;
 }
 
@@ -453,7 +454,7 @@ button.reaction-button:hover {
 }
 
 .reaction-button.user-selected {
-	background-color: var(--color-main);
+	background-color: var(--color-ok);
 }
 
 .reaction-tooltip {
