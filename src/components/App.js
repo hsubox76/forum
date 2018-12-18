@@ -289,9 +289,11 @@ class App extends Component {
             <div>New content available, please refresh.</div>
             <button type="none" onClick={() => {
               if (navigator && navigator.serviceWorker) {
+                console.log('checking registration');
                 navigator.serviceWorker
                   .getRegistration()
                   .then(reg => {
+                    console.log('posting skipWaiting message');
                     reg.waiting.postmessage('skipWaiting');
                   });
               }
