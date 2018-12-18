@@ -3,40 +3,10 @@ import { format } from 'date-fns';
 import get from 'lodash/get';
 import findKey from 'lodash/findKey';
 import TextContent from './TextContent';
-import { LOADING_STATUS, STANDARD_DATE_FORMAT } from '../utils/constants';
+import { LOADING_STATUS, STANDARD_DATE_FORMAT, reactions } from '../utils/constants';
 import { getUser, updatePost } from '../utils/dbhelpers';
+import { usePostDocument } from '../utils/hooks';
 import ReactionButton from './ReactionButton';
-
-const reactions = [
-	{ faName: 'laugh-beam', desc: 'laugh' },
-	{ faName: 'angry', desc: 'angry' },
-	{ faName: 'surprise', desc: 'surprised' },
-	{ faName: 'sad-tear', desc: 'sad' },
-	{ faName: 'heart', desc: 'love' },
-	{ faName: 'thumbs-up', desc: 'thumbs up' },
-	{ faName: 'thumbs-down', desc: 'thumbs down' },
-];
-
-function usePostDocument(db, collection, docId, props) {
-	const [post, updatePost] = useState(null);
-	const [unsub, setUnsub] = useState(null);
-	
-	useEffect(() => {
-		const unsubTemp = db.collection(collection)
-				.doc(docId)
-				.onSnapshot(postDoc => {
-					const postData = postDoc.data();
-					if (!postData) {
-						return;
-					}
-					updatePost(Object.assign(postData, { id: postDoc.id }));
-					setUnsub(unsubTemp);
-				});
-		return () => unsub && unsub();
-	}, [collection, docId]);
-	
-	return { post, unsub };
-}
 
 function Post(props) {
 	const [status, setStatus] = useState(null);
@@ -59,6 +29,10 @@ function Post(props) {
 			props.updateLastRead(props.postId, post.updatedTime || post.createdTime);
 		}
 	}, [post || '', props.isLastOnPage || false]);
+	
+	useEffect(() => {
+		unsub && unsub();
+	}, []);
 	
 	function toggleEditMode() {
 		if (status === LOADING_STATUS.EDITING) {
@@ -107,56 +81,32 @@ function Post(props) {
 	
 	function renderAdminButtons() {
 		const adminButtons = [];
+	
+		function addButton(name, buttonType, action, disabledCondition = false) {
+				adminButtons.push(
+					<button
+						key={name}
+						className={`small button-${buttonType}`}
+						disabled={status === LOADING_STATUS.SUBMITTING || disabledCondition}
+						onClick={action}>
+							{name}
+					</button>
+				);
+		}
+		
 		if (status !== LOADING_STATUS.EDITING) {
-			adminButtons.push(
-				<button
-					key="quote"
-					className="small button-edit"
-					disabled={status === LOADING_STATUS.SUBMITTING}
-					onClick={() => props.handleQuote(post)}>
-						quote
-				</button>
-			);
+			addButton('quote', 'edit', () => props.handleQuote(post));
 		}
 		if (props.user.isAdmin || props.user.uid === post.uid) {
 			if (status === LOADING_STATUS.EDITING) {
-				adminButtons.push(
-					<button
-						key="cancel"
-						className="small button-cancel"
-						disabled={status === LOADING_STATUS.SUBMITTING}
-						onClick={toggleEditMode}>
-							cancel
-					</button>
-				);
-				adminButtons.push(
-					<button
-						key="edit"
-						className="small button-edit"
-						disabled={status === LOADING_STATUS.SUBMITTING}
-						onClick={handleEditPost}>
-							submit
-					</button>
-				);
+				addButton('cancel', 'cancel', toggleEditMode);
+				addButton('ok', 'edit', handleEditPost);
 			} else {
-				adminButtons.push(
-					<button
-						key="edit"
-						className="small button-edit"
-						disabled={props.isDisabled}
-						onClick={toggleEditMode}>
-							edit
-					</button>
-				);
-				adminButtons.push(
-					<button
-						key="delete"
-						className="small button-delete"
-						disabled={props.isDisabled}
-						onClick={props.isOnlyPost ? props.deleteThread : handleDeletePost}>
-							delete
-					</button>
-				);
+				addButton('edit', 'edit', toggleEditMode, props.isDisabled);
+				const deleteAction = props.isOnlyPost
+					? props.deleteThread
+					: handleDeletePost;
+				addButton('delete', 'delete', deleteAction, props.isDisabled);
 			}
 		}
 		return adminButtons;
