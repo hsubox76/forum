@@ -28,7 +28,8 @@ class App extends Component {
       forumIds: null,
       forumsById: {},
       dialog: null,
-      hasNewContent: false
+      hasNewContent: false,
+      refreshing: false
     };
 		this.inviteCodeRef = React.createRef();
 		this.db = firebase.firestore();
@@ -66,6 +67,15 @@ class App extends Component {
         }
     );
     registerServiceWorker(() => this.setState({ hasNewContent: true }));
+    if (navigator && navigator.serviceWorker) {
+      navigator.serviceWorker.addEventListener('controllerchange',
+        function() {
+          if (this.state.refreshing) return;
+          this.setState({ refreshing: true });
+          window.location.reload();
+        }
+      );
+    }
   }
   componentDidUpdate = () => {
     if (!this.unregisterProfileObserver && this.state.user) {
@@ -277,7 +287,15 @@ class App extends Component {
         {this.state.hasNewContent &&
           <div className="message-banner">
             <div>New content available, please refresh.</div>
-            <button type="none" onClick={() => window.location.reload()}>
+            <button type="none" onClick={() => {
+              if (navigator && navigator.serviceWorker) {
+                navigator.serviceWorker
+                  .getRegistration()
+                  .then(reg => {
+                    reg.waiting.postmessage('skipWaiting');
+                  });
+              }
+            }}>
               reload page
             </button>
           </div>
