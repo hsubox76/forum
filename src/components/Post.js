@@ -17,34 +17,48 @@ const reactions = [
 	{ faName: 'thumbs-down', desc: 'thumbs down' },
 ];
 
+function usePostDocument(db, collection, docId, props) {
+	const [post, updatePost] = useState(null);
+	const [unsub, setUnsub] = useState(null);
+	
+	useEffect(() => {
+		const unsubTemp = db.collection(collection)
+				.doc(docId)
+				.onSnapshot(postDoc => {
+					const postData = postDoc.data();
+					if (!postData) {
+						return;
+					}
+					updatePost(Object.assign(postData, { id: postDoc.id }));
+					setUnsub(unsubTemp);
+				});
+		return () => unsub && unsub();
+	}, [collection, docId]);
+	
+	return { post, unsub };
+}
+
 function Post(props) {
-	const [post, setPost] = useState(null);
 	const [status, setStatus] = useState(null);
 	const postRef = useRef();
 	const contentRef = useRef();
 	const db = props.db;
-	let unsub = null;
 	
+	const { post, unsub } = usePostDocument(db, "posts", props.postId, props);
+	const uid = post ? post.uid : null;
+	
+	// get user if uid changes
 	useEffect(() => {
-		unsub = db.collection("posts")
-				.doc(props.postId)
-				.onSnapshot(postDoc => {
-					const post = postDoc.data();
-					if (!post) {
-						return;
-					}
-					setPost(Object.assign(post, { id: postDoc.id }));
-					getUser(props, post.uid);
-					if (props.isLastOnPage) {
-						postRef.current && postRef.current.scrollIntoView();
-					}
-				});
-		return () => {
-			unsub && unsub();
-			post && props.updateLastRead(
-				props.postId, post.updatedTime || post.createdTime);
-		};
-	}, []);
+		uid && getUser(props, uid);
+	}, [uid]);
+	
+	// scroll to bottom and update last read if/when post updates and is last post
+	useEffect(() => {
+		if (props.isLastOnPage && post) {
+			postRef.current && postRef.current.scrollIntoView();
+			props.updateLastRead(props.postId, post.updatedTime || post.createdTime);
+		}
+	}, [post || '', props.isLastOnPage || false]);
 	
 	function toggleEditMode() {
 		if (status === LOADING_STATUS.EDITING) {
