@@ -70,6 +70,7 @@ class App extends Component {
     if (navigator && navigator.serviceWorker) {
       navigator.serviceWorker.addEventListener('controllerchange',
         function() {
+          console.log('triggering reload');
           if (this.state.refreshing) return;
           this.setState({ refreshing: true });
           window.location.reload();
