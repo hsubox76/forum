@@ -295,7 +295,7 @@ class App extends Component {
                   .getRegistration()
                   .then(reg => {
                     console.log('posting skipWaiting message');
-                    reg.waiting.postmessage('skipWaiting');
+                    reg.waiting.postMessage('skipWaiting');
                   });
               }
             }}>
