@@ -1,4 +1,5 @@
 import firebase from 'firebase/app';
+import 'firebase/auth';
 import 'firebase/firestore';
 
 export function getForum(props) {
@@ -6,16 +7,16 @@ export function getForum(props) {
 	const forum = props.forumsById[props.forumId];
   if (!forum) {
 	  return db.collection("forums")
-	    .doc(props.forumId)
-	    .get()
-	    .then(doc => {
-	      props.setForumData(
-	        null,
-	        Object.assign(
-	          {}, props.forumsById, { [props.forumId]: doc.data() }
-          )
-        );
-	    });
+		.doc(props.forumId)
+		.get()
+		.then(doc => {
+		  props.setForumData(
+			null,
+			Object.assign(
+			  {}, props.forumsById, { [props.forumId]: doc.data() }
+		  )
+		);
+		});
   }
 }
 
@@ -76,11 +77,11 @@ export function toggleBan(uid, shouldBan) {
 	const db = firebase.firestore();
 	if (shouldBan) {
 		db.collection("roles").doc("bannedUsers").update({
-			    ids: firebase.firestore.FieldValue.arrayUnion(uid)
+				ids: firebase.firestore.FieldValue.arrayUnion(uid)
 		});
 	} else {
 		db.collection("roles").doc("bannedUsers").update({
-			    ids: firebase.firestore.FieldValue.arrayRemove(uid)
+				ids: firebase.firestore.FieldValue.arrayRemove(uid)
 		});
 	}
 }
@@ -89,11 +90,11 @@ export function toggleMod(uid, shouldMod) {
 	const db = firebase.firestore();
 	if (shouldMod) {
 		db.collection("roles").doc("moderators").update({
-			    ids: firebase.firestore.FieldValue.arrayUnion(uid)
+				ids: firebase.firestore.FieldValue.arrayUnion(uid)
 		});
 	} else {
 		db.collection("roles").doc("moderators").update({
-			    ids: firebase.firestore.FieldValue.arrayRemove(uid)
+				ids: firebase.firestore.FieldValue.arrayRemove(uid)
 		});
 	}
 }
@@ -144,11 +145,11 @@ export function updateReaction(uid, postId, reactionType, shouldAdd) {
 	const db = firebase.firestore();
 	if (shouldAdd) {
 		db.collection("posts").doc(postId).update({
-			    [`reactions.${reactionType}`]: firebase.firestore.FieldValue.arrayUnion(uid)
+				[`reactions.${reactionType}`]: firebase.firestore.FieldValue.arrayUnion(uid)
 		});
 	} else {
 		db.collection("posts").doc(postId).update({
-			    [`reactions.${reactionType}`]: firebase.firestore.FieldValue.arrayRemove(uid)
+				[`reactions.${reactionType}`]: firebase.firestore.FieldValue.arrayRemove(uid)
 		});
 	}
 }
@@ -157,14 +158,14 @@ export function updatePost(content, postIds, props) {
 	const db = firebase.firestore();
 	const now = Date.now();
 	const postData = {
-				uid: props.user.uid,
-		    content,
-		    parentThread: props.threadId,
-		    createdTime: now,
-		    updatedTime: now
+			content,
+			parentThread: props.threadId,
+			createdTime: now,
+			updatedTime: now
 	};
 	if (postIds) {
-		// new post
+		// new 
+		postData.uid = props.user.uid;
 		return db.collection("posts").add(postData)
 			.then((docRef) => {
 				if (postIds) {
@@ -177,9 +178,10 @@ export function updatePost(content, postIds, props) {
 						['readBy.' + props.user.uid]: now
 					});
 				}
-		    	console.log("Document written with ID: ", docRef.id);
+				console.log("Document written with ID: ", docRef.id);
 			});
 	} else {
+		postData.updatedBy = props.user.uid;
 		return db.collection("posts")
 			.doc(props.postId)
 			.update(postData);
@@ -214,4 +216,15 @@ export function updateForum(forumId, forumData) {
 
 export function escapeRegExp(string){
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}
+
+export function getIsAdmin() {
+	return firebase.auth().currentUser.getIdTokenResult()
+		.then((idTokenResult) => {
+			if (idTokenResult.claims.admin) {
+				console.log('verified this user is an admin');
+				return true;
+			}
+			return false;
+		});
 }

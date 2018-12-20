@@ -8,17 +8,20 @@ import { getAllUsers,
 	getRoles,
 	toggleBan,
 	toggleMod,
+	getIsAdmin
 } from '../utils/dbhelpers';
 
 function Admin(props) {
 	const [users, setUsers] = useState([]);
 	const [invites, setInvites] = useState([]);
 	const [roles, setRoles] = useState({});
+	const [isAdmin, setIsAdmin] = useState(false);
 	
 	useEffect(() => {
 		getAllUsers().then(users => setUsers(users));
 		getAllInvites().then(invites => setInvites(invites));
 		getRoles().then(roles => setRoles(roles));
+		getIsAdmin().then(adminStatus => setIsAdmin(adminStatus))
 	}, []);
 	
 	function onBanClick(uid, isBanned) {
@@ -31,7 +34,7 @@ function Admin(props) {
 		getRoles().then(roles => setRoles(roles));
 	}
 	
-	if (!props.user.isAdmin) {
+	if (!isAdmin) {
 		return (
 			<div className="admin-container">
 				Sorry! You don't have permissions!
@@ -82,10 +85,10 @@ function Admin(props) {
 				</thead>
 				<tbody>
 				{users.map(user => {
-					const isAdmin = admins.ids.includes(user.uid);
+					const userIsAdmin = admins.ids.includes(user.uid);
 					const isMod = moderators.ids.includes(user.uid);
 					const isBanned = bannedUsers.ids.includes(user.uid);
-					const role = isAdmin ? 'admin' : (isMod ? 'mod' : '-');
+					const role = userIsAdmin ? 'admin' : (isMod ? 'mod' : '-');
 					return (
 						<tr key={user.uid}>
 							<td>{user.displayName}</td>
