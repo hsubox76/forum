@@ -5,7 +5,6 @@ import { STANDARD_DATE_FORMAT } from '../utils/constants';
 import { getAllUsers,
 	getAllInvites,
 	verifyAllUsers,
-	getRoles,
 	toggleBan,
 	toggleMod,
 	getIsAdmin
@@ -14,36 +13,43 @@ import { getAllUsers,
 function Admin(props) {
 	const [users, setUsers] = useState([]);
 	const [invites, setInvites] = useState([]);
-	const [roles, setRoles] = useState({});
-	const [isAdmin, setIsAdmin] = useState(false);
+	const [userIsAdmin, setUserIsAdmin] = useState(false);
+	const [pageDisabled, setPageDisabled] = useState(false);
 	
 	useEffect(() => {
-		getAllUsers().then(users => setUsers(users));
+		getAllUsers(true).then(users => setUsers(users));
 		getAllInvites().then(invites => setInvites(invites));
-		getRoles().then(roles => setRoles(roles));
-		getIsAdmin().then(adminStatus => setIsAdmin(adminStatus))
+		getIsAdmin().then(adminStatus => setUserIsAdmin(adminStatus))
 	}, []);
 	
 	function onBanClick(uid, isBanned) {
 		toggleBan(uid, !isBanned);
-		getRoles().then(roles => setRoles(roles));
+		getAllUsers(true).then(users => setUsers(users));
 	}
 	
 	function onModClick(uid, isMod) {
-		toggleMod(uid, !isMod);
-		getRoles().then(roles => setRoles(roles));
+		setPageDisabled(true);
+		toggleMod(uid, !isMod)
+			.then(() => getAllUsers(true))
+			.then(users => setUsers(users))
+			.catch(e => console.error(e))
+			.finally(() => setPageDisabled(false));
 	}
 	
-	if (!isAdmin) {
+	if (!userIsAdmin) {
 		return (
 			<div className="admin-container">
 				Sorry! You don't have permissions!
 			</div>
 		);
 	}
-	const admins = roles.admins || { ids: [] };
-	const moderators = roles.moderators || { ids: [] };
-	const bannedUsers = roles.bannedUsers || { ids: [] };
+	if (pageDisabled) {
+		return (
+			<div className="admin-container">
+				Updating the database.
+			</div>
+		);
+	}
 	return (
 		<div className="admin-container">
 			<div className="table-title">Invites</div>
@@ -85,27 +91,33 @@ function Admin(props) {
 				</thead>
 				<tbody>
 				{users.map(user => {
-					const userIsAdmin = admins.ids.includes(user.uid);
-					const isMod = moderators.ids.includes(user.uid);
-					const isBanned = bannedUsers.ids.includes(user.uid);
-					const role = userIsAdmin ? 'admin' : (isMod ? 'mod' : '-');
+					const isAdmin = user.customClaims.admin;
+					const isMod = user.customClaims.mod;
+					const isBanned = user.customClaims.banned;
+					const role = isAdmin ? 'admin' : (isMod ? 'mod' : '-');
 					return (
 						<tr key={user.uid}>
 							<td>{user.displayName}</td>
 							<td>{user.email}</td>
-							<td>{user.avatarUrl ? 'av' : 'no av'}</td>
-							<td>{user.verifiedWithCode ? 'V' : '-'}</td>
-							<td>{role}</td>
+							<td>{user.photoURL ? 'av' : 'no av'}</td>
+							<td>{user.customClaims.validated ? 'V' : '-'}</td>
 							<td>
-								<button onClick={() => onModClick(user.uid, isMod)}>
-									{isMod ? 'unmod' : 'mod'}
-								</button>
+								<div className="action-cell">
+									{role}
+									{!isAdmin && (
+										<button onClick={() => onModClick(user.uid, isMod)}>
+										{isMod ? 'unmod' : 'mod'}
+										</button>
+									)}
+								</div>
 							</td>
-							<td>{isBanned ? 'V' : '-'}</td>
 							<td>
-								<button onClick={() => onBanClick(user.uid, isBanned)}>
-									{isBanned ? 'unban' : 'ban'}
-								</button>
+								<div className="action-cell">
+									{isBanned ? 'V' : '-'}
+									<button onClick={() => onBanClick(user.uid, isBanned)}>
+										{isBanned ? 'unban' : 'ban'}
+									</button>
+								</div>
 							</td>
 						</tr>
 					);

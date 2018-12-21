@@ -1,6 +1,7 @@
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
+import 'firebase/functions';
 
 export function getForum(props) {
 	const db = firebase.firestore();
@@ -36,17 +37,11 @@ export function getUser(props, uid) {
 	}
 }
 
-export function getAllUsers() {
-	const db = firebase.firestore();
-	return db.collection("users")
-		.get()
-		.then(querySnapshot => {
-			const users = [];
-			querySnapshot.forEach(doc => users.push(
-				Object.assign(doc.data(), { uid: doc.id })
-			));
-			return users;
-		});
+export function getAllUsers(getAllData) {
+	const fetchAllUsers = firebase.functions().httpsCallable('getAllUsers');
+	return fetchAllUsers({ getAll: getAllData })
+		.then(response => response.data)
+		.catch(e => console.error(e));
 }
 
 export function getAllInvites() {
@@ -87,16 +82,8 @@ export function toggleBan(uid, shouldBan) {
 }
 
 export function toggleMod(uid, shouldMod) {
-	const db = firebase.firestore();
-	if (shouldMod) {
-		db.collection("roles").doc("moderators").update({
-				ids: firebase.firestore.FieldValue.arrayUnion(uid)
-		});
-	} else {
-		db.collection("roles").doc("moderators").update({
-				ids: firebase.firestore.FieldValue.arrayRemove(uid)
-		});
-	}
+	const setModerator = firebase.functions().httpsCallable('setModerator');
+	return setModerator({ uid, isOn: shouldMod });
 }
 
 export function getAllInvitesFor(uid) {
@@ -132,11 +119,13 @@ export function verifyAllUsers() {
 	return db.collection("users")
 		.get()
 		.then(querySnapshot => {
+			const setValidated = firebase.functions().httpsCallable('setValidated');
 			querySnapshot.forEach(doc => {
-				db.collection("users").doc(doc.id).update({
-					verifiedWithCode: true,
-					verifiedDate: Date.now()
-				});
+				setValidated({ uid: doc.id, isOn: true });
+				// db.collection("users").doc(doc.id).update({
+				// 	verifiedWithCode: true,
+				// 	verifiedDate: Date.now()
+				// });
 			});
 		});
 }

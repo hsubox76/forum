@@ -13,6 +13,16 @@
   margin-bottom: 10px;
 }
 
+.action-cell {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+}
+
+.action-cell button {
+	margin-left: 8px;
+}
+
 .invite-gen-form {
 	margin: 20px;
 	border: 1px solid grey;
