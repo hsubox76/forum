@@ -63,6 +63,7 @@ class Profile extends Component {
     });
   }
   uploadAvatar = () => {
+    this.setState({ avatarError: null });
     const file = this.fileInputRef.current.files[0];
     const parts = file.name.split('.');
     const extension = parts[parts.length - 1];
@@ -70,7 +71,11 @@ class Profile extends Component {
     const avatarImageRef = this.storageRef.child(`avatars/${userId}.${extension}`);
     return avatarImageRef.put(file)
       .then(snapshot => snapshot.ref.getDownloadURL())
-      .then(url => this.db.collection('users').doc(userId).update({ avatarUrl: url }));
+      .then(url => this.props.user.updateProfile({ photoURL: url }))
+      .catch(e => {
+        console.error(e);
+        this.setState({ avatarError: 'Problem uploading avatar' });
+      });
   }
   onAvatarSelect = (e) => {
     this.setState({ previewUrl: null, avatarError: null, avatarBlocking: false });
@@ -113,24 +118,23 @@ class Profile extends Component {
         <div>
           <input
             ref={this.displayNameRef}
-            disabled={this.profileChangeState === 'sending'}
+            disabled={this.state.profileChangeState === 'sending'}
             className="display-name-input"
             defaultValue={this.props.user.displayName}
           />
         </div>
         <div><label>Current avatar:</label></div>
         <div>
-          {this.props.user.avatarUrl
-            ? <img className="avatar-profile" alt="User's Avatar" src={this.props.user.avatarUrl} />
+          {this.props.user.photoURL
+            ? <img className="avatar-profile" alt="User's Avatar" src={this.props.user.photoURL} />
             : 'none'}
         </div>
         {this.state.previewUrl && (
           <div>
             <div><label>Avatar to upload:</label></div>
             <div>
-              {this.props.user.avatarUrl
-                ? <img className="avatar-profile" alt="New Avatar" src={this.state.previewUrl} />
-                : 'none'}
+              {this.state.previewUrl
+                && <img className="avatar-profile" alt="New Avatar" src={this.state.previewUrl} />}
             </div>
             <button className="button-cancel" type="nosubmit" onClick={() => {this.setState({ previewUrl: null });}}>cancel</button>
           </div>

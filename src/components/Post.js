@@ -4,12 +4,13 @@ import get from 'lodash/get';
 import findKey from 'lodash/findKey';
 import TextContent from './TextContent';
 import { LOADING_STATUS, STANDARD_DATE_FORMAT, reactions } from '../utils/constants';
-import { updatePost } from '../utils/dbhelpers';
-import { useSubscribeToDocument, useGetUser, useGetRoles } from '../utils/hooks';
+import { updatePost, getClaims } from '../utils/dbhelpers';
+import { useSubscribeToDocument, useGetUser } from '../utils/hooks';
 import ReactionButton from './ReactionButton';
 
 function Post(props) {
 	const [status, setStatus] = useState(null);
+	const [claims, setClaims] = useState(false);
 	const postRef = useRef();
 	const contentRef = useRef();
 	const db = props.db;
@@ -19,7 +20,6 @@ function Post(props) {
 	const uid = post ? post.uid : null;
 
 	const postUser = useGetUser(uid);
-	const postUserRoles = useGetRoles(uid);
 	
 	// scroll to bottom and update last read if/when post updates and is last post
 	useEffect(() => {
@@ -28,6 +28,10 @@ function Post(props) {
 			props.updateLastRead(props.postId, post.updatedTime || post.createdTime);
 		}
 	}, [post || '', props.isLastOnPage || false]);
+
+  useEffect(() => {
+    getClaims().then(setClaims);
+  }, [props.user]);
 	
 	useEffect(() => {
 		postUnsub && postUnsub();
@@ -96,7 +100,7 @@ function Post(props) {
 		if (status !== LOADING_STATUS.EDITING) {
 			addButton('quote', 'edit', () => props.handleQuote(post));
 		}
-		if (props.user.isAdmin || props.user.uid === post.uid) {
+		if (claims.admin || props.user.uid === post.uid) {
 			if (status === LOADING_STATUS.EDITING) {
 				addButton('cancel', 'cancel', toggleEditMode);
 				addButton('ok', 'edit', handleEditPost);
@@ -161,12 +165,12 @@ function Post(props) {
 		<div key={post.id} ref={postRef} className={classes.join(' ')}>
 			<div className="post-header">
 				<div className="post-user">
-					{postUser && postUser.avatarUrl && <img className="avatar-post" alt="User's Avatar" src={postUser.avatarUrl} />}
+					{postUser && postUser.photoURL && <img className="avatar-post" alt="User's Avatar" src={postUser.photoURL} />}
 					{postUser
 						? <div>{postUser.displayName}</div>
 						: <div className="loader loader-small"></div>}
-					{postUserRoles && postUserRoles.isAdmin && <div className="role-icon">A</div>}
-					{postUserRoles && postUserRoles.isMod && <div className="role-icon">M</div>}
+					{get(postUser, 'customClaims.admin') && <div className="role-icon">A</div>}
+					{get(postUser, 'customClaims.mod') && <div className="role-icon">M</div>}
 				</div>
 				<div className="post-header-right">
 					<div>#{props.index}</div>

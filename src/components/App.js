@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import '../styles/App.css';
 import { Router, Link } from '@reach/router';
-import isEmpty from 'lodash/isEmpty';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import Dialog from './Dialog.js';
 import ForumList from './ForumList.js';
@@ -15,7 +14,6 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import registerServiceWorker from '../registerServiceWorker';
-import { ROLE_PROP } from '../utils/constants';
 
 class App extends Component {
   constructor() {
@@ -29,7 +27,7 @@ class App extends Component {
       forumsById: {},
       dialog: null,
       hasNewContent: false,
-      refreshing: false
+      refreshing: false,
     };
 		this.inviteCodeRef = React.createRef();
 		this.db = firebase.firestore();
@@ -41,7 +39,8 @@ class App extends Component {
         // Avoid redirects after sign-in.
         signInSuccessWithAuthResult: (result) => {
           if (result.additionalUserInfo.isNewUser) {
-        		this.createUserProfile(result.user);
+            // Don't need this anymore, may want to trigger other actions.
+        		// this.createUserProfile(result.user);
           }
         }
       },
@@ -54,16 +53,7 @@ class App extends Component {
   componentDidMount = () => {
     this.unregisterAuthObserver = firebase.auth().onAuthStateChanged(
         (user) => {
-          // Set if null, otherwise get more data
-          if (!user) {
-            this.unregisterProfileObserver && this.unregisterProfileObserver();
-            this.unregisterProfileObserver = null;
-            this.unregisterRolesObserver && this.unregisterRolesObserver();
-            this.unregisterRolesObserver = null;
-            this.setState({ user });
-          } else {
-            this.updateUserData(user);
-          }
+          this.setState({ user });
         }
     );
     registerServiceWorker(() => this.setState({ hasNewContent: true }));
@@ -78,90 +68,8 @@ class App extends Component {
       );
     }
   }
-  componentDidUpdate = () => {
-    if (!this.unregisterProfileObserver && this.state.user) {
-      this.updateUserData(this.state.user);
-    }
-  }
   componentWillUnmount = () => {
-    this.unregisterRolesObserver && this.unregisterRolesObserver();
-    this.unregisterProfileObserver && this.unregisterProfileObserver();
     this.unregisterAuthObserver && this.unregisterAuthObserver();
-  }
-  createUserProfile = (user) => {
-		this.db.collection("users").doc(user.uid).set({
-        displayName: user.displayName,
-        email: user.email,
-        verifiedWithCode: false
-    });
-  }
-  updateUserData = (user) => {
-    if (!user) return;
-    this.unregisterRolesObserver = this.db.collection("roles")
-      .onSnapshot(
-        querySnapshot => {
-          const userUpdates = { rolesLoaded: true };
-          querySnapshot.forEach(docRef => {
-            if (docRef && docRef.data()) {
-              if (docRef.data().ids.includes(user.uid)) {
-                userUpdates[ROLE_PROP[docRef.id]] = true;
-              }
-            }
-          });
-          this.setState({ user: Object.assign({}, user, this.state.user, userUpdates) });
-        }
-      );
-		this.unregisterProfileObserver = this.db.collection("users").doc(user.uid)
-		  .onSnapshot(
-		    docRef => {
-  		    if (docRef && docRef.data()) {
-  		      const userUpdates = { profileLoaded: true };
-  		      userUpdates.avatarUrl = docRef.data().avatarUrl;
-            const profileUpdates = {};
-  		      if (user.displayName !== docRef.data().displayName) {
-  		        profileUpdates.displayName = docRef.data().displayName;
-  		      }
-  		      if (!isEmpty(profileUpdates)) {
-              user.updateProfile(profileUpdates);
-  		      }
-  		      // Don't try to update the firebase auth profile with this.
-  		      // Just used locally.
-  		      userUpdates.verifiedWithCode = docRef.data().verifiedWithCode;
-            this.setState({ user: Object.assign({}, this.state.user, userUpdates) });
-  		    } else {
-  		      // no profile?
-      		  let error = 'unknown';
-      		  if (!docRef) {
-      		    error = 'no docRef';
-      		  }
-      		  if (docRef && !docRef.data()) {
-      		    error = 'no docRef.data()';
-      		    // this.createUserProfile(user);
-      		  }
-      		  const timestamp = Date.now();
-      		  this.db.collection("errors").add({
-      		    error,
-      		    timestamp,
-      		    date: new Date(timestamp).toString(),
-      		    userId: user.uid,
-      		    name: user.displayName,
-      		    docRef: docRef || 'none'
-      		  });
-  		    }
-  		  },
-		    e => {
-  		    // If we never got this user into the DB
-      		// this.createUserProfile(user);
-      		const timestamp = Date.now();
-      		this.db.collection("errors").add({
-      		  error: 'onSnapshot error callback',
-      		  timestamp,
-      		  date: new Date(timestamp).toString(),
-      		  message: e.message,
-      		  userId: user.uid,
-      		  name: user.displayName
-      		});
-		  });
   }
   handleAddUserByUid = (uid, userData) => {
 		this.setState({
@@ -245,12 +153,7 @@ class App extends Component {
           firebaseAuth={firebase.auth()}
         />
       );
-    } else if (!this.state.user.profileLoaded || !this.state.user.rolesLoaded) {
-      return (
-        <div className="loading-page">
-  				<div className="loader loader-big"></div>
-  			</div>);
-    } else if (this.state.user.isBanned) {
+    } else if (this.state.user.banned) {
       return (
         <div className="loading-page">
   				this user has been banned

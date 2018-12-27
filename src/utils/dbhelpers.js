@@ -21,22 +21,6 @@ export function getForum(props) {
   }
 }
 
-export function getUser(props, uid) {
-	const db = firebase.firestore();
-	if (props.usersByUid[uid]) {
-		return Promise.resolve(props.usersByUid[uid]);
-	} else {
-		return db.collection("users")
-			.doc(uid)
-			.get()
-			.then(userDoc => {
-				// store this up a level
-				props.addUserByUid(uid, userDoc.data());
-				return userDoc.data();
-			});
-	}
-}
-
 export function getAllUsers(getAllData) {
 	const fetchAllUsers = firebase.functions().httpsCallable('getAllUsers');
 	return fetchAllUsers({ getAll: getAllData })
@@ -57,28 +41,9 @@ export function getAllInvites() {
 		});
 }
 
-export function getRoles() {
-	const db = firebase.firestore();
-	return db.collection("roles")
-		.get()
-		.then(querySnapshot => {
-			const roles = {};
-			querySnapshot.forEach(doc => roles[doc.id] = doc.data());
-			return roles;
-		});
-}
-
 export function toggleBan(uid, shouldBan) {
-	const db = firebase.firestore();
-	if (shouldBan) {
-		db.collection("roles").doc("bannedUsers").update({
-				ids: firebase.firestore.FieldValue.arrayUnion(uid)
-		});
-	} else {
-		db.collection("roles").doc("bannedUsers").update({
-				ids: firebase.firestore.FieldValue.arrayRemove(uid)
-		});
-	}
+	const setBanned = firebase.functions().httpsCallable('setBanned');
+	return setBanned({ uid, isOn: shouldBan });
 }
 
 export function toggleMod(uid, shouldMod) {
@@ -114,18 +79,22 @@ export function generateInviteCode(createdByName, createdByUid) {
 		});
 }
 
-export function verifyAllUsers() {
+export function verifyAllUsers(users) {
+	const setValidated = firebase.functions().httpsCallable('setValidated');
+	const promiseList = users.map(user => setValidated({ uid: user.uid, isOn: true }));
+	return Promise.all(promiseList);
+}
+
+export function migrateAllAvatars() {
 	const db = firebase.firestore();
 	return db.collection("users")
 		.get()
 		.then(querySnapshot => {
-			const setValidated = firebase.functions().httpsCallable('setValidated');
+			const setAvatar = firebase.functions().httpsCallable('setAvatar');
 			querySnapshot.forEach(doc => {
-				setValidated({ uid: doc.id, isOn: true });
-				// db.collection("users").doc(doc.id).update({
-				// 	verifiedWithCode: true,
-				// 	verifiedDate: Date.now()
-				// });
+				if (doc.data().avatarUrl) {
+					setAvatar({ uid: doc.id, url: doc.data().avatarUrl });
+				}
 			});
 		});
 }
@@ -207,13 +176,22 @@ export function escapeRegExp(string){
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
-export function getIsAdmin() {
+// Get claims of current user
+export function getClaims() {
 	return firebase.auth().currentUser.getIdTokenResult()
 		.then((idTokenResult) => {
-			if (idTokenResult.claims.admin) {
-				console.log('verified this user is an admin');
-				return true;
-			}
-			return false;
+			return idTokenResult.claims;
 		});
+}
+
+// Get user data of any user
+export function getUser(props, uid) {
+	if (props.usersByUid[uid]) {
+			return Promise.resolve(props.usersByUid[uid]);
+	}
+	const fetchUser = firebase.functions().httpsCallable('getUser');
+	return fetchUser({ uid }).then((response) => {
+		props.addUserByUid(uid, response.data);
+		return response.data;
+	});
 }

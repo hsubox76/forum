@@ -6,7 +6,7 @@ import { LOADING_STATUS, POSTS_PER_PAGE } from '../utils/constants';
 import without from 'lodash/without';
 import range from 'lodash/range';
 import get from 'lodash/get';
-import { getForum, updatePost, updateThread } from '../utils/dbhelpers';
+import { getForum, updatePost, updateThread, getClaims } from '../utils/dbhelpers';
 import { getParams, getPostRange } from '../utils/utils';
 
 function PostList(props) {
@@ -17,6 +17,7 @@ function PostList(props) {
   const [thread, setThread] = useState(null);
   const [status, setStatus] = useState(LOADING_STATUS.LOADING);
   const [postBeingEdited, setPostBeingEdited] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   useEffect(() => {
     getForum(props);
@@ -27,6 +28,10 @@ function PostList(props) {
         setThread(threadDoc.data());
       });
   }, [props.threadId]);
+
+  useEffect(() => {
+    getClaims().then(claims => setIsAdmin(claims.admin));
+  }, [props.user]);
   
   // Unmount
   useEffect(() => {
@@ -209,7 +214,7 @@ function PostList(props) {
           <span className="thread-title">{thread.title}</span>
         </div>
         <div>
-          {props.user.isAdmin &&
+          {isAdmin &&
             <button className="button-delete" onClick={handleDeleteThread}>
               delete
             </button>

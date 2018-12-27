@@ -3,13 +3,6 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const pick = require('lodash/pick');
 
-const ROLE_DOCS = {
-  mod: 'moderators',
-  admin: 'admins',
-  banned: 'bannedUsers',
-  validated: 'validatedUsers'
-};
-
 admin.initializeApp();
 
 const firestore = admin.firestore();
@@ -28,22 +21,18 @@ async function getUser(uid) {
 async function setRole(uid, role, isOn = true, overwrite = false) {
   let user = await getUser(uid);
   let existingClaims = {};
-  if (!overwrite && user.customClaims) {
-    existingClaims = user.customClaims;
+  if (user.customClaims) {
+    if (user.customClaims[role] === Boolean(isOn)) {
+      console.log(`${role} privileges were already ${actionPhrase} ${user.displayName}`);
+      return { customClaims: user.customClaims };
+    }
+    if (!overwrite) {
+      existingClaims = user.customClaims;
+    }
   }
   await admin.auth().setCustomUserClaims(
     uid,
-    Object.assign(existingClaims, { [role]: isOn }));
-  try {
-    let arrayOp = isOn ? 'arrayUnion' : 'arrayRemove';
-    await firestore
-      .doc(`roles/${ROLE_DOCS[role]}`)
-      .update({
-          ids: admin.firestore.FieldValue[arrayOp](uid)
-      });
-  } catch (e) {
-    throw new functions.https.HttpsError('unknown', e.code + e.message);
-  }
+    Object.assign(existingClaims, { [role]: Boolean(isOn) }));
   user = await getUser(uid);
   const actionPhrase = isOn ? 'given to' : 'removed from';
   console.log(`${role} privileges ${actionPhrase} ${user.displayName}`);
@@ -79,6 +68,12 @@ exports.setBanned = functions.https.onCall(async (data, context) => {
     await setRole(data.uid, 'banned', data.isOn);
     return await setRole(data.uid, 'validated', data.isOn);
   }
+});
+
+exports.setAvatar = functions.https.onCall(async (data, context) => {
+  checkIfAdmin(context);
+  checkIfUid(data);
+  return await admin.auth().updateUser(data.uid, { photoURL: data.url });
 });
 
 exports.setValidated = functions.https.onCall(async (data, context) => {
@@ -132,4 +127,28 @@ exports.getAllUsers = functions.https.onCall(async (data, context) => {
     newRecord.customClaims = pick(customClaims, customClaimsProperties);
     return newRecord;
   });
+});
+
+exports.getUser = functions.https.onCall(async (data, context) => {
+  checkIfUid(data);
+  const userProperties = [
+    'uid',
+    'displayName',
+    'photoURL'
+  ];
+  const customClaimsProperties = [
+    'admin',
+    'mod'
+  ];
+  if (data && data.getAll &&
+      context && context.auth && context.auth.token.admin) {
+    userProperties.push('email');
+    customClaimsProperties.push('banned');
+    customClaimsProperties.push('validated');
+  }
+  const userRecord = await admin.auth().getUser(data.uid);
+  const newRecord = pick(userRecord, userProperties);
+  const customClaims = userRecord.customClaims || {};
+  newRecord.customClaims = pick(customClaims, customClaimsProperties);
+  return newRecord;
 });

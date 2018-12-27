@@ -5,12 +5,13 @@ import { STANDARD_DATE_FORMAT } from '../utils/constants';
 import { getAllUsers,
 	getAllInvites,
 	verifyAllUsers,
+	migrateAllAvatars,
 	toggleBan,
 	toggleMod,
-	getIsAdmin
+	getClaims
 } from '../utils/dbhelpers';
 
-function Admin(props) {
+function Admin() {
 	const [users, setUsers] = useState([]);
 	const [invites, setInvites] = useState([]);
 	const [userIsAdmin, setUserIsAdmin] = useState(false);
@@ -19,7 +20,7 @@ function Admin(props) {
 	useEffect(() => {
 		getAllUsers(true).then(users => setUsers(users));
 		getAllInvites().then(invites => setInvites(invites));
-		getIsAdmin().then(adminStatus => setUserIsAdmin(adminStatus))
+		getClaims().then(claims => setUserIsAdmin(claims.admin))
 	}, []);
 	
 	function onBanClick(uid, isBanned) {
@@ -77,7 +78,8 @@ function Admin(props) {
 			</table>
 			<hr />
 			<div className="table-title">Users</div>
-			<button className="button-edit" onClick={verifyAllUsers}>verify all users</button>
+			<button className="button-edit" onClick={() => verifyAllUsers(users)}>verify all users</button>
+			<button className="button-edit" onClick={migrateAllAvatars}>migrate all avatars</button>
 			<table>
 				<thead>
 					<tr>
