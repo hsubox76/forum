@@ -3,6 +3,9 @@ import 'firebase/auth';
 import 'firebase/firestore';
 import 'firebase/functions';
 
+const usersByUid = {};
+const userPromisesByUid = {};
+
 export function getForum(props) {
 	const db = firebase.firestore();
 	const forum = props.forumsById[props.forumId];
@@ -19,6 +22,10 @@ export function getForum(props) {
 		);
 		});
   }
+}
+
+export function getDoc(collection, docId) {
+	return firebase.firestore().collection(collection).doc(docId).get();
 }
 
 export function getAllUsers(getAllData) {
@@ -185,13 +192,22 @@ export function getClaims() {
 }
 
 // Get user data of any user
-export function getUser(props, uid) {
-	if (props.usersByUid[uid]) {
-			return Promise.resolve(props.usersByUid[uid]);
+export function getUser(uid) {
+	if (usersByUid[uid] && usersByUid[uid].uid) {
+		return Promise.resolve(usersByUid[uid]);
+	} else if (userPromisesByUid[uid]) {
+		return userPromisesByUid[uid];
 	}
 	const fetchUser = firebase.functions().httpsCallable('getUser');
-	return fetchUser({ uid }).then((response) => {
-		props.addUserByUid(uid, response.data);
+	const doFetch = fetchUser({ uid }).then((response) => {
+		// props.addUserByUid(uid, response.data);
+		usersByUid[uid] = response.data;
 		return response.data;
 	});
+	userPromisesByUid[uid] = doFetch;
+	return doFetch;
+}
+
+export function getUsersByUid() {
+	return { usersByUid, userPromisesByUid };
 }

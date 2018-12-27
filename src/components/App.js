@@ -10,6 +10,7 @@ import Invite from './Invite.js';
 import ThreadList from './ThreadList.js';
 import PostList from './PostList.js';
 import Profile from './Profile.js';
+import UserContext from './UserContext.js';
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
@@ -28,6 +29,7 @@ class App extends Component {
       dialog: null,
       hasNewContent: false,
       refreshing: false,
+      addUserByUid: this.handleAddUserByUid
     };
 		this.inviteCodeRef = React.createRef();
 		this.db = firebase.firestore();
@@ -173,81 +175,83 @@ class App extends Component {
       );
     } */
     return (
-      <div className="App">
-        <div className="page-header">
-          <div><Link to="/">Home</Link></div>
-          <div className="account-area">
-            <span className="logged-in-user">{this.state.user.displayName}</span>
-            <Link to="/help">Help</Link>
-            <Link to="/invite">Invite</Link>
-            <Link to="/profile">Edit profile</Link>
-            <span
-              className="sign-out-button"
-              onClick={() => firebase.auth().signOut()}>
-                Logout
-            </span>
+      <UserContext.Provider value={this.state}>
+        <div className="App">
+          <div className="page-header">
+            <div><Link to="/">Home</Link></div>
+            <div className="account-area">
+              <span className="logged-in-user">{this.state.user.displayName}</span>
+              <Link to="/help">Help</Link>
+              <Link to="/invite">Invite</Link>
+              <Link to="/profile">Edit profile</Link>
+              <span
+                className="sign-out-button"
+                onClick={() => firebase.auth().signOut()}>
+                  Logout
+              </span>
+            </div>
+          </div>
+          {this.state.hasNewContent &&
+            <div className="message-banner">
+              <div>New content available, please refresh.</div>
+              <button type="none" onClick={() => {
+                if (navigator && navigator.serviceWorker) {
+                  console.log('checking registration');
+                  navigator.serviceWorker
+                    .getRegistration()
+                    .then(reg => {
+                      console.log('posting skipWaiting message');
+                      reg.waiting.postMessage('skipWaiting');
+                    });
+                }
+              }}>
+                reload page
+              </button>
+            </div>
+          }
+          <Router>
+            <ForumList
+              path="/"
+              user={this.state.user}
+              usersByUid={this.state.usersByUid}
+              forumIds={this.state.forumIds}
+              forumsById={this.state.forumsById}
+              addUserByUid={this.handleAddUserByUid}
+              setForumData={this.handleSetForumData}
+            />
+            <ThreadList
+              path="forum/:forumId"
+              forumsById={this.state.forumsById}
+              user={this.state.user}
+              usersByUid={this.state.usersByUid}
+              threadIds={this.state.threadIds}
+              threadsById={this.state.threadsById}
+              addUserByUid={this.handleAddUserByUid}
+              setThreadData={this.handleSetThreadData}
+              setForumData={this.handleSetForumData}
+            />
+            <PostList
+              path="forum/:forumId/thread/:threadId"
+              db={this.db}
+              user={this.state.user}
+              setDialog={this.handleSetDialog}
+              usersByUid={this.state.usersByUid}
+              addUserByUid={this.handleAddUserByUid}
+              forumsById={this.state.forumsById}
+              setForumData={this.handleSetForumData}
+            />
+            <Help path="help" />
+            <Profile path="profile" user={this.state.user} />
+            <Admin path="admin" user={this.state.user} />
+            <Invite path="invite" user={this.state.user} />
+          </Router>
+          {this.state.dialog &&
+            <Dialog {...this.state.dialog} onClose={() => this.setState({dialog: null})} />}
+          <div className="footer">
+            <div>COMMIT_REF: {process.env.REACT_APP_COMMIT_REF && process.env.REACT_APP_COMMIT_REF.substr(0, 7)}</div>
           </div>
         </div>
-        {this.state.hasNewContent &&
-          <div className="message-banner">
-            <div>New content available, please refresh.</div>
-            <button type="none" onClick={() => {
-              if (navigator && navigator.serviceWorker) {
-                console.log('checking registration');
-                navigator.serviceWorker
-                  .getRegistration()
-                  .then(reg => {
-                    console.log('posting skipWaiting message');
-                    reg.waiting.postMessage('skipWaiting');
-                  });
-              }
-            }}>
-              reload page
-            </button>
-          </div>
-        }
-        <Router>
-          <ForumList
-            path="/"
-            user={this.state.user}
-            usersByUid={this.state.usersByUid}
-            forumIds={this.state.forumIds}
-            forumsById={this.state.forumsById}
-            addUserByUid={this.handleAddUserByUid}
-            setForumData={this.handleSetForumData}
-          />
-          <ThreadList
-            path="forum/:forumId"
-            forumsById={this.state.forumsById}
-            user={this.state.user}
-            usersByUid={this.state.usersByUid}
-            threadIds={this.state.threadIds}
-            threadsById={this.state.threadsById}
-            addUserByUid={this.handleAddUserByUid}
-            setThreadData={this.handleSetThreadData}
-            setForumData={this.handleSetForumData}
-          />
-          <PostList
-            path="forum/:forumId/thread/:threadId"
-            db={this.db}
-            user={this.state.user}
-            setDialog={this.handleSetDialog}
-            usersByUid={this.state.usersByUid}
-            addUserByUid={this.handleAddUserByUid}
-            forumsById={this.state.forumsById}
-            setForumData={this.handleSetForumData}
-          />
-          <Help path="help" />
-          <Profile path="profile" user={this.state.user} />
-          <Admin path="admin" user={this.state.user} />
-          <Invite path="invite" user={this.state.user} />
-        </Router>
-        {this.state.dialog &&
-          <Dialog {...this.state.dialog} onClose={() => this.setState({dialog: null})} />}
-        <div className="footer">
-          <div>COMMIT_REF: {process.env.REACT_APP_COMMIT_REF && process.env.REACT_APP_COMMIT_REF.substr(0, 7)}</div>
-        </div>
-      </div>
+      </UserContext.Provider>
     );
   }
 }
