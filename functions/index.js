@@ -55,8 +55,42 @@ function checkIfUid(data) {
 
 exports.onNewPost = functions.firestore
   .document('posts/{postId}')
-  .onCreate((snap, context) => {
-    console.log('content', snap.data().content);
+  .onCreate(async (snap, context) => {
+    const listUsersResult = await admin.auth().listUsers();
+    const userIds = listUsersResult.users.map(userRecord => userRecord.uid);
+    snap.ref.update({
+      unreadBy: userIds
+    });
+    if (snap.data().parentThread) {
+      firestore.collection('threads').doc(snap.data().parentThread).update({
+        unreadBy: userIds
+      });
+    }
+    if (snap.data().parentForum) {
+      firestore.collection('forums').doc(snap.data().parentForum).update({
+        unreadBy: userIds
+      });
+    }
+  });
+
+exports.onUpdatePost = functions.firestore
+  .document('posts/{postId}')
+  .onUpdate(async (change, context) => {
+    const listUsersResult = await admin.auth().listUsers();
+    const userIds = listUsersResult.users.map(userRecord => userRecord.uid);
+    change.after.ref.update({
+      unreadBy: userIds
+    });
+    if (change.after.data().parentThread) {
+      firestore.collection('threads').doc(change.after.data().parentThread).update({
+        unreadBy: userIds
+      });
+    }
+    if (change.after.data().parentForum) {
+      firestore.collection('forums').doc(change.after.data().parentForum).update({
+        unreadBy: userIds
+      });
+    }
   });
 
 exports.setBanned = functions.https.onCall(async (data, context) => {
