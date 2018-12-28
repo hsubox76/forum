@@ -6,7 +6,7 @@ import { LOADING_STATUS, POSTS_PER_PAGE } from '../utils/constants';
 import without from 'lodash/without';
 import range from 'lodash/range';
 import get from 'lodash/get';
-import { deleteDoc, addPost, updateThread, getClaims } from '../utils/dbhelpers';
+import { deleteDoc, addPost, getClaims, updateDoc } from '../utils/dbhelpers';
 import { getParams, getPostRange } from '../utils/utils';
 import { useSubscribeToDocument } from '../utils/hooks';
 
@@ -34,7 +34,7 @@ function PostList(props) {
         postIds: without(postIds, postId)
     };
     //TODO: update last read time
-    return updateThread(props.threadId, updates, props.forumId);
+    return updateDoc('threads', props.threadId, updates);
   }
   
   function handleDeleteThread () {
@@ -73,11 +73,8 @@ function PostList(props) {
   }
   
   function handleUpdateLastRead (postId, timestamp) {
-    updateThread(
-      props.threadId,
-      { ['readBy.' + props.user.uid]: timestamp },
-      props.forumId,
-      { ['readBy.' + props.user.uid]: Date.now() });
+    updateDoc("threads", props.threadId, { ['readBy.' + props.user.uid]: timestamp });
+    updateDoc("forums", props.forumId, { ['readBy.' + props.user.uid]: timestamp });
   }
   
   function deleteThread () {
@@ -197,8 +194,6 @@ function PostList(props) {
           deletePostFromThread={deletePostFromThread}
           toggleEditPost={handleToggleEditPost}
           threadId={props.threadId}
-          usersByUid={props.usersByUid}
-          addUserByUid={props.addUserByUid}
           setDialog={props.setDialog}
           handleQuote={handleQuote}
           isLastOnPage={index === end - 1}
