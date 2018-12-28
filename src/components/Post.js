@@ -1,25 +1,27 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { format } from 'date-fns';
 import get from 'lodash/get';
 import findKey from 'lodash/findKey';
 import TextContent from './TextContent';
+import UserData from './UserData';
+import UserContext from './UserContext';
 import { LOADING_STATUS, STANDARD_DATE_FORMAT, reactions } from '../utils/constants';
-import { updatePost, getClaims } from '../utils/dbhelpers';
+import { deleteDoc, updatePost, getClaims } from '../utils/dbhelpers';
 import { useSubscribeToDocument, useGetUser } from '../utils/hooks';
 import ReactionButton from './ReactionButton';
 
 function Post(props) {
 	const [status, setStatus] = useState(null);
 	const [claims, setClaims] = useState(false);
+  const context = useContext(UserContext);
 	const postRef = useRef();
 	const contentRef = useRef();
-	const db = props.db;
 	
-	const { doc: post, unsub: postUnsub } =
+	const post =
 		useSubscribeToDocument("posts", props.postId, props);
 	const uid = post ? post.uid : null;
 
-	const postUser = useGetUser(uid);
+	let postUser = useGetUser(uid, context);
 	
 	// scroll to bottom and update last read if/when post updates and is last post
 	useEffect(() => {
@@ -33,10 +35,6 @@ function Post(props) {
     getClaims().then(setClaims);
   }, [props.user]);
 	
-	useEffect(() => {
-		postUnsub && postUnsub();
-	}, []);
-	
 	function toggleEditMode() {
 		if (status === LOADING_STATUS.EDITING) {
 			setStatus(LOADING_STATUS.LOADED);
@@ -47,14 +45,9 @@ function Post(props) {
 	}
 	
 	function deletePost () {
-		postUnsub && postUnsub();
 		setStatus(LOADING_STATUS.DELETING);
 		const deletePromises = [];
-		deletePromises.push(
-			db.collection("posts")
-				.doc(props.postId)
-				.delete()
-				.then(() => console.log(`post ${props.postId} deleted`)));
+		deletePromises.push(deleteDoc('posts', props.postId));
 		deletePromises.push(props.deletePostFromThread(props.postId));
 		Promise.all(deletePromises)
 			.then(() => {
@@ -74,7 +67,7 @@ function Post(props) {
 	
 	function handleEditPost() {
 		setStatus(LOADING_STATUS.SUBMITTING);
-		updatePost(contentRef.current.value, null, props)
+		updatePost(contentRef.current.value, props.threadId, props.postId, props.user)
 			.then(() => {
 					//TODO: update thread "last updated" info
 					setStatus(LOADING_STATUS.LOADED);
@@ -186,8 +179,8 @@ function Post(props) {
 						<TextContent
 							content={post.content}
 							user={props.user}
-							usersByUid={props.usersByUid}
-							addUserByUid={props.addUserByUid}
+							usersByUid={context.usersByUid}
+							addUserByUid={context.addUserByUid}
 						/>
 					)
 				}
@@ -197,7 +190,7 @@ function Post(props) {
 					<span>Last edited</span>
 					<span className="edit-data">{format(post.updatedTime, STANDARD_DATE_FORMAT)}</span>
 					<span>by</span>
-					<span className="edit-data">{get(props.usersByUid, [post.updatedBy, 'displayName']) || ''}</span>
+					<span className="edit-data"><UserData uid={post.updatedBy} /></span>
 				</div>}
 			{footer}
 		</div>

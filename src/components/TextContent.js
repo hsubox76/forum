@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import Linkify from 'linkifyjs/react';
 import escape from 'lodash/escape';
 import startsWith from 'lodash/startsWith';
 import trim from 'lodash/trim';
-import { getUser } from '../utils/dbhelpers';
+import { useGetUser } from '../utils/hooks';
+import UserContext from './UserContext';
 
 const TAG_TYPES = {
 	'img': { className: 'image' },
@@ -87,6 +88,7 @@ const TextContent = (props) => {
 	if (!props.content || typeof props.content !== 'string') {
 		return null;
 	}
+	const context = useContext(UserContext);
 	const tokenDelimiterRE = new RegExp(`(\\[\\/?(?:${tagRE})\\])`);
 	const tokens = props.content.split(tokenDelimiterRE);
 		
@@ -181,11 +183,8 @@ const TextContent = (props) => {
 				quoteAuthor = node.tagAttrs.name;
 			}
 			if (node.tagAttrs.uid) {
-				if (props.usersByUid[node.tagAttrs.uid]) {
-					quoteAuthor = props.usersByUid[node.tagAttrs.uid].displayName;
-				} else {
-					getUser(props, node.tagAttrs.uid);
-				}
+				const user = useGetUser(node.tagAttrs.uid, context);
+				quoteAuthor = user ? user.displayName : '?';
 			}
 		} else if (node.tagType === 'bold') {
 			classes.push('bold');

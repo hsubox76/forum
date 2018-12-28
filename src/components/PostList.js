@@ -6,60 +6,35 @@ import { LOADING_STATUS, POSTS_PER_PAGE } from '../utils/constants';
 import without from 'lodash/without';
 import range from 'lodash/range';
 import get from 'lodash/get';
-import { getForum, updatePost, updateThread, getClaims } from '../utils/dbhelpers';
+import { deleteDoc, addPost, updateThread, getClaims } from '../utils/dbhelpers';
 import { getParams, getPostRange } from '../utils/utils';
+import { useSubscribeToDocument } from '../utils/hooks';
 
 function PostList(props) {
-  const db = props.db;
   const contentRef = useRef();
   const newPostRef = useRef();
-  let threadUnsub;
-  const [thread, setThread] = useState(null);
   const [status, setStatus] = useState(LOADING_STATUS.LOADING);
   const [postBeingEdited, setPostBeingEdited] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  
-  useEffect(() => {
-    getForum(props);
-    threadUnsub = db.collection("threads")
-      .doc(props.threadId)
-      .onSnapshot(threadDoc => {
-        setStatus(LOADING_STATUS.LOADED);
-        setThread(threadDoc.data());
-      });
-  }, [props.threadId]);
+
+  const thread = useSubscribeToDocument('threads', props.threadId);
+  if (thread && status === LOADING_STATUS.LOADING) {
+    setStatus(LOADING_STATUS.LOADED);
+  }
+
+  const forum = useSubscribeToDocument('forums', props.forumId);
 
   useEffect(() => {
     getClaims().then(claims => setIsAdmin(claims.admin));
   }, [props.user]);
-  
-  // Unmount
-  useEffect(() => {
-    return () => threadUnsub && threadUnsub();
-  }, []);
   
   function deletePostFromThread (postId) {
     const postIds = thread.postIds;
     const updates = {
         postIds: without(postIds, postId)
     };
-    if (postIds[postIds.length - 1] === postId) {
-      // if this was the last post, change updated time to previous post
-      // this isn't perfect - another post might have been edited later
-      // but close enough for now
-      return db.collection('posts')
-        .doc(postIds[postIds.length - 2])
-        .get()
-        .then(ref => {
-          const post = ref.data();
-          updates.updatedTime = post.updatedTime || post.createdTime;
-          updates.updatedBy = post.uid;
-          return updates;
-        })
-        .then(updates => updateThread(props.threadId, updates, props.forumId));
-    } else {
-      return updateThread(props.threadId, updates, props.forumId);
-    }
+    //TODO: update last read time
+    return updateThread(props.threadId, updates, props.forumId);
   }
   
   function handleDeleteThread () {
@@ -79,10 +54,7 @@ function PostList(props) {
   
   function handleSubmitPost (e) {
     e.preventDefault();
-    updatePost(
-        contentRef.current.value,
-        thread.postIds,
-        props)
+    addPost(contentRef.current.value, forum, thread, props.user)
       .then(() => {
         contentRef.current.value = '';
         navigate(`/forum/${props.forumId}` +
@@ -109,21 +81,12 @@ function PostList(props) {
   }
   
   function deleteThread () {
-    threadUnsub && threadUnsub();
     setStatus(LOADING_STATUS.DELETING);
     const deletePromises = [];
     thread.postIds.forEach(postId => {
-      deletePromises.push(
-        db.collection("posts")
-          .doc(postId)
-          .delete()
-          .then(() => console.log(`post ${postId} deleted`)));
+      deletePromises.push(deleteDoc('posts', postId));
     });
-    deletePromises.push(
-      db.collection("threads")
-        .doc(props.threadId)
-        .delete()
-        .then(() => console.log(`thread ${props.threadId} deleted`)));
+    deletePromises.push(deleteDoc('threads', props.threadId));
     // TODO: Update forum based on latest updated thread remaining.
     Promise.all(deletePromises)
       .then(() => {
@@ -164,7 +127,6 @@ function PostList(props) {
       </div>
     );
   }
-  const forum = props.forumsById[props.forumId] || {};
   
   let { posts = POSTS_PER_PAGE, page: pageString = 0 } = getParams(props.location.search);
   const { start, end, numPages, page } = getPostRange(pageString, posts, thread.postIds);
@@ -207,7 +169,7 @@ function PostList(props) {
           </span>
           <span>
             <Link className="thread-label" to={`/forum/${props.forumId}`}>
-              {forum.name}
+              {forum && forum.name}
             </Link>
             <span className="title-caret">&gt;</span>
           </span>
@@ -227,7 +189,6 @@ function PostList(props) {
         <Post
           key={id}
           postId={id}
-          db={db}
           user={props.user}
           index={index}
           isDisabled={postBeingEdited && postBeingEdited !== id}

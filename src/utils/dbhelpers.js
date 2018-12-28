@@ -3,9 +3,6 @@ import 'firebase/auth';
 import 'firebase/firestore';
 import 'firebase/functions';
 
-const usersByUid = {};
-const userPromisesByUid = {};
-
 export function getForum(props) {
 	const db = firebase.firestore();
 	const forum = props.forumsById[props.forumId];
@@ -22,10 +19,6 @@ export function getForum(props) {
 		);
 		});
   }
-}
-
-export function getDoc(collection, docId) {
-	return firebase.firestore().collection(collection).doc(docId).get();
 }
 
 export function getAllUsers(getAllData) {
@@ -119,38 +112,48 @@ export function updateReaction(uid, postId, reactionType, shouldAdd) {
 	}
 }
 
-export function updatePost(content, postIds, props) {
-	const db = firebase.firestore();
+export function updateDoc(collection, docId, data) {
+	return firebase.firestore().collection(collection).doc(docId).update(data);
+}
+
+export function addDoc(collection, data) {
+	return firebase.firestore().collection(collection).add(data);
+}
+
+export function addPost(content, forum, thread, user) {
+	const now = Date.now();
+	const postData = {
+		content,
+		parentThread: thread.id,
+		createdTime: now,
+		updatedTime: now,
+		uid: user.uid
+	};
+	return addDoc('posts', postData)
+		.then(docRef => {
+			updateDoc('threads', thread.id, {
+				updatedTime: now,
+				updatedBy: user.uid,
+				postIds: thread.postIds.concat(docRef.id),
+				['readBy.' + user.uid]: now
+			});
+			updateDoc('forums', forum.id, {
+				updatedBy: user.uid,
+				updatedTime: now
+			});
+		});
+}
+
+export function updatePost(content, thread, postId, user) {
 	const now = Date.now();
 	const postData = {
 			content,
-			parentThread: props.threadId,
+			parentThread: thread.id,
 			createdTime: now,
-			updatedTime: now
+			updatedTime: now,
+			updatedBy: user.uid
 	};
-	if (postIds) {
-		// new 
-		postData.uid = props.user.uid;
-		return db.collection("posts").add(postData)
-			.then((docRef) => {
-				if (postIds) {
-					updateThread(props.threadId, {
-						updatedTime: now,
-						updatedBy: props.user.uid,
-						postIds: postIds.concat(docRef.id),
-						['readBy.' + props.user.uid]: now
-					}, props.forumId, {
-						['readBy.' + props.user.uid]: now
-					});
-				}
-				console.log("Document written with ID: ", docRef.id);
-			});
-	} else {
-		postData.updatedBy = props.user.uid;
-		return db.collection("posts")
-			.doc(props.postId)
-			.update(postData);
-	}
+	return updateDoc('posts', postId, postData);
 }
 
 export function updateThread(threadId, threadData, forumId, forumData) {
@@ -192,22 +195,29 @@ export function getClaims() {
 }
 
 // Get user data of any user
-export function getUser(uid) {
-	if (usersByUid[uid] && usersByUid[uid].uid) {
-		return Promise.resolve(usersByUid[uid]);
-	} else if (userPromisesByUid[uid]) {
-		return userPromisesByUid[uid];
+export function getUser(uid, context) {
+	const usersByUid = context.usersByUid;
+	if (usersByUid[uid]) {
+		if (usersByUid[uid].uid) {
+			return Promise.resolve(usersByUid[uid]);
+		} else if (usersByUid[uid].then) { // if there's a promise it's already being fetched
+			return usersByUid[uid]; // return ongoing promise
+		}
 	}
 	const fetchUser = firebase.functions().httpsCallable('getUser');
 	const doFetch = fetchUser({ uid }).then((response) => {
-		// props.addUserByUid(uid, response.data);
-		usersByUid[uid] = response.data;
+		context.addUserByUid(uid, response.data);
 		return response.data;
 	});
-	userPromisesByUid[uid] = doFetch;
+	// add promise to map, it will be replaced with value when it comes
+	context.addUserByUid(uid, doFetch);
 	return doFetch;
 }
 
-export function getUsersByUid() {
-	return { usersByUid, userPromisesByUid };
+export function deleteDoc(collection, docId) {
+	return firebase.firestore().collection(collection)
+		.doc(docId)
+		.delete()
+		.then(() => console.log(`${docId} deleted from collection ${collection}`))
+		.catch(e => console.error(e));
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useContext } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import '../styles/Posts.css';
 import firebase from 'firebase/app';
 import 'firebase/firestore';
@@ -10,8 +10,8 @@ import {
   STANDARD_DATE_FORMAT,
   LOADING_STATUS,
   POSTS_PER_PAGE } from '../utils/constants';
-import UserContext from './UserContext';
-import { getUser, updateForum } from '../utils/dbhelpers';
+import UserData from './UserData';
+import { addDoc, updateDoc } from '../utils/dbhelpers';
 import { useForum } from '../utils/hooks';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -21,18 +21,16 @@ function ThreadList(props) {
   const [isHoveringOnLast, setIsHoveringOnLast] = useState(false);
   const contentRef = useRef();
   const titleRef  = useRef();
-  const context = useContext(UserContext);
 
   function handleSubmitThread(e) {
     e.preventDefault();
-    const time = Date.now()
-    firebase.firestore().collection("posts").add({
+    const time = Date.now();
+    addDoc('posts', {
       uid: props.user.uid,
       content: contentRef.current.value,
       createdTime: time
-    })
-    .then((docRef) => {
-      firebase.firestore().collection("threads").add({
+    }).then((docRef) => {
+      return addDoc('threads', {
         createdBy: props.user.uid,
         title: titleRef.current.value,
         postIds: [docRef.id],
@@ -42,15 +40,16 @@ function ThreadList(props) {
         forumId: props.forumId,
         priority: 0,
         isSticky: false
-      }).then((threadRef) => {
-        contentRef.current.value = '';
-        titleRef.current.value = '';
-        updateForum(props.forumId, {
-          updatedBy: props.user.uid,
-          updatedTime: time
-        });
-        navigate(`/forum/${props.forumId}/thread/${threadRef.id}`);
       });
+    }).then((threadRef) => {
+      contentRef.current.value = '';
+      titleRef.current.value = '';
+      //TODO: Update updated times with cloud functions
+      updateDoc('forums', props.forumId, {
+        updatedBy: props.user.uid,
+        updatedTime: time
+      });
+      navigate(`/forum/${props.forumId}/thread/${threadRef.id}`);
     });
   }
 
@@ -67,14 +66,6 @@ function ThreadList(props) {
         querySnapshot.forEach((doc) => {
           const thread = Object.assign(doc.data(), { id: doc.id });
           threadList.push(thread);
-          if (!context.usersByUid[thread.createdBy]) {
-            context.addUserByUid(thread.createdBy, {});
-            getUser(thread.createdBy).then(user => context.addUserByUid(user.uid, user));
-          }
-          if (!context.usersByUid[thread.updatedBy]) {
-            context.addUserByUid(thread.updatedBy, {});
-            getUser(thread.updatedBy).then(user => context.addUserByUid(user.uid, user));
-          }
         });
       setThreads(threadList);
     });
@@ -145,7 +136,7 @@ function ThreadList(props) {
               <div>
                 <span>started by</span>
                 <span className="info truncatable-name">
-                  {get(context.usersByUid[thread.createdBy], 'displayName') || '?'}
+                  <UserData uid={thread.createdBy} />
                 </span>
               </div>
             </div>
@@ -155,7 +146,7 @@ function ThreadList(props) {
               <div className="last-updated-info">
                 <span>last updated by</span>
                 <span className="info truncatable-name">
-                  {get(context.usersByUid[thread.updatedBy], 'displayName') || '?'}
+                  <UserData uid={thread.updatedBy} />
                 </span>
                 {!isMobile && <span>at</span>}
                 <span className="info">{format(thread.updatedTime, dateFormat)}</span>

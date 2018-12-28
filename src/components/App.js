@@ -14,7 +14,7 @@ import UserContext from './UserContext.js';
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
-import registerServiceWorker from '../registerServiceWorker';
+// import registerServiceWorker from '../registerServiceWorker';
 
 class App extends Component {
   constructor() {
@@ -22,14 +22,10 @@ class App extends Component {
     this.state = {
       user: 'unknown',
       usersByUid: {},
-      threadIds: null,
-      threadsById: {},
-      forumIds: null,
-      forumsById: {},
+      addUserByUid: this.handleAddUserByUid,
       dialog: null,
       hasNewContent: false,
       refreshing: false,
-      addUserByUid: this.handleAddUserByUid
     };
 		this.inviteCodeRef = React.createRef();
 		this.db = firebase.firestore();
@@ -58,42 +54,26 @@ class App extends Component {
           this.setState({ user });
         }
     );
-    registerServiceWorker(() => this.setState({ hasNewContent: true }));
-    if (navigator && navigator.serviceWorker) {
-      navigator.serviceWorker.addEventListener('controllerchange',
-        function() {
-          console.log('triggering reload');
-          if (this.state.refreshing) return;
-          this.setState({ refreshing: true });
-          window.location.reload();
-        }
-      );
-    }
+    // registerServiceWorker(() => this.setState({ hasNewContent: true }));
+    // if (navigator && navigator.serviceWorker) {
+    //   navigator.serviceWorker.addEventListener('controllerchange',
+    //     function() {
+    //       console.log('triggering reload');
+    //       if (this.state.refreshing) return;
+    //       this.setState({ refreshing: true });
+    //       window.location.reload();
+    //     }
+    //   );
+    // }
   }
   componentWillUnmount = () => {
     this.unregisterAuthObserver && this.unregisterAuthObserver();
   }
+  // This goes into context.
   handleAddUserByUid = (uid, userData) => {
 		this.setState({
 			usersByUid: Object.assign({}, this.state.usersByUid, { [uid]: userData })
 		});
-	}
-	handleSetThreadData = (threadIds, threadsById) => {
-	  const updates = { threadIds };
-	  if (threadsById) {
-	    updates.threadsById = threadsById;
-	  }
-	  this.setState(updates);
-	}
-	handleSetForumData = (forumIds, forumsById) => {
-	  const updates = {};
-	  if (forumIds) {
-	    updates.forumIds = forumIds;
-	  }
-	  if (forumsById) {
-	    updates.forumsById = forumsById;
-	  }
-	  this.setState(updates);
 	}
 	handleSetDialog = dialog => {
 	  this.setState({dialog});
@@ -191,7 +171,7 @@ class App extends Component {
               </span>
             </div>
           </div>
-          {this.state.hasNewContent &&
+          {/* this.state.hasNewContent &&
             <div className="message-banner">
               <div>New content available, please refresh.</div>
               <button type="none" onClick={() => {
@@ -208,37 +188,20 @@ class App extends Component {
                 reload page
               </button>
             </div>
-          }
+            */}
           <Router>
             <ForumList
               path="/"
               user={this.state.user}
-              usersByUid={this.state.usersByUid}
-              forumIds={this.state.forumIds}
-              forumsById={this.state.forumsById}
-              addUserByUid={this.handleAddUserByUid}
-              setForumData={this.handleSetForumData}
             />
             <ThreadList
               path="forum/:forumId"
-              forumsById={this.state.forumsById}
               user={this.state.user}
-              usersByUid={this.state.usersByUid}
-              threadIds={this.state.threadIds}
-              threadsById={this.state.threadsById}
-              addUserByUid={this.handleAddUserByUid}
-              setThreadData={this.handleSetThreadData}
-              setForumData={this.handleSetForumData}
             />
             <PostList
               path="forum/:forumId/thread/:threadId"
-              db={this.db}
               user={this.state.user}
               setDialog={this.handleSetDialog}
-              usersByUid={this.state.usersByUid}
-              addUserByUid={this.handleAddUserByUid}
-              forumsById={this.state.forumsById}
-              setForumData={this.handleSetForumData}
             />
             <Help path="help" />
             <Profile path="profile" user={this.state.user} />
