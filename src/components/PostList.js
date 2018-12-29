@@ -3,12 +3,10 @@ import '../styles/Posts.css';
 import Post from './Post.js';
 import { Link, navigate } from '@reach/router';
 import { LOADING_STATUS, POSTS_PER_PAGE } from '../utils/constants';
-import without from 'lodash/without';
 import range from 'lodash/range';
-import get from 'lodash/get';
-import { deleteDoc, addPost, getClaims, updateDoc } from '../utils/dbhelpers';
+import { deleteDoc, deleteCollection, addPost, getClaims } from '../utils/dbhelpers';
 import { getParams, getPostRange } from '../utils/utils';
-import { useSubscribeToDocument } from '../utils/hooks';
+import { useSubscribeToDocumentPath, useSubscribeToCollection } from '../utils/hooks';
 
 function PostList(props) {
   const contentRef = useRef();
@@ -17,25 +15,19 @@ function PostList(props) {
   const [postBeingEdited, setPostBeingEdited] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const thread = useSubscribeToDocument('threads', props.threadId);
-  if (thread && status === LOADING_STATUS.LOADING) {
+  const forum = useSubscribeToDocumentPath(`forums/${props.forumId}`);
+  const thread = useSubscribeToDocumentPath(`forums/${props.forumId}/threads/${props.threadId}`);
+
+  const posts = useSubscribeToCollection(`forums/${props.forumId}/threads/${props.threadId}/posts`,
+    [{ orderBy: 'updatedTime' }]);
+
+  if (thread && posts && status === LOADING_STATUS.LOADING) {
     setStatus(LOADING_STATUS.LOADED);
   }
-
-  const forum = useSubscribeToDocument('forums', props.forumId);
 
   useEffect(() => {
     getClaims().then(claims => setIsAdmin(claims.admin));
   }, [props.user]);
-  
-  function deletePostFromThread (postId) {
-    const postIds = thread.postIds;
-    const updates = {
-        postIds: without(postIds, postId)
-    };
-    //TODO: update last read time
-    return updateDoc('threads', props.threadId, updates);
-  }
   
   function handleDeleteThread () {
     props.setDialog({
@@ -72,23 +64,15 @@ function PostList(props) {
     }
   }
   
-  function handleUpdateLastRead (postId, timestamp) {
-    updateDoc("threads", props.threadId, { ['readBy.' + props.user.uid]: timestamp });
-    updateDoc("forums", props.forumId, { ['readBy.' + props.user.uid]: timestamp });
-  }
-  
   function deleteThread () {
     setStatus(LOADING_STATUS.DELETING);
     const deletePromises = [];
-    thread.postIds.forEach(postId => {
-      deletePromises.push(deleteDoc('posts', postId));
-    });
-    deletePromises.push(deleteDoc('threads', props.threadId));
+    deletePromises.push(deleteCollection(`forums/${props.forumId}/threads/${props.threadId}/posts`));
+    deletePromises.push(deleteDoc(`forums/${props.forumId}/threads/${props.threadId}`));
     // TODO: Update forum based on latest updated thread remaining.
     Promise.all(deletePromises)
       .then(() => {
         setStatus(LOADING_STATUS.DELETED);
-        this.setState({ thread: null, status: LOADING_STATUS.DELETED });
       })
       .catch(e => setStatus(LOADING_STATUS.PERMISSIONS_ERROR));
   }
@@ -125,13 +109,15 @@ function PostList(props) {
     );
   }
   
-  let { posts = POSTS_PER_PAGE, page: pageString = 0 } = getParams(props.location.search);
-  const { start, end, numPages, page } = getPostRange(pageString, posts, thread.postIds);
+  const params = getParams(props.location.search);
+  const postsPerPage = params.posts || POSTS_PER_PAGE;
+  const pageString = params.page || 0;
+  const { start, end, numPages, page } = getPostRange(pageString, postsPerPage, posts.length);
   
-  const postList = thread.postIds &&
-    thread.postIds
+  const postList = posts ?
+    posts
       .slice(start, end)
-      .map((postId, index) => ({ id: postId, index: index + start }));
+      .map((post, index) => ({ id: post.id, index: index + start })) : [];
       
   const paginationBox = (
     <div className="pagination-control">
@@ -140,7 +126,7 @@ function PostList(props) {
         .map(pageNum => {
           const pageLink = `/forum/${props.forumId}` +
             `/thread/${props.threadId}` +
-            `?page=${pageNum}&posts=${posts}`;
+            `?page=${pageNum}&posts=${postsPerPage}`;
           const classes = ['page-link'];
           if (pageNum === page) {
             classes.push('selected');
@@ -186,19 +172,17 @@ function PostList(props) {
         <Post
           key={id}
           postId={id}
+          threadId={props.threadId}
+          forumId={props.forumId}
           user={props.user}
           index={index}
           isDisabled={postBeingEdited && postBeingEdited !== id}
           isOnlyPost={thread.postIds.length === 1}
           deleteThread={handleDeleteThread}
-          deletePostFromThread={deletePostFromThread}
           toggleEditPost={handleToggleEditPost}
-          threadId={props.threadId}
           setDialog={props.setDialog}
           handleQuote={handleQuote}
           isLastOnPage={index === end - 1}
-          lastReadTime={get(thread, ['readBy', props.user.uid]) || 0}
-          updateLastRead={handleUpdateLastRead}
         />
       ))}
       {paginationBox}

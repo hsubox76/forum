@@ -10,19 +10,19 @@ export function getParams(queryString) {
       }, {});
 }
 
-export function getPostRange(page, posts, postIds) {
+export function getPostRange(page, posts, postCount) {
   let start;
   let end;
-  const numPages = Math.ceil(postIds.length / posts);
+  const numPages = Math.ceil(postCount / posts);
   if (page === 'last') {
     // get last page
     start = posts * (numPages - 1);
-    end = Math.min(posts * numPages, postIds.length);
+    end = Math.min(posts * numPages, postCount);
     page = numPages - 1;
   } else {
     page = parseInt(page, 10);
     start = posts * page;
-    end = Math.min(posts * (page + 1), postIds.length);
+    end = Math.min(posts * (page + 1), postCount);
   }
   return { start, end, page, numPages };
 }

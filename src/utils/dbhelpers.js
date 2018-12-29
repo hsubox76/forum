@@ -39,30 +39,108 @@ export function migrateAllAvatars() {
 		});
 }
 
+export async function migrateToTree() {
+	const db = firebase.firestore();
+	await db.collection("threads").get()
+		.then(q => {
+			const promises = [];
+			q.forEach(thread => {
+				const forumId = thread.data().forumId;
+				promises.push(() => db.collection("forums")
+					.doc(forumId)
+					.collection("threads")
+					.doc(thread.id)
+					.set(thread.data()));
+			});
+			return Promise.all(promises);
+		});
+	db.collection("threads").get()
+		.then(q => {
+			q.forEach(async thread => {
+				const postIds = thread.data().postIds;
+				postIds.forEach(async postId => {
+					const post = await db.collection("posts").doc(postId).get();
+					db.collection('forums')
+						.doc(thread.data().forumId)
+						.collection("threads")
+						.doc(thread.id)
+						.collection("posts")
+						.doc(post.id)
+						.set(post.data());
+				});
+			})
+		});
+		db.collection("threads").get()
+			.then(q => {
+				q.forEach(async thread => {
+					updatePostCount(thread.data().forumId, thread.id);
+				})
+			});
+}
+
 // ******************************************************************
 // DATABASE UPDATES
 // ******************************************************************
 
-export function addDoc(collection, data) {
-	return firebase.firestore().collection(collection).add(data);
-}
-
-export function updateDoc(collection, docId, data) {
-	return firebase.firestore().collection(collection).doc(docId).update(data);
-}
-
-export function deleteDoc(collection, docId) {
-	return firebase.firestore().collection(collection)
-		.doc(docId)
-		.delete()
-		.then(() => console.log(`${docId} deleted from collection ${collection}`))
+export function addDoc(collectionPath, data) {
+	return firebase.firestore().collection(collectionPath)
+		.add(data)
 		.catch(e => console.error(e));
 }
 
-export function updateReaction(uid, postId, reactionType, shouldAdd) {
+export function updateDoc(docPath, data) {
+	return firebase.firestore()
+		.doc(docPath)
+		.update(data)
+		.catch(e => console.error(e));
+}
+
+export function deleteDoc(docPath) {
+	return firebase.firestore()
+		.doc(docPath)
+		.delete()
+		.then(() => console.log(`${docPath} deleted`))
+		.catch(e => console.error(e));
+}
+
+export function deleteCollection(collectionPath) {
+	return firebase.firestore()
+		.collection(collectionPath)
+		.get()
+		.then(q => {
+			const deletePromises = [];
+			q.forEach(doc => doc.delete());
+			return Promise.all(deletePromises);
+		})
+		.catch(e => console.error(e));
+}
+
+export function updateReaction(uid, postPath, reactionType, shouldAdd) {
 	const operation = shouldAdd ? 'arrayUnion' : 'arrayRemove';
-	updateDoc('posts', postId, {
+	updateDoc(postPath, {
 		[`reactions.${reactionType}`]: firebase.firestore.FieldValue[operation](uid)
+	});
+}
+
+export async function updatePostCount(forumId, threadId) {
+	const threadPosts = await firebase.firestore()
+		.collection(`forums/${forumId}/threads/${threadId}/posts`)
+		.get();
+	updateDoc(`forums/${forumId}/threads/${threadId}`, {
+		postCount: threadPosts.size
+	});
+}
+
+export function updateReadStatus(didRead, user, postId, threadId, forumId) {
+	const operation = didRead ? 'arrayRemove' : 'arrayUnion';
+	updateDoc(`forums/${forumId}/threads/${threadId}/posts/${postId}`, {
+		unreadBy: firebase.firestore.FieldValue[operation](user.uid)
+	});
+	updateDoc(`forums/${forumId}/threads/${threadId}`, {
+		unreadBy: firebase.firestore.FieldValue[operation](user.uid)
+	});
+	updateDoc(`forums/${forumId}`, {
+		unreadBy: firebase.firestore.FieldValue[operation](user.uid)
 	});
 }
 
@@ -70,36 +148,35 @@ export function addPost(content, forum, thread, user) {
 	const now = Date.now();
 	const postData = {
 		content,
+		parentForum: forum.id,
 		parentThread: thread.id,
 		createdTime: now,
 		updatedTime: now,
 		uid: user.uid
 	};
-	return addDoc('posts', postData)
+	return addDoc(`forums/${forum.id}/threads/${thread.id}/posts`, postData)
 		.then(docRef => {
-			updateDoc('threads', thread.id, {
+			updatePostCount(forum.id, thread.id);
+			updateDoc(`forums/${forum.id}/threads/${thread.id}`, {
 				updatedTime: now,
-				updatedBy: user.uid,
-				postIds: thread.postIds.concat(docRef.id),
-				['readBy.' + user.uid]: now
+				updatedBy: user.uid
 			});
-			updateDoc('forums', forum.id, {
+			updateDoc(`forums/${forum.id}`, {
 				updatedBy: user.uid,
 				updatedTime: now
 			});
 		});
 }
 
-export function updatePost(content, thread, postId, user) {
+export function updatePost(content, postPath, user) {
 	const now = Date.now();
 	const postData = {
 			content,
-			parentThread: thread.id,
 			createdTime: now,
 			updatedTime: now,
 			updatedBy: user.uid
 	};
-	return updateDoc('posts', postId, postData);
+	return updateDoc(postPath, postData);
 }
 
 // ******************************************************************

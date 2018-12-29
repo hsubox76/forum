@@ -1,7 +1,6 @@
 import React from 'react';
 import '../styles/Posts.css';
 import { format } from 'date-fns';
-import get from 'lodash/get';
 import { Link } from "@reach/router"
 import { COMPACT_DATE_FORMAT, STANDARD_DATE_FORMAT } from '../utils/constants';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -9,8 +8,7 @@ import { useSubscribeToCollection } from '../utils/hooks';
 import UserData from './UserData';
 
 function ForumList(props) {
-	const forumList = useSubscribeToCollection('forums', { orderBy: 'order' });
-
+	const forumList = useSubscribeToCollection('forums', [{ orderBy: 'order' }]);
 	if (!forumList) {
 		return (
 			<div className="forum-list-container">
@@ -34,8 +32,7 @@ function ForumList(props) {
 					);
 				}
 				const classes = ['forum-row'];
-				const isUnread = forum.updatedTime >
-					(get(forum, ['readBy', props.user.uid]) || 0);
+        const isUnread = forum.unreadBy && forum.unreadBy.includes(props.user.uid);
 				if (isUnread) {
 					classes.push('unread');
 				}

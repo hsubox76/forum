@@ -6,12 +6,11 @@ import 'firebase/functions';
 
 const promisesById = {};
 
-export function useSubscribeToDocument(collection, docId) {
+export function useSubscribeToDocumentPath(docPath) {
   const [doc, updateDoc] = useState(null);
   
   useEffect(() => {
-    const unsub = firebase.firestore().collection(collection)
-        .doc(docId)
+    const unsub = firebase.firestore().doc(docPath)
         .onSnapshot(docRef => {
           const docData = docRef.data();
           if (!docData) {
@@ -20,7 +19,7 @@ export function useSubscribeToDocument(collection, docId) {
           updateDoc(Object.assign(docData, { id: docRef.id }));
         });
     return unsub;
-  }, [collection, docId]);
+  }, [docPath]);
   
   return doc;
 }
@@ -30,8 +29,16 @@ export function useSubscribeToCollection(collectionName, options) {
   
   useEffect(() => {
     let ref = firebase.firestore().collection(collectionName);
-    if (options.orderBy) {
-      ref = ref.orderBy(options.orderBy);
+    if (options) {
+      options.forEach(option => {
+        const prop = Object.keys(option)[0];
+        const val = option[prop];
+        if (Array.isArray(val)) {
+          ref = ref[prop](...val);
+        } else {
+          ref = ref[prop](val);
+        }
+      })
     }
     const unsub = ref.onSnapshot(querySnapshot => {
       const docList = [];
@@ -42,56 +49,37 @@ export function useSubscribeToCollection(collectionName, options) {
       updateCollection(docList);
     });
     return unsub;
-  }, [collection]);
+  }, [collectionName]);
   
   return collection;
 }
 
-export function useForum(forumId) {
-  const [forum, setForum] = useState(null);
-
-  useEffect(() => {
-    let unsub = () => {};
-    if (forumId) {
-      unsub = firebase.firestore()
-        .collection("forums")
-        .doc(forumId)
-        .onSnapshot(docRef => {
-          if (!docRef.data()) return;
-          setForum(docRef.data());
-        });
-    }
-    return unsub;
-  }, [forumId]);
-
-  return forum;
-}
-
 export function useGetUser(uid, context) {
   const [user, setUser] = useState(null);
+  let unmounting = false;
   
   useEffect(() => {
     if (uid) {
       if (context.usersByUid[uid]) {
-        console.log('found user');
         setUser(context.usersByUid[uid]);
         return;
       }
       const fetchUser = firebase.functions().httpsCallable('getUser');
       let doFetch;
       if (promisesById[uid]) { // fetch promise is in flight
-        console.log('use existing fetch of uid', uid);
         doFetch = promisesById[uid];
       } else { // start a new fetch promise
-        console.log('fetching uid', uid);
         doFetch = () => fetchUser({ uid });
         promisesById[uid] = doFetch; // put it in the map
       }
       doFetch().then((response) => {
         promisesById[uid] = null; // remove from map
-        setUser(response.data);
+        if (!unmounting) {
+          setUser(response.data);
+        }
       });
     }
+    return () => unmounting = true;
   }, [uid]);
 
   useEffect(() => {

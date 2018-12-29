@@ -8,7 +8,8 @@ import { getAllUsers,
 	migrateAllAvatars,
 	toggleBan,
 	toggleMod,
-	getClaims
+	getClaims,
+	migrateToTree
 } from '../utils/dbhelpers';
 
 function Admin() {
@@ -80,6 +81,7 @@ function Admin() {
 			<div className="table-title">Users</div>
 			<button className="button-edit" onClick={() => verifyAllUsers(users)}>verify all users</button>
 			<button className="button-edit" onClick={migrateAllAvatars}>migrate all avatars</button>
+			<button className="button-edit" onClick={migrateToTree}>migrate to tree structure</button>
 			<table>
 				<thead>
 					<tr>

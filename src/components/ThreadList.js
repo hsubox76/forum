@@ -1,9 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import '../styles/Posts.css';
-import firebase from 'firebase/app';
-import 'firebase/firestore';
 import { format } from 'date-fns';
-import get from 'lodash/get';
 import { Link, navigate } from "@reach/router"
 import {
   COMPACT_DATE_FORMAT,
@@ -12,12 +9,11 @@ import {
   POSTS_PER_PAGE } from '../utils/constants';
 import UserData from './UserData';
 import { addDoc, updateDoc } from '../utils/dbhelpers';
-import { useForum } from '../utils/hooks';
+import { useSubscribeToCollection, useSubscribeToDocumentPath } from '../utils/hooks';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 function ThreadList(props) {
   const [status, setStatus] = useState(LOADING_STATUS.LOADING);
-  const [threads, setThreads] = useState([]);
   const [isHoveringOnLast, setIsHoveringOnLast] = useState(false);
   const contentRef = useRef();
   const titleRef  = useRef();
@@ -25,27 +21,27 @@ function ThreadList(props) {
   function handleSubmitThread(e) {
     e.preventDefault();
     const time = Date.now();
-    addDoc('posts', {
-      uid: props.user.uid,
-      content: contentRef.current.value,
-      createdTime: time
-    }).then((docRef) => {
-      return addDoc('threads', {
-        createdBy: props.user.uid,
-        title: titleRef.current.value,
-        postIds: [docRef.id],
-        updatedBy: props.user.uid,
-        createdTime: time,
-        updatedTime: time,
-        forumId: props.forumId,
-        priority: 0,
-        isSticky: false
+    addDoc(`forums/${props.forumId}/threads`, {
+      createdBy: props.user.uid,
+      title: titleRef.current.value,
+      updatedBy: props.user.uid,
+      createdTime: time,
+      updatedTime: time,
+      forumId: props.forumId,
+      priority: 0,
+      isSticky: false
+    }).then(async (threadRef) => {
+      await addDoc(`forums/${props.forumId}/threads/${threadRef.id}`, {
+        uid: props.user.uid,
+        content: contentRef.current.value,
+        createdTime: time
       });
+      return threadRef;
     }).then((threadRef) => {
       contentRef.current.value = '';
       titleRef.current.value = '';
       //TODO: Update updated times with cloud functions
-      updateDoc('forums', props.forumId, {
+      updateDoc(`forums/${props.forumId}`, {
         updatedBy: props.user.uid,
         updatedTime: time
       });
@@ -53,26 +49,19 @@ function ThreadList(props) {
     });
   }
 
-  const forum = useForum(props.forumId);
+  const forum = useSubscribeToDocumentPath(`forums/${props.forumId}`);
 
-  useEffect(() => {
-    const unsub = firebase.firestore().collection("threads")
-      .where("forumId", "==", props.forumId)
-      .orderBy("priority", "desc")
-      .orderBy("updatedTime", "desc")
-      .onSnapshot((querySnapshot) => {
-        const threadList = [];
-        setStatus(LOADING_STATUS.LOADED);
-        querySnapshot.forEach((doc) => {
-          const thread = Object.assign(doc.data(), { id: doc.id });
-          threadList.push(thread);
-        });
-      setThreads(threadList);
-    });
-    return unsub;
-  }, [props.forumId]);
+  const threads = useSubscribeToCollection(`forums/${props.forumId}/threads`,
+    [
+      { orderBy: ['priority', 'desc'] },
+      { orderBy: ['updatedTime', 'desc'] }
+    ]);
+
+  if (forum && threads && status === LOADING_STATUS.LOADING) {
+    setStatus(LOADING_STATUS.LOADED);
+  }
   
-  if (!forum || !threads || status === LOADING_STATUS.LOADING) {
+  if (status === LOADING_STATUS.LOADING) {
     return (
       <div className="thread-list-container">
         <div className="loader loader-med"></div>
@@ -83,6 +72,7 @@ function ThreadList(props) {
   const dateFormat = isMobile
     ? COMPACT_DATE_FORMAT
     : STANDARD_DATE_FORMAT;
+
   return (
     <div className="thread-list-container">
       <div className="section-header">
@@ -102,7 +92,7 @@ function ThreadList(props) {
             </div>
           );
         }
-        const isUnread = thread.updatedTime > (get(thread, ['readBy', props.user.uid]) || 0);
+        const isUnread = thread.unreadBy && thread.unreadBy.includes(props.user.uid);
         const threadClasses = ['thread-row'];
         let link = "thread/" + thread.id;
         if (isUnread) {
@@ -141,8 +131,11 @@ function ThreadList(props) {
               </div>
             </div>
             <div className="thread-meta">
+            {thread.postCount && (
               <div className="post-count">
-                <span className="post-num">{thread.postIds.length}</span> posts</div>
+                <span className="post-num">{thread.postCount}</span> posts
+              </div>
+            )}
               <div className="last-updated-info">
                 <span>last updated by</span>
                 <span className="info truncatable-name">

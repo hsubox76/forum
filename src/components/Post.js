@@ -6,8 +6,8 @@ import TextContent from './TextContent';
 import UserData from './UserData';
 import UserContext from './UserContext';
 import { LOADING_STATUS, STANDARD_DATE_FORMAT, reactions } from '../utils/constants';
-import { deleteDoc, updatePost, getClaims } from '../utils/dbhelpers';
-import { useSubscribeToDocument, useGetUser } from '../utils/hooks';
+import { deleteDoc, updatePost, getClaims, updateReadStatus, updatePostCount } from '../utils/dbhelpers';
+import { useSubscribeToDocumentPath, useGetUser } from '../utils/hooks';
 import ReactionButton from './ReactionButton';
 
 function Post(props) {
@@ -16,24 +16,28 @@ function Post(props) {
   const context = useContext(UserContext);
 	const postRef = useRef();
 	const contentRef = useRef();
+
+	const postPath = `forums/${props.forumId}/threads/${props.threadId}/posts/${props.postId}`;
 	
-	const post =
-		useSubscribeToDocument("posts", props.postId, props);
+	const post = useSubscribeToDocumentPath(postPath);
 	const uid = post ? post.uid : null;
 
 	let postUser = useGetUser(uid, context);
 	
-	// scroll to bottom and update last read if/when post updates and is last post
+	// scroll to bottom if/when post updates and is last post
 	useEffect(() => {
 		if (props.isLastOnPage && post) {
 			postRef.current && postRef.current.scrollIntoView();
-			props.updateLastRead(props.postId, post.updatedTime || post.createdTime);
 		}
-	}, [post || '', props.isLastOnPage || false]);
+	}, [post, props.isLastOnPage]);
 
   useEffect(() => {
     getClaims().then(setClaims);
-  }, [props.user]);
+	}, [props.user]);
+
+	useEffect(() => {
+		return () => updateReadStatus(true, props.user, props.postId, props.threadId, props.forumId);
+	}, []);
 	
 	function toggleEditMode() {
 		if (status === LOADING_STATUS.EDITING) {
@@ -46,10 +50,10 @@ function Post(props) {
 	
 	function deletePost () {
 		setStatus(LOADING_STATUS.DELETING);
-		const deletePromises = [];
-		deletePromises.push(deleteDoc('posts', props.postId));
-		deletePromises.push(props.deletePostFromThread(props.postId));
-		Promise.all(deletePromises)
+		deleteDoc(postPath)
+			.then(() => {
+				return updatePostCount(props.forumId, props.threadId);
+			})
 			.then(() => {
 				console.log(`Successfully deleted post ${props.postId}`);
 			})
@@ -67,7 +71,7 @@ function Post(props) {
 	
 	function handleEditPost() {
 		setStatus(LOADING_STATUS.SUBMITTING);
-		updatePost(contentRef.current.value, props.threadId, props.postId, props.user)
+		updatePost(contentRef.current.value, postPath, props.user)
 			.then(() => {
 					//TODO: update thread "last updated" info
 					setStatus(LOADING_STATUS.LOADED);
@@ -151,7 +155,7 @@ function Post(props) {
 	if (props.isDisabled) {
 		classes.push('disabled');
 	}
-	if (post.createdTime > (props.lastReadTime || 0)) {
+	if (post.unreadBy && post.unreadBy.includes(props.user.uid)) {
 		classes.push('unread');
 	}
 	return (

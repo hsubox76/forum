@@ -5,15 +5,16 @@ import get from 'lodash/get';
 
 const ReactionButton = (props) => {
 	const [showTip, setShowTip] = useState(false);
+	const post = props.post;
+	const postPath = `forums/${props.forumId}/threads/${props.threadId}/posts/${props.postId}`;
 	
 	function handleClick(userSelected) {
-		updateReaction(props.user.uid, props.postId, props.reaction.faName, !userSelected);
+		updateReaction(props.user.uid, postPath, props.reaction.faName, !userSelected);
 		if (props.currentReaction && !userSelected) {
-			updateReaction(props.user.uid, props.postId, props.currentReaction, false);
+			updateReaction(props.user.uid, postPath, props.currentReaction, false);
 		}
 		setShowTip(false);
 	}
-	const post = props.post;
 	const responses = get(post, ['reactions', props.reaction.faName]) || [];
 	const classes = ['reaction-button'];
 	const userSelected = props.currentReaction === props.reaction.faName;
