@@ -15,6 +15,7 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 // import registerServiceWorker from '../registerServiceWorker';
+import { unregister } from '../registerServiceWorker';
 
 class App extends Component {
   constructor() {
@@ -54,6 +55,7 @@ class App extends Component {
           this.setState({ user });
         }
     );
+    unregister(); // unregister any existing service workers
     // registerServiceWorker(() => this.setState({ hasNewContent: true }));
     // if (navigator && navigator.serviceWorker) {
     //   navigator.serviceWorker.addEventListener('controllerchange',
