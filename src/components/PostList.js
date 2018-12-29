@@ -18,8 +18,8 @@ function PostList(props) {
   const forum = useSubscribeToDocumentPath(`forums/${props.forumId}`);
   const thread = useSubscribeToDocumentPath(`forums/${props.forumId}/threads/${props.threadId}`);
 
-  const posts = useSubscribeToCollection(`forums/${props.forumId}/threads/${props.threadId}/posts`,
-    [{ orderBy: 'updatedTime' }]);
+  let posts = useSubscribeToCollection(`forums/${props.forumId}/threads/${props.threadId}/posts`,
+   [{ orderBy: 'createdTime' }]);
 
   if (thread && posts && status === LOADING_STATUS.LOADING) {
     setStatus(LOADING_STATUS.LOADED);
@@ -113,11 +113,11 @@ function PostList(props) {
   const postsPerPage = params.posts || POSTS_PER_PAGE;
   const pageString = params.page || 0;
   const { start, end, numPages, page } = getPostRange(pageString, postsPerPage, posts.length);
-  
   const postList = posts ?
     posts
       .slice(start, end)
       .map((post, index) => ({ id: post.id, index: index + start })) : [];
+      //TODO: should be able to pass postdata straight to post and not have to reload it
       
   const paginationBox = (
     <div className="pagination-control">
@@ -167,7 +167,7 @@ function PostList(props) {
         </div>
       </div>
       {paginationBox}
-      {!thread.postIds && "loading"}
+      {!posts && "loading"}
       {postList && postList.map(({ id, index }, listIndex) => (
         <Post
           key={id}
@@ -177,7 +177,7 @@ function PostList(props) {
           user={props.user}
           index={index}
           isDisabled={postBeingEdited && postBeingEdited !== id}
-          isOnlyPost={thread.postIds.length === 1}
+          isOnlyPost={thread.postCount === 1}
           deleteThread={handleDeleteThread}
           toggleEditPost={handleToggleEditPost}
           setDialog={props.setDialog}

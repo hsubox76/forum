@@ -109,7 +109,7 @@ export function deleteCollection(collectionPath) {
 		.get()
 		.then(q => {
 			const deletePromises = [];
-			q.forEach(doc => doc.delete());
+			q.forEach(doc => doc.ref.delete());
 			return Promise.all(deletePromises);
 		})
 		.catch(e => console.error(e));

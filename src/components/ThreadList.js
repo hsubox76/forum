@@ -31,7 +31,7 @@ function ThreadList(props) {
       priority: 0,
       isSticky: false
     }).then(async (threadRef) => {
-      await addDoc(`forums/${props.forumId}/threads/${threadRef.id}`, {
+      await addDoc(`forums/${props.forumId}/threads/${threadRef.id}/posts`, {
         uid: props.user.uid,
         content: contentRef.current.value,
         createdTime: time
