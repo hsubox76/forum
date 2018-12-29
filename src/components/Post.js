@@ -26,10 +26,10 @@ function Post(props) {
 	
 	// scroll to bottom if/when post updates and is last post
 	useEffect(() => {
-		if (props.isLastOnPage && post) {
+		if (props.scrollToMe && post) {
 			postRef.current && postRef.current.scrollIntoView();
 		}
-	}, [post, props.isLastOnPage]);
+	}, [post, props.scrollToMe]);
 
   useEffect(() => {
     getClaims().then(setClaims);

@@ -25,6 +25,7 @@ function ThreadList(props) {
       createdBy: props.user.uid,
       title: titleRef.current.value,
       updatedBy: props.user.uid,
+      postCount: 1,
       createdTime: time,
       updatedTime: time,
       forumId: props.forumId,

@@ -182,7 +182,7 @@ function PostList(props) {
           toggleEditPost={handleToggleEditPost}
           setDialog={props.setDialog}
           handleQuote={handleQuote}
-          isLastOnPage={index === end - 1}
+          scrollToMe={pageString === 'last' && index === end - 1}
         />
       ))}
       {paginationBox}
