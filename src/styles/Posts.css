@@ -23,12 +23,19 @@
 	align-items: center;
 	justify-content: space-between;
 	color: var(--color-main);
+	margin-bottom: 2px;
 }
 
 .section-header .breadcrumbs {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
+}
+
+.section-header .title-edit-input {
+	font-size: .9rem;
+	padding: .3rem;
+	width: 360px;
 }
 
 .section-header .thread-label {
@@ -40,6 +47,14 @@
 
 .section-header a.thread-label:hover {
   opacity: 0.8;
+}
+
+.section-header .thread-buttons {
+	display: flex;
+}
+
+.section-header button {
+	margin-left: 10px;
 }
 
 .section-header .title-caret {

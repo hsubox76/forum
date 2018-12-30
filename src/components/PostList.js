@@ -4,16 +4,24 @@ import Post from './Post.js';
 import { Link, navigate } from '@reach/router';
 import { LOADING_STATUS, POSTS_PER_PAGE } from '../utils/constants';
 import range from 'lodash/range';
-import { deleteDoc, deleteCollection, addPost, getClaims } from '../utils/dbhelpers';
+import {
+  deleteDoc,
+  deleteCollection,
+  updateDoc,
+  addPost,
+  getClaims
+} from '../utils/dbhelpers';
 import { getParams, getPostRange } from '../utils/utils';
 import { useSubscribeToDocumentPath, useSubscribeToCollection } from '../utils/hooks';
 
 function PostList(props) {
   const contentRef = useRef();
   const newPostRef = useRef();
+  const titleRef = useRef();
   const [status, setStatus] = useState(LOADING_STATUS.LOADING);
   const [postBeingEdited, setPostBeingEdited] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [claims, setClaims] = useState({});
+  const [threadTitleEditing, setThreadTitleEditing] = useState(false);
 
   const forum = useSubscribeToDocumentPath(`forums/${props.forumId}`);
   const thread = useSubscribeToDocumentPath(`forums/${props.forumId}/threads/${props.threadId}`);
@@ -26,7 +34,7 @@ function PostList(props) {
   }
 
   useEffect(() => {
-    getClaims().then(claims => setIsAdmin(claims.admin));
+    getClaims().then(claims => setClaims(claims));
   }, [props.user]);
   
   function handleDeleteThread () {
@@ -36,6 +44,10 @@ function PostList(props) {
       okClass: 'delete',
       onOk: deleteThread
     });
+  }
+
+  function toggleEditThread () {
+    setThreadTitleEditing(!threadTitleEditing);
   }
   
   function handleQuote ({ content, uid }) {
@@ -54,6 +66,14 @@ function PostList(props) {
               `?page=last&posts=${POSTS_PER_PAGE}`);
         newPostRef.current.scrollIntoView({ behavior: "smooth" });
       });
+  }
+
+  function handleSubmitTitle() {
+    if (titleRef.current.value === thread.title) return;
+    updateDoc(`forums/${props.forumId}/threads/${props.threadId}`,
+      { title: titleRef.current.value })
+      .then(() => setThreadTitleEditing(false))
+      .catch(e => console.log(e));
   }
   
   function handleToggleEditPost (postId) {
@@ -139,6 +159,18 @@ function PostList(props) {
         })}
     </div>
   );
+
+  const threadTitle = threadTitleEditing
+    ? (<div className="thread-title">
+        <input ref={titleRef} className="title-edit-input" defaultValue={thread.title} />
+        <button className="button-edit" onClick={handleSubmitTitle}>
+          ok
+        </button>
+        <button className="button-cancel" onClick={toggleEditThread}>
+          cancel
+        </button>
+      </div>)
+    : (<span className="thread-title">{thread.title}</span>);
   
   return (
     <div className="post-list-container">
@@ -156,15 +188,18 @@ function PostList(props) {
             </Link>
             <span className="title-caret">&gt;</span>
           </span>
-          <span className="thread-title">{thread.title}</span>
+          {threadTitle}
         </div>
-        <div>
-          {isAdmin &&
+        {(claims.admin || claims.mod) && !threadTitleEditing && (
+          <div className="thread-buttons">
+            <button className="button-edit" onClick={toggleEditThread}>
+              edit
+            </button>
             <button className="button-delete" onClick={handleDeleteThread}>
               delete
             </button>
-          }
-        </div>
+          </div>
+        )}
       </div>
       {paginationBox}
       {!posts && "loading"}
@@ -178,7 +213,6 @@ function PostList(props) {
           index={index}
           isDisabled={postBeingEdited && postBeingEdited !== id}
           isOnlyPost={thread.postCount === 1}
-          deleteThread={handleDeleteThread}
           toggleEditPost={handleToggleEditPost}
           setDialog={props.setDialog}
           handleQuote={handleQuote}

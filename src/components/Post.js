@@ -97,7 +97,7 @@ function Post(props) {
 		if (status !== LOADING_STATUS.EDITING) {
 			addButton('quote', 'edit', () => props.handleQuote(post));
 		}
-		if (claims.admin || props.user.uid === post.uid) {
+		if (claims.admin || claims.mod || props.user.uid === post.uid) {
 			if (status === LOADING_STATUS.EDITING) {
 				addButton('cancel', 'cancel', toggleEditMode);
 				addButton('ok', 'edit', handleEditPost);
