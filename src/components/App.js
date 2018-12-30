@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import '../styles/App.css';
-import { Router, Link } from '@reach/router';
+import { Router, Link, LocationProvider, createHistory } from '@reach/router';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import Dialog from './Dialog.js';
 import ForumList from './ForumList.js';
@@ -14,8 +14,12 @@ import UserContext from './UserContext.js';
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
+import get from 'lodash/get';
+import { getClaims, getIsBanned } from '../utils/dbhelpers';
 // import registerServiceWorker from '../registerServiceWorker';
 import { unregister } from '../registerServiceWorker';
+
+const history = createHistory(window);
 
 class App extends Component {
   constructor() {
@@ -30,7 +34,7 @@ class App extends Component {
     };
 		this.inviteCodeRef = React.createRef();
 		this.db = firebase.firestore();
-	  this.db.settings({timestampsInSnapshots: true});
+    this.db.settings({timestampsInSnapshots: true});
 	  this.uiConfig = {
       // Popup signin flow rather than redirect flow.
       signInFlow: 'popup',
@@ -50,9 +54,20 @@ class App extends Component {
     };
   }
   componentDidMount = () => {
+    // Force get new token (temp while modding lots of people?)
+    if (firebase.auth().currentUser) {
+      firebase.auth().currentUser.getIdToken(true);
+    }
+    history.listen(() => {
+      this.logoutIfBanned();
+    });
     this.unregisterAuthObserver = firebase.auth().onAuthStateChanged(
         (user) => {
           this.setState({ user });
+          if (user) {
+            this.logoutIfBanned();
+            getClaims().then(claims => this.setState({ claims }));
+          }
         }
     );
     unregister(); // unregister any existing service workers
@@ -70,7 +85,16 @@ class App extends Component {
   }
   componentWillUnmount = () => {
     this.unregisterAuthObserver && this.unregisterAuthObserver();
+    window.removeEventListener('popstate', this.logoutIfBanned);
   }
+  logoutIfBanned = () => {
+    console.log('logoutIfBanned running');
+    getIsBanned().then(isBanned => {
+      if (isBanned) {
+        firebase.auth().signOut();
+      }
+    })
+  };
   // This goes into context.
   handleAddUserByUid = (uid, userData) => {
 		this.setState({
@@ -137,7 +161,7 @@ class App extends Component {
           firebaseAuth={firebase.auth()}
         />
       );
-    } else if (this.state.user.banned) {
+    } else if (get(this.state, 'claims.banned')) {
       return (
         <div className="loading-page">
   				this user has been banned
@@ -157,6 +181,7 @@ class App extends Component {
       );
     } */
     return (
+      <LocationProvider history={history}>
       <UserContext.Provider value={this.state}>
         <div className="App">
           <div className="page-header">
@@ -217,6 +242,7 @@ class App extends Component {
           </div>
         </div>
       </UserContext.Provider>
+      </LocationProvider>
     );
   }
 }

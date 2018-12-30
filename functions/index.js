@@ -18,12 +18,13 @@ async function getUser(uid) {
   return user;
 }
 
-async function setRole(uid, role, isOn = true, overwrite = false) {
+async function setClaim(uid, claim, isOn = true, overwrite = false) {
   let user = await getUser(uid);
   let existingClaims = {};
+  const actionPhrase = isOn ? 'given to' : 'removed from';
   if (user.customClaims) {
-    if (user.customClaims[role] === Boolean(isOn)) {
-      console.log(`${role} privileges were already ${actionPhrase} ${user.displayName}`);
+    if (user.customClaims[claim] === Boolean(isOn)) {
+      console.log(`${claim} claim was already ${actionPhrase} ${user.displayName}`);
       return { customClaims: user.customClaims };
     }
     if (!overwrite) {
@@ -32,10 +33,9 @@ async function setRole(uid, role, isOn = true, overwrite = false) {
   }
   await admin.auth().setCustomUserClaims(
     uid,
-    Object.assign(existingClaims, { [role]: Boolean(isOn) }));
+    Object.assign(existingClaims, { [claim]: Boolean(isOn) }));
   user = await getUser(uid);
-  const actionPhrase = isOn ? 'given to' : 'removed from';
-  console.log(`${role} privileges ${actionPhrase} ${user.displayName}`);
+  console.log(`${claim} claim ${actionPhrase} ${user.displayName}`);
   return { customClaims: user.customClaims };
 }
 
@@ -51,6 +51,20 @@ function checkIfUid(data) {
     throw new functions.https.HttpsError('invalid-argument',
       'No uid prop provided.');
   }
+}
+
+function revokeTokens(uid) {
+  return admin.auth().revokeRefreshTokens(uid)
+    .then(() => {
+      return admin.auth().getUser(uid);
+    })
+    .then((userRecord) => {
+      const timestamp = new Date(userRecord.tokensValidAfterTime).getTime() / 1000;
+      console.log("Tokens revoked at: ", timestamp);
+      return timestamp;
+    })
+    .catch(e => console.log(e));
+
 }
 
 exports.onNewPost = functions.firestore
@@ -72,36 +86,7 @@ exports.onNewPost = functions.firestore
       .catch(e => console.error(e));
   });
 
-// exports.onUpdatePost = functions.firestore
-//   .document('posts/{postId}')
-//   .onUpdate(async (change, context) => {
-//     const listUsersResult = await admin.auth().listUsers();
-//     const userIds = listUsersResult.users.map(userRecord => userRecord.uid);
-//     change.after.ref.update({
-//       unreadBy: userIds
-//     });
-//     if (change.after.data().parentThread) {
-//       firestore.collection('threads').doc(change.after.data().parentThread).update({
-//         unreadBy: userIds
-//       });
-//     }
-//     if (change.after.data().parentForum) {
-//       firestore.collection('forums').doc(change.after.data().parentForum).update({
-//         unreadBy: userIds
-//       });
-//     }
-//   });
-
-exports.setBanned = functions.https.onCall(async (data, context) => {
-  checkIfAdmin(context);
-  checkIfUid(data);
-  if (data.isOn) {
-    return await setRole(data.uid, 'banned', data.isOn, true);
-  } else {
-    await setRole(data.uid, 'banned', data.isOn);
-    return await setRole(data.uid, 'validated', data.isOn);
-  }
-});
+//TODO: Figure something out about updating forum/thread unreads on post/thread deletes.
 
 exports.setAvatar = functions.https.onCall(async (data, context) => {
   checkIfAdmin(context);
@@ -109,25 +94,27 @@ exports.setAvatar = functions.https.onCall(async (data, context) => {
   return await admin.auth().updateUser(data.uid, { photoURL: data.url });
 });
 
-exports.setValidated = functions.https.onCall(async (data, context) => {
+exports.setClaim = functions.https.onCall(async (data, context) => {
   checkIfAdmin(context);
   checkIfUid(data);
-  return await setRole(data.uid, 'validated', data.isOn);
+  return await setClaim(data.uid, data.claim, data.isOn);
 });
 
-exports.setModerator = functions.https.onCall(async (data, context) => {
+exports.setBanned = functions.https.onCall(async (data, context) => {
   checkIfAdmin(context);
   checkIfUid(data);
-  return await setRole(data.uid, 'mod', data.isOn);
+  if (data.isOn) {
+    await clearClaims(data, context);
+  }
+  const roleResult = await setClaim(data.uid, 'banned', data.isOn);
+  await firestore.doc(`users/${data.uid}`).update({
+    isBanned: data.isOn
+  });
+  await revokeTokens(data.uid);
+  return roleResult;
 });
 
-exports.setAdmin = functions.https.onCall(async (data, context) => {
-  checkIfAdmin(context);
-  checkIfUid(data);
-  return await setRole(data.uid, 'admin', data.isOn);
-});
-
-exports.eraseAllClaims = functions.https.onCall(async (data, context) => {
+async function clearClaims(data, context) {
   checkIfAdmin(context);
   checkIfUid(data);
   let user = await getUser(data.uid);
@@ -135,7 +122,9 @@ exports.eraseAllClaims = functions.https.onCall(async (data, context) => {
   user = await getUser(data.uid);
   console.log(`All claims removed from ${user.displayName}`);
   return { customClaims: user.customClaims };
-});
+}
+
+exports.eraseAllClaims = functions.https.onCall(clearClaims);
 
 exports.getAllUsers = functions.https.onCall(async (data, context) => {
   const userProperties = [
@@ -145,7 +134,8 @@ exports.getAllUsers = functions.https.onCall(async (data, context) => {
   ];
   const customClaimsProperties = [
     'admin',
-    'mod'
+    'mod',
+    'pwot'
   ];
   if (data && data.getAll &&
       context && context.auth && context.auth.token.admin) {
@@ -171,7 +161,8 @@ exports.getUser = functions.https.onCall(async (data, context) => {
   ];
   const customClaimsProperties = [
     'admin',
-    'mod'
+    'mod',
+    'pwot'
   ];
   if (data && data.getAll &&
       context && context.auth && context.auth.token.admin) {

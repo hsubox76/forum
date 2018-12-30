@@ -3,6 +3,8 @@ import 'firebase/auth';
 import 'firebase/firestore';
 import 'firebase/functions';
 
+let checkingIfBannedPromise = null;
+
 // ******************************************************************
 // ADMIN MAINTENANCE
 // ******************************************************************
@@ -12,16 +14,23 @@ export function toggleBan(uid, shouldBan) {
 }
 
 export function toggleMod(uid, shouldMod) {
-	const setModerator = firebase.functions().httpsCallable('setModerator');
-	return setModerator({ uid, isOn: shouldMod });
+	const setClaim = firebase.functions().httpsCallable('setClaim');
+	return setClaim({ claim: 'mod', uid, isOn: shouldMod });
 }
 
 // ******************************************************************
 // ADMIN SPECIAL CASE
 // ******************************************************************
+
 export function verifyAllUsers(users) {
-	const setValidated = firebase.functions().httpsCallable('setValidated');
-	const promiseList = users.map(user => setValidated({ uid: user.uid, isOn: true }));
+	const setClaim = firebase.functions().httpsCallable('setClaim');
+	const promiseList = users.map(user => setClaim({ claim: 'validated', uid: user.uid, isOn: true }));
+	return Promise.all(promiseList);
+}
+
+export function pwotAllUsers(users) {
+	const setClaim = firebase.functions().httpsCallable('setClaim');
+	const promiseList = users.map(user => setClaim({ claim: 'pwot', uid: user.uid, isOn: true }));
 	return Promise.all(promiseList);
 }
 
@@ -189,6 +198,22 @@ export function getClaims() {
 		.then((idTokenResult) => {
 			return idTokenResult.claims;
 		});
+}
+
+// Get database banned listing
+export function getIsBanned() {
+	if (checkingIfBannedPromise) return checkingIfBannedPromise;
+	if (!firebase.auth().currentUser) {
+		return Promise.resolve('false');
+	}
+	const uid = firebase.auth().currentUser.uid;
+	checkingIfBannedPromise = firebase.firestore().doc(`users/${uid}`)
+		.get()
+		.then(userDoc => {
+			checkingIfBannedPromise = null;
+			return userDoc.data().isBanned;
+		});
+	return checkingIfBannedPromise;
 }
 
 export function getAllUsers(getAllData) {

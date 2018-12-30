@@ -5,6 +5,7 @@ import { STANDARD_DATE_FORMAT } from '../utils/constants';
 import { getAllUsers,
 	getAllInvites,
 	verifyAllUsers,
+	pwotAllUsers,
 	migrateAllAvatars,
 	toggleBan,
 	toggleMod,
@@ -17,6 +18,7 @@ function Admin() {
 	const [invites, setInvites] = useState([]);
 	const [userIsAdmin, setUserIsAdmin] = useState(false);
 	const [pageDisabled, setPageDisabled] = useState(false);
+	const [showEmails, setShowEmails] = useState(false);
 	
 	useEffect(() => {
 		getAllUsers(true).then(users => setUsers(users));
@@ -25,8 +27,12 @@ function Admin() {
 	}, []);
 	
 	function onBanClick(uid, isBanned) {
-		toggleBan(uid, !isBanned);
-		getAllUsers(true).then(users => setUsers(users));
+		setPageDisabled(true);
+		toggleBan(uid, !isBanned)
+			.then(() => getAllUsers(true))
+			.then(users => setUsers(users))
+			.catch(e => console.error(e))
+			.finally(() => setPageDisabled(false));
 	}
 	
 	function onModClick(uid, isMod) {
@@ -36,6 +42,10 @@ function Admin() {
 			.then(users => setUsers(users))
 			.catch(e => console.error(e))
 			.finally(() => setPageDisabled(false));
+	}
+
+	function toggleShowEmails() {
+		setShowEmails(!showEmails);
 	}
 	
 	if (!userIsAdmin) {
@@ -80,15 +90,21 @@ function Admin() {
 			<hr />
 			<div className="table-title">Users</div>
 			<button className="button-edit" onClick={() => verifyAllUsers(users)}>verify all users</button>
+			<button className="button-edit" onClick={() => pwotAllUsers(users)}>pwot all users</button>
 			<button className="button-edit" onClick={migrateAllAvatars}>migrate all avatars</button>
 			<button className="button-edit" onClick={migrateToTree}>migrate to tree structure</button>
 			<table>
 				<thead>
 					<tr>
 						<th>Display Name</th>
-						<th>Email</th>
+						<th>
+							<button className="button-edit" onClick={() => toggleShowEmails()}>
+								{showEmails ? 'hide' : 'show'} emails
+							</button>
+						</th>
 						<th>Has Avatar</th>
-						<th>Verified</th>
+						<th>Validated</th>
+						<th>PWOT</th>
 						<th>Role</th>
 						<th>Banned</th>
 					</tr>
@@ -102,9 +118,10 @@ function Admin() {
 					return (
 						<tr key={user.uid}>
 							<td>{user.displayName}</td>
-							<td>{user.email}</td>
+							<td>{showEmails ? user.email : '--------------------------------------'}</td>
 							<td>{user.photoURL ? 'av' : 'no av'}</td>
 							<td>{user.customClaims.validated ? 'V' : '-'}</td>
+							<td>{user.customClaims.pwot ? 'V' : '-'}</td>
 							<td>
 								<div className="action-cell">
 									{role}

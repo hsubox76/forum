@@ -1,13 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/Posts.css';
 import { format } from 'date-fns';
-import { Link } from "@reach/router"
+import { Link } from "@reach/router";
 import { COMPACT_DATE_FORMAT, STANDARD_DATE_FORMAT } from '../utils/constants';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useSubscribeToCollection } from '../utils/hooks';
+import { getClaims } from '../utils/dbhelpers';
 import UserData from './UserData';
 
 function ForumList(props) {
+	const [claims, setClaims] = useState(null);
+	useEffect(() => {
+		getClaims().then(result => setClaims(result));
+	}, [props.user]);
 	const forumList = useSubscribeToCollection('forums', [{ orderBy: 'order' }]);
 	if (!forumList) {
 		return (
@@ -23,36 +28,35 @@ function ForumList(props) {
 	return (
 		<div className="forum-list-container">
 			<div className="section-header">All Forums</div>
-			{forumList.map((forum) => {
-				if (!forum) {
+			{forumList
+				.filter(forum =>
+					forum && (
+						!forum.requiresClaims || forum.requiresClaims.some(reqClaim => claims[reqClaim])
+					)
+				)
+				.map((forum) => {
+					const classes = ['forum-row'];
+					const isUnread = forum.unreadBy && forum.unreadBy.includes(props.user.uid);
+					if (isUnread) {
+						classes.push('unread');
+					}
 					return (
-						<div key={forum.id} className="forum-row">
-							<div className="loader loader-med"></div>
-						</div>
+						<Link to={"forum/" + forum.id} key={forum.id} className={classes.join(' ')}>
+							<div className="forum-title">
+									{isUnread
+										&& <FontAwesomeIcon className="icon icon-comment" icon="comment" />}
+								<span className="title-text">{forum.name}</span>
+							</div>
+							<div className="forum-meta">
+								<span>last updated by</span>
+								<span className="info truncatable-name">
+									<UserData uid={forum.updatedBy} />
+								</span>
+								{!isMobile && <span>at</span>}
+								<span className="info">{format(forum.updatedTime, dateFormat)}</span>
+							</div>
+						</Link>
 					);
-				}
-				const classes = ['forum-row'];
-        const isUnread = forum.unreadBy && forum.unreadBy.includes(props.user.uid);
-				if (isUnread) {
-					classes.push('unread');
-				}
-				return (
-					<Link to={"forum/" + forum.id} key={forum.id} className={classes.join(' ')}>
-						<div className="forum-title">
-								{isUnread
-									&& <FontAwesomeIcon className="icon icon-comment" icon="comment" />}
-							<span className="title-text">{forum.name}</span>
-						</div>
-						<div className="forum-meta">
-							<span>last updated by</span>
-							<span className="info truncatable-name">
-								<UserData uid={forum.updatedBy} />
-							</span>
-							{!isMobile && <span>at</span>}
-							<span className="info">{format(forum.updatedTime, dateFormat)}</span>
-						</div>
-					</Link>
-				);
 			})}
 		</div>
 	);
