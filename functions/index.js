@@ -72,7 +72,10 @@ exports.onNewPost = functions.firestore
   .onCreate(async (snap, context) => {
     const listUsersResult = await admin.auth().listUsers();
     const { threadId, forumId } = context.params;
-    const userIds = listUsersResult.users.map(userRecord => userRecord.uid);
+    const newPostUid = snap.data().uid;
+    const userIds = listUsersResult.users
+      .filter(userRecord => userRecord.uid !== newPostUid)
+      .map(userRecord => userRecord.uid);
     const postUpdate = snap.ref.update({
       unreadBy: userIds
     });
@@ -87,7 +90,44 @@ exports.onNewPost = functions.firestore
   });
 
 //TODO: Figure something out about updating forum/thread unreads on post/thread deletes.
-
+exports.onDeletePost = functions.firestore
+  .document('forums/{forumId}/threads/{threadId}/posts/{postId}')
+  .onDelete(async (snap, context) => {
+    const { threadId, forumId } = context.params;
+    const postsUnreadBy = await firestore.collection(`forums/${forumId}/threads/${threadId}/posts`)
+      .get()
+      .then(posts => {
+        const uidMap = {};
+        posts.forEach(post => {
+          post.data().unreadBy && post.data().unreadBy.forEach(unreadUid => {
+            uidMap[unreadUid]  = true;
+          });
+        });
+        return Object.keys(uidMap);
+      })
+      .catch(e => console.error(e));
+    const threadsUnreadBy = await firestore.collection(`forums/${forumId}/threads`)
+      .get()
+      .then(threads => {
+        const uidMap = {};
+        threads.forEach(thread => {
+          thread.data().unreadBy
+            && thread.data().unreadBy.forEach(unreadUid => {
+              uidMap[unreadUid]  = true;
+            });
+        });
+        return Object.keys(uidMap);
+      })
+      .catch(e => console.error(e));
+    const threadUpdate = firestore.doc(`forums/${forumId}/threads/${threadId}`).update({
+      unreadBy: postsUnreadBy
+    });
+    const forumUpdate = firestore.doc(`forums/${forumId}`).update({
+      unreadBy: threadsUnreadBy
+    });
+    return Promise.all([threadUpdate, forumUpdate])
+      .catch(e => console.error(e));
+  });
 exports.setAvatar = functions.https.onCall(async (data, context) => {
   checkIfAdmin(context);
   checkIfUid(data);
