@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../../styles/Admin.css';
-import { Router, Link } from '@reach/router';
+import { Router, Redirect, Link } from '@reach/router';
 import AdminInvites from './AdminInvites';
 import AdminUsers from './AdminUsers';
 import {
@@ -34,6 +34,7 @@ function Admin() {
 			<Router basepath="/admin">
 				<AdminInvites path="/invites" />
 				<AdminUsers path="/users" />
+				<Redirect noThrow from="/" to="/admin/users" />
 			</Router>
 		</div>
 	);

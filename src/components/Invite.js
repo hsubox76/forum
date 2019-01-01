@@ -10,7 +10,7 @@ class Invite extends Component {
 		this.state = {
 			code: null,
 			inviteError: null,
-			invites: []
+			invites: null
 		};
 	}
 	componentDidMount = () => {
@@ -27,6 +27,12 @@ class Invite extends Component {
 		});
 	}
 	render() {
+		if (!this.state.invites) {
+      return (
+        <div className="loading-page">
+  				<div className="loader loader-big"></div>
+  			</div>);
+		}
 		const usedInvites = this.state.invites.filter(invite => invite.wasUsed);
 		const unusedInvites = this.state.invites.filter(invite => !invite.wasUsed);
 		const unusedInvitesTable = unusedInvites.length > 0 && (
