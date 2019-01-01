@@ -216,3 +216,37 @@ exports.getUser = functions.https.onCall(async (data, context) => {
   newRecord.customClaims = pick(customClaims, customClaimsProperties);
   return newRecord;
 });
+
+function checkIfCodeValid (code) {
+  return firestore.collection("invites").doc(code).get()
+		.then(ref => {
+			if (!ref.data()) {
+				throw new Error(`Code ${code} not found.`);
+			}
+			if (ref.data().wasUsed === false) {
+        console.log(`Code ${code} is a valid invite code.`);
+				return true;
+			} else {
+				throw new Error(`Code ${code} has already been used.`);
+			}
+		});
+}
+exports.processInviteCode = functions.https.onCall(async (data, context) => {
+  checkIfUid(data);
+  try {
+    await checkIfCodeValid(data.code);
+  } catch (e) {
+    return { error: e.message };
+  }
+
+  const claimUpdate = setClaim(data.uid, 'validated', true);
+  const { displayName, email }  = data.user;
+  const inviteUpdate = firestore.collection("invites")
+    .doc(data.code)
+    .update({
+      wasUsed: true,
+      usedAt: Date.now(),
+      usedBy: `${displayName} (${email})`
+    });
+  return await Promise.all([claimUpdate, inviteUpdate]).catch(e => console.error(e));
+});

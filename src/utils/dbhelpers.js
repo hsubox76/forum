@@ -2,6 +2,7 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import 'firebase/functions';
+import pick from 'lodash/pick';
 
 let checkingIfBannedPromise = null;
 
@@ -16,6 +17,11 @@ export function toggleBan(uid, shouldBan) {
 export function toggleMod(uid, shouldMod) {
 	const setClaim = firebase.functions().httpsCallable('setClaim');
 	return setClaim({ claim: 'mod', uid, isOn: shouldMod });
+}
+
+export function toggleVal(uid, shouldVal) {
+	const setClaim = firebase.functions().httpsCallable('setClaim');
+	return setClaim({ claim: 'validated', uid, isOn: shouldVal });
 }
 
 // ******************************************************************
@@ -196,7 +202,7 @@ export function updatePost(content, postPath, user) {
 export function getClaims() {
 	return firebase.auth().currentUser.getIdTokenResult()
 		.then((idTokenResult) => {
-			return idTokenResult.claims;
+			return idTokenResult.claims || {};
 		});
 }
 
@@ -265,4 +271,9 @@ export function generateInviteCode(createdByName, createdByUid) {
 		.then(docRef => {
 			return docRef.id;
 		});
+}
+
+export function submitInviteCode(code, user) {
+	const processInviteCode = firebase.functions().httpsCallable('processInviteCode');
+	return processInviteCode({ uid: user.uid, user: pick(user, ['displayName', 'email']), code });
 }

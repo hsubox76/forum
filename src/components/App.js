@@ -15,7 +15,7 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import get from 'lodash/get';
-import { getClaims, getIsBanned } from '../utils/dbhelpers';
+import { getClaims, getIsBanned, submitInviteCode } from '../utils/dbhelpers';
 // import registerServiceWorker from '../registerServiceWorker';
 import { unregister } from '../registerServiceWorker';
 
@@ -54,10 +54,6 @@ class App extends Component {
     };
   }
   componentDidMount = () => {
-    // Force get new token (temp while modding lots of people?)
-    if (firebase.auth().currentUser) {
-      firebase.auth().currentUser.getIdToken(true);
-    }
     history.listen(() => {
       this.logoutIfBanned();
     });
@@ -65,8 +61,11 @@ class App extends Component {
         (user) => {
           this.setState({ user });
           if (user) {
-            this.logoutIfBanned();
-            getClaims().then(claims => this.setState({ claims }));
+            // Force get new token (temp while modding lots of people?)
+            user.getIdToken(true).then(() => {
+              this.logoutIfBanned();
+              getClaims().then(claims => this.setState({ claims }));
+            });
           }
         }
     );
@@ -110,46 +109,24 @@ class App extends Component {
 	  
 	  if (!code || !this.state.user) return;
 	  
-    this.setState({ inviteError: null });
-	  this.db.collection("invites").doc(code).get()
-	    .then(ref => {
-	      if (!ref.data()) {
-	        throw new Error(`Code ${code} not found.`);
-	      }
-	      if (ref.data().wasUsed === false) {
-	        const user =
-	          Object.assign({}, this.state.user, { verifiedWithCode: true });
-	        return user;
-	      } else {
-	        throw new Error(`Code ${code} has already been used.`);
-	      }
-	    })
-	    .then(user => {
-	      const userUpdate = this.db.collection("users")
-	        .doc(this.state.user.uid)
-	        .update({
-  	        verifiedWithCode: true
-  	      });
-  	    const { displayName, email }  = this.state.user;
-	      const inviteUpdate = this.db.collection("invites")
-	        .doc(code)
-	        .update({
-  	        wasUsed: true,
-  	        usedAt: Date.now(),
-  	        usedBy: `${displayName} (${email})`
-  	      });
-	      Promise.all([userUpdate, inviteUpdate]).then(() => {
-	        this.setState({ user });
-	      });
-	    })
+    this.setState({ inviteError: null, processingInviteCode: true });
+    submitInviteCode(code, this.state.user)
+      .then((result) => {
+        if (get(result, 'data.error')) throw new Error(result.data.error);
+        this.setState({ processingInviteCode: false });
+        firebase.auth().currentUser
+          .getIdToken(true)
+          .then(() => window.location.reload());
+      })
 	    .catch((e) => {
         this.setState({
-          inviteError: e.message
+          inviteError: e.message,
+          processingInviteCode: false
         });
 	    });
 	}
   render() {
-    if (this.state.user === 'unknown') {
+    if (this.state.user === 'unknown' || !this.state.claims) {
       return (
         <div className="loading-page">
   				<div className="loader loader-big"></div>
@@ -166,20 +143,21 @@ class App extends Component {
         <div className="loading-page">
   				this user has been banned
   			</div>);
-    }
-    /* else if (!this.state.user.verifiedWithCode) {
+    } else if (this.state.claims && !this.state.claims.validated) {
       return (
         <div className="App">
           <form className="invite-code-container" onSubmit={this.handleCodeSubmit}>
             <label>enter code</label>
             <input className="invite-input" ref={this.inviteCodeRef} />
-            <button className="button-edit">ok</button>
+            {this.state.processingInviteCode
+              ? (<div className="loader"></div>)
+              : (<button className="button-edit">ok</button>)}
             {this.state.inviteError &&
               <div className="invite-error">{this.state.inviteError}</div>}
           </form>
         </div>
       );
-    } */
+    }
     return (
       <LocationProvider history={history}>
       <UserContext.Provider value={this.state}>

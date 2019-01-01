@@ -9,6 +9,7 @@ import { getAllUsers,
 	migrateAllAvatars,
 	toggleBan,
 	toggleMod,
+	toggleVal,
 	getClaims,
 	migrateToTree
 } from '../utils/dbhelpers';
@@ -38,6 +39,15 @@ function Admin() {
 	function onModClick(uid, isMod) {
 		setPageDisabled(true);
 		toggleMod(uid, !isMod)
+			.then(() => getAllUsers(true))
+			.then(users => setUsers(users))
+			.catch(e => console.error(e))
+			.finally(() => setPageDisabled(false));
+	}
+	
+	function onValidateClick(uid, shouldVal) {
+		setPageDisabled(true);
+		toggleVal(uid, shouldVal)
 			.then(() => getAllUsers(true))
 			.then(users => setUsers(users))
 			.catch(e => console.error(e))
@@ -120,7 +130,16 @@ function Admin() {
 							<td>{user.displayName}</td>
 							<td>{showEmails ? user.email : '--------------------------------------'}</td>
 							<td>{user.photoURL ? 'av' : 'no av'}</td>
-							<td>{user.customClaims.validated ? 'V' : '-'}</td>
+							<td>
+								<div className="action-cell">
+									{user.customClaims.validated ? 'V' : '-'}
+									{!isAdmin && (
+										<button onClick={() => onValidateClick(user.uid, !user.customClaims.validated)}>
+										{user.customClaims.validated ? 'undo' : 'val'}
+										</button>
+									)}
+								</div>
+							</td>
 							<td>{user.customClaims.pwot ? 'V' : '-'}</td>
 							<td>
 								<div className="action-cell">
