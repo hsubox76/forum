@@ -11,6 +11,7 @@ import ThreadList from './ThreadList.js';
 import PostList from './PostList.js';
 import Profile from './Profile.js';
 import UserContext from './UserContext.js';
+import CreateAccount from './CreateAccount.js';
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
@@ -87,7 +88,6 @@ class App extends Component {
     window.removeEventListener('popstate', this.logoutIfBanned);
   }
   logoutIfBanned = () => {
-    console.log('logoutIfBanned running');
     getIsBanned().then(isBanned => {
       if (isBanned) {
         firebase.auth().signOut();
@@ -126,17 +126,21 @@ class App extends Component {
 	    });
 	}
   render() {
-    if (this.state.user === 'unknown' || !this.state.claims) {
+    if (this.state.user === 'unknown' || (this.state.user && !this.state.claims)) {
       return (
         <div className="loading-page">
   				<div className="loader loader-big"></div>
   			</div>);
     } else if (!this.state.user) {
       return (
-        <StyledFirebaseAuth
-          uiConfig={this.uiConfig}
-          firebaseAuth={firebase.auth()}
-        />
+        <Router>
+          <StyledFirebaseAuth
+            default
+            uiConfig={this.uiConfig}
+            firebaseAuth={firebase.auth()}
+          />
+          <CreateAccount path="code/:code" />
+        </Router>
       );
     } else if (get(this.state, 'claims.banned')) {
       return (
@@ -212,6 +216,7 @@ class App extends Component {
             <Profile path="profile" user={this.state.user} />
             <Admin path="admin" user={this.state.user} />
             <Invite path="invite" user={this.state.user} />
+            <CreateAccount path="code/:code" user={this.state.user} claims={this.state.claims} />
           </Router>
           {this.state.dialog &&
             <Dialog {...this.state.dialog} onClose={() => this.setState({dialog: null})} />}

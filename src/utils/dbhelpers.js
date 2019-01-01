@@ -217,6 +217,7 @@ export function getIsBanned() {
 		.get()
 		.then(userDoc => {
 			checkingIfBannedPromise = null;
+			if (!userDoc.exists) return false;
 			return userDoc.data().isBanned;
 		});
 	return checkingIfBannedPromise;
@@ -273,7 +274,12 @@ export function generateInviteCode(createdByName, createdByUid) {
 		});
 }
 
-export function submitInviteCode(code, user) {
+export function submitInviteCode(code, user, shouldCreate = false) {
 	const processInviteCode = firebase.functions().httpsCallable('processInviteCode');
-	return processInviteCode({ uid: user.uid, user: pick(user, ['displayName', 'email']), code });
+	return processInviteCode({
+		uid: user.uid,
+		user: shouldCreate ? user : pick(user, ['displayName', 'email']),
+		code,
+		shouldCreate
+	});
 }

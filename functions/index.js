@@ -231,16 +231,38 @@ function checkIfCodeValid (code) {
 			}
 		});
 }
+
 exports.processInviteCode = functions.https.onCall(async (data, context) => {
-  checkIfUid(data);
   try {
     await checkIfCodeValid(data.code);
   } catch (e) {
+    console.error(e);
     return { error: e.message };
   }
 
-  const claimUpdate = setClaim(data.uid, 'validated', true);
-  const { displayName, email }  = data.user;
+  let user = data.user;
+  if (data.shouldCreate) {
+    if (!user || !user.displayName || !user.email || !user.password) {
+      console.error('missing data fields');
+      return { error: 'Error creating user.' };
+    }
+    try {
+      user = await admin.auth().createUser({
+        email: user.email,
+        password: user.password,
+        displayName: user.displayName
+      });
+      console.log('Created new user with uid' + user.uid);
+    } catch (e) {
+      console.error(e);
+      return { error: 'Error creating user.' };
+    }
+  } else {
+    checkIfUid(data);
+  }
+
+  const claimUpdate = setClaim(user.uid, 'validated', true);
+  const { displayName, email }  = user;
   const inviteUpdate = firestore.collection("invites")
     .doc(data.code)
     .update({
@@ -248,5 +270,7 @@ exports.processInviteCode = functions.https.onCall(async (data, context) => {
       usedAt: Date.now(),
       usedBy: `${displayName} (${email})`
     });
-  return await Promise.all([claimUpdate, inviteUpdate]).catch(e => console.error(e));
+  return await Promise.all([claimUpdate, inviteUpdate])
+    .then(() => console.log(`Validated user ${displayName} / ${email}`))
+    .catch(e => console.error(e));
 });
