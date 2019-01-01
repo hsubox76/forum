@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import '../styles/App.css';
-import { Router, Link } from '@reach/router';
+import { Router, Link, LocationProvider, createHistory } from '@reach/router';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import Dialog from './Dialog.js';
 import ForumList from './ForumList.js';
@@ -19,6 +19,8 @@ import get from 'lodash/get';
 import { getClaims, getIsBanned, submitInviteCode } from '../utils/dbhelpers';
 // import registerServiceWorker from '../registerServiceWorker';
 import { unregister } from '../registerServiceWorker';
+
+const history = createHistory(window);
 
 class App extends Component {
   constructor() {
@@ -53,6 +55,9 @@ class App extends Component {
     };
   }
   componentDidMount = () => {
+    history.listen(() => {
+      this.logoutIfBanned();
+    });
     this.unregisterAuthObserver = firebase.auth().onAuthStateChanged(
         (user) => {
           this.setState({ user });
@@ -158,6 +163,7 @@ class App extends Component {
       );
     }
     return (
+      <LocationProvider history={history}>
       <UserContext.Provider value={this.state}>
         <div className="App">
           <div className="page-header">
@@ -219,6 +225,7 @@ class App extends Component {
           </div>
         </div>
       </UserContext.Provider>
+      </LocationProvider>
     );
   }
 }
