@@ -305,3 +305,33 @@ a.user-link {
 .message-banner button:hover {
   background-color: var(--color-highlight);
 }
+
+.tabs {
+  display: flex;
+  border-bottom: 2px solid var(--color-main);
+  margin-bottom: 5px;
+}
+
+.tabs .tab {
+  display: flex;
+  font-size: 1.1rem;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--color-main);
+  border: 2px solid var(--color-neutral);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 2px;
+  border-bottom: none;
+  padding: 5px;
+  margin-right: 8px;
+  background-color: var(--color-light);
+  color: var(--color-neutral);
+}
+
+.tabs .tab.selected {
+  background-color: transparent;
+  color: var(--color-main);
+  border-color: var(--color-main);
+  box-shadow: 0 4px 0 -2px white;
+}

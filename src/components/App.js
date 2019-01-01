@@ -5,7 +5,7 @@ import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import Dialog from './Dialog.js';
 import ForumList from './ForumList.js';
 import Help from './Help.js';
-import Admin from './Admin.js';
+import Admin from './Admin/Admin.js';
 import Invite from './Invite.js';
 import ThreadList from './ThreadList.js';
 import PostList from './PostList.js';
@@ -214,7 +214,7 @@ class App extends Component {
             />
             <Help path="help" />
             <Profile path="profile" user={this.state.user} />
-            <Admin path="admin" user={this.state.user} />
+            <Admin path="admin/*" user={this.state.user} />
             <Invite path="invite" user={this.state.user} />
             <CreateAccount path="code/:code" user={this.state.user} claims={this.state.claims} />
           </Router>
