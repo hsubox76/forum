@@ -5,6 +5,7 @@ import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import Dialog from './Dialog.js';
 import ForumList from './ForumList.js';
 import Help from './Help.js';
+import NotFound from './NotFound.js';
 import Admin from './Admin/Admin.js';
 import Invite from './Invite.js';
 import ThreadList from './ThreadList.js';
@@ -217,6 +218,7 @@ class App extends Component {
             <Admin path="admin/*" user={this.state.user} />
             <Invite path="invite" user={this.state.user} />
             <CreateAccount path="code/:code" user={this.state.user} claims={this.state.claims} />
+            <NotFound default />
           </Router>
           {this.state.dialog &&
             <Dialog {...this.state.dialog} onClose={() => this.setState({dialog: null})} />}

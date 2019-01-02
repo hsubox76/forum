@@ -335,3 +335,31 @@ a.user-link {
   border-color: var(--color-main);
   box-shadow: 0 4px 0 -2px white;
 }
+
+button.button-sort {
+  width: 22px;
+  height: 20px;
+  padding: 3px;
+}
+
+.button-sort > .none {
+  width: 12px;
+  height: 2px;
+  background-color: var(--color-neutral);
+}
+
+.button-sort > .up {
+  width: 0; 
+  height: 0; 
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 8px solid var(--color-ok);
+}
+
+.button-sort > .down {
+  width: 0; 
+  height: 0; 
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid var(--color-ok);
+}

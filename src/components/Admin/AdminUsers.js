@@ -9,14 +9,17 @@ import { getAllUsers,
 	migrateToTree
 } from '../../utils/dbhelpers';
 import repeat from 'lodash/repeat';
+import sortBy from 'lodash/sortBy';
 
 function AdminUsers(props) {
 	const [users, setUsers] = useState([]);
+	const [sortField, setSortField] = useState('customClaims.validated');
+	const [sortDirection, setSortDirection] = useState('asc');
 	const [pageDisabled, setPageDisabled] = useState(false);
 	const [showEmails, setShowEmails] = useState(false);
 	
 	useEffect(() => {
-		getAllUsers(true).then(users => setUsers(users));
+		getAllUsers(true).then(users => setUsers(sortBy(users, 'customClaims.validated')));
 	}, []);
 	
 	function onBanClick(uid, isBanned) {
@@ -49,6 +52,31 @@ function AdminUsers(props) {
 	function toggleShowEmails() {
 		setShowEmails(!showEmails);
   }
+
+  function filterUsers(field) {
+    let sortedUsers = sortBy(users, field);
+    if (sortDirection === 'desc') {
+      sortedUsers.reverse();
+      console.log('reversing');
+      setSortDirection('asc');
+    } else {
+      setSortDirection('desc');
+    }
+    setSortField(field);
+    setUsers(sortedUsers);
+  }
+
+  function SortButton(props) {
+    let iconClass = 'none';
+    if (props.field === sortField) {
+      iconClass = sortDirection === 'asc' ? 'up' : 'down';
+    }
+    return (
+      <button className="button-sort" onClick={() => filterUsers(props.field)}>
+        <div className={'sort-icon ' + iconClass} />
+      </button>
+    );
+  }
   
 	if (pageDisabled) {
 		return (
@@ -70,14 +98,13 @@ function AdminUsers(props) {
       <table>
         <thead>
           <tr>
-            <th>Display Name</th>
-            <th>
-            </th>
+            <th>Display Name <SortButton field="displayName" /></th>
+            <th>Email <SortButton field="email" /></th>
             <th>Has Avatar</th>
-            <th>Validated</th>
-            <th>PWOT</th>
-            <th>Role</th>
-            <th>Banned</th>
+            <th>Validated <SortButton field="customClaims.validated" /></th>
+            <th>PWOT <SortButton field="customClaims.pwot" /></th>
+            <th>Is Mod <SortButton field="customClaims.mod" /></th>
+            <th>Banned <SortButton field="customClaims.banned" /></th>
           </tr>
         </thead>
         <tbody>
@@ -85,7 +112,6 @@ function AdminUsers(props) {
           const isAdmin = user.customClaims.admin;
           const isMod = user.customClaims.mod;
           const isBanned = user.customClaims.banned;
-          const role = isAdmin ? 'admin' : (isMod ? 'mod' : '-');
           return (
             <tr key={user.uid}>
               <td>{showEmails ? user.displayName : user.displayName[0] + repeat('*', user.displayName.length - 1)}</td>
@@ -104,7 +130,7 @@ function AdminUsers(props) {
               <td>{user.customClaims.pwot ? 'V' : '-'}</td>
               <td>
                 <div className="action-cell">
-                  {role}
+                  {isMod ? 'M' : '-'}
                   {!isAdmin && (
                     <button onClick={() => onModClick(user.uid, isMod)}>
                     {isMod ? 'unmod' : 'mod'}
