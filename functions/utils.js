@@ -36,6 +36,7 @@ async function throwIfBanned(context) {
 }
 
 async function throwIfNotValidated(context) {
+  if (!context || !context.auth) return;
   const user = await getUser(context.auth.uid);
   if (!user.customClaims.validated) {
     throw new functions.https.HttpsError('permission-denied',

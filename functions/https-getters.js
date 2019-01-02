@@ -63,7 +63,7 @@ exports.getUser = functions.https.onCall(async (data, context) => {
     customClaimsProperties.push('banned');
     customClaimsProperties.push('validated');
   }
-  const userRecord = getUser(data.uid);
+  const userRecord = await getUser(data.uid);
   const newRecord = pick(userRecord, userProperties);
   const customClaims = userRecord.customClaims || {};
   newRecord.customClaims = pick(customClaims, customClaimsProperties);

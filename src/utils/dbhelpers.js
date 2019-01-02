@@ -219,7 +219,8 @@ export function getIsBanned() {
 			checkingIfBannedPromise = null;
 			if (!userDoc.exists) return false;
 			return userDoc.data().isBanned;
-		});
+		})
+		.catch(e => console.error(e));
 	return checkingIfBannedPromise;
 }
 
