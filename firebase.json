@@ -3,5 +3,17 @@
     "predeploy": [
       "npm --prefix \"$RESOURCE_DIR\" run lint"
     ]
-  }
+  },
+  "hosting": 
+    {
+      "predeploy": [
+        "yarn --prefix \"$RESOURCE_DIR\" build"
+      ],
+      "public": "build",
+      "rewrites": [{
+        "source": "**",
+        "destination": "/index.html"
+      }]
+    }
+  
 }
