@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './styles/index.css';
-// import App from './components/App';
-import SiteDown from './components/SiteDown';
+import App from './components/App';
+// import SiteDown from './components/SiteDown';
 import firebase from 'firebase/app';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import {
@@ -37,4 +37,4 @@ const config = {
 
 firebase.initializeApp(config);
 
-ReactDOM.render(<SiteDown />, document.getElementById('root'));
+ReactDOM.render(<App />, document.getElementById('root'));
