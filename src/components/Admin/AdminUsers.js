@@ -14,19 +14,20 @@ import sortBy from 'lodash/sortBy';
 function AdminUsers(props) {
 	const [users, setUsers] = useState([]);
 	const [sortField, setSortField] = useState('customClaims.validated');
-	const [sortDirection, setSortDirection] = useState('asc');
+	const [sortDirection, setSortDirection] = useState('desc');
 	const [pageDisabled, setPageDisabled] = useState(false);
 	const [showEmails, setShowEmails] = useState(false);
 	
 	useEffect(() => {
-		getAllUsers(true).then(users => setUsers(sortBy(users, 'customClaims.validated')));
+    getAllUsers(true)
+      .then(users => filterUsers(sortField, sortDirection, users));
 	}, []);
 	
 	function onBanClick(uid, isBanned) {
 		setPageDisabled(true);
 		toggleBan(uid, !isBanned)
 			.then(() => getAllUsers(true))
-			.then(users => setUsers(users))
+			.then(users => filterUsers(sortField, sortDirection, users))
 			.catch(e => console.error(e))
 			.finally(() => setPageDisabled(false));
 	}
@@ -35,7 +36,7 @@ function AdminUsers(props) {
 		setPageDisabled(true);
 		toggleMod(uid, !isMod)
 			.then(() => getAllUsers(true))
-			.then(users => setUsers(users))
+			.then(users => filterUsers(sortField, sortDirection, users))
 			.catch(e => console.error(e))
 			.finally(() => setPageDisabled(false));
 	}
@@ -44,7 +45,7 @@ function AdminUsers(props) {
 		setPageDisabled(true);
 		toggleVal(uid, shouldVal)
 			.then(() => getAllUsers(true))
-			.then(users => setUsers(users))
+			.then(users => filterUsers(sortField, sortDirection, users))
 			.catch(e => console.error(e))
 			.finally(() => setPageDisabled(false));
 	}
@@ -53,17 +54,23 @@ function AdminUsers(props) {
 		setShowEmails(!showEmails);
   }
 
-  function filterUsers(field) {
-    let sortedUsers = sortBy(users, field);
-    if (sortDirection === 'desc') {
+  function filterUsers(field, direction, usersToSort) {
+    let sortedUsers = sortBy(usersToSort, field);
+    if (direction === 'desc') {
       sortedUsers.reverse();
-      console.log('reversing');
-      setSortDirection('asc');
-    } else {
-      setSortDirection('desc');
     }
     setSortField(field);
+    setSortDirection(direction);
     setUsers(sortedUsers);
+  }
+
+  function onSortClick(field) {
+    let direction = 'desc';
+    if (field === sortField && direction === 'desc') {
+      console.log('go asc');
+      direction = 'asc';
+    }
+    filterUsers(field, direction, users);
   }
 
   function SortButton(props) {
@@ -72,7 +79,7 @@ function AdminUsers(props) {
       iconClass = sortDirection === 'asc' ? 'up' : 'down';
     }
     return (
-      <button className="button-sort" onClick={() => filterUsers(props.field)}>
+      <button className="button-sort" onClick={() => onSortClick(props.field)}>
         <div className={'sort-icon ' + iconClass} />
       </button>
     );
