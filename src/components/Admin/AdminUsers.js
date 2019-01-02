@@ -20,14 +20,14 @@ function AdminUsers(props) {
 	
 	useEffect(() => {
     getAllUsers(true)
-      .then(users => filterUsers(sortField, sortDirection, users));
+      .then(users => sortUsers(sortField, sortDirection, users));
 	}, []);
 	
 	function onBanClick(uid, isBanned) {
 		setPageDisabled(true);
 		toggleBan(uid, !isBanned)
 			.then(() => getAllUsers(true))
-			.then(users => filterUsers(sortField, sortDirection, users))
+			.then(users => sortUsers(sortField, sortDirection, users))
 			.catch(e => console.error(e))
 			.finally(() => setPageDisabled(false));
 	}
@@ -36,7 +36,7 @@ function AdminUsers(props) {
 		setPageDisabled(true);
 		toggleMod(uid, !isMod)
 			.then(() => getAllUsers(true))
-			.then(users => filterUsers(sortField, sortDirection, users))
+			.then(users => sortUsers(sortField, sortDirection, users))
 			.catch(e => console.error(e))
 			.finally(() => setPageDisabled(false));
 	}
@@ -45,7 +45,7 @@ function AdminUsers(props) {
 		setPageDisabled(true);
 		toggleVal(uid, shouldVal)
 			.then(() => getAllUsers(true))
-			.then(users => filterUsers(sortField, sortDirection, users))
+			.then(users => sortUsers(sortField, sortDirection, users))
 			.catch(e => console.error(e))
 			.finally(() => setPageDisabled(false));
 	}
@@ -54,7 +54,7 @@ function AdminUsers(props) {
 		setShowEmails(!showEmails);
   }
 
-  function filterUsers(field, direction, usersToSort) {
+  function sortUsers(field, direction, usersToSort) {
     let sortedUsers = sortBy(usersToSort, field);
     if (direction === 'desc') {
       sortedUsers.reverse();
@@ -70,7 +70,7 @@ function AdminUsers(props) {
       console.log('go asc');
       direction = 'asc';
     }
-    filterUsers(field, direction, users);
+    sortUsers(field, direction, users);
   }
 
   function SortButton(props) {
@@ -91,7 +91,9 @@ function AdminUsers(props) {
 				Updating the database.
 			</div>
 		);
-	}
+  }
+  
+  console.log('Moderator list: ', users.filter(user => user.customClaims.mod).map(user => user.displayName).join(', '));
   
   return (
     <React.Fragment>
