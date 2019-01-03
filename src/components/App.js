@@ -11,6 +11,7 @@ import Invite from './Invite.js';
 import ThreadList from './ThreadList.js';
 import PostList from './PostList.js';
 import Profile from './Profile.js';
+import UserPage from './UserPage.js';
 import UserContext from './UserContext.js';
 import CreateAccount from './CreateAccount.js';
 import firebase from 'firebase/app';
@@ -215,6 +216,7 @@ class App extends Component {
             />
             <Help path="help" />
             <Profile path="profile" user={this.state.user} />
+            <UserPage path="user/:userId" />
             <Admin path="admin/*" user={this.state.user} />
             <Invite path="invite" user={this.state.user} />
             <CreateAccount path="code/:code" user={this.state.user} claims={this.state.claims} />

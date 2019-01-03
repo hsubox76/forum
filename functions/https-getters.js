@@ -13,7 +13,8 @@ const USER_PROPERTIES = {
   VIEWABLE_FOR_ALL: [
     'uid',
     'displayName',
-    'photoURL'
+    'photoURL',
+    'metadata'
   ],
   VIEWABLE_FOR_ADMIN: [
     'email',

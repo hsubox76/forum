@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { format } from 'date-fns';
+import { Link } from '@reach/router';
 import get from 'lodash/get';
 import findKey from 'lodash/findKey';
 import TextContent from './TextContent';
@@ -164,7 +165,7 @@ function Post(props) {
 				<div className="post-user">
 					{postUser && postUser.photoURL && <img className="avatar-post" alt="User's Avatar" src={postUser.photoURL} />}
 					{postUser
-						? <div>{postUser.displayName}</div>
+						? <Link className="user-name-link" to={`/user/${postUser.uid}`}>{postUser.displayName}</Link>
 						: <div className="loader loader-small"></div>}
 					{get(postUser, 'customClaims.admin') && <div className="role-icon">A</div>}
 					{get(postUser, 'customClaims.mod') && <div className="role-icon">M</div>}

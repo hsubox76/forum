@@ -109,6 +109,7 @@ function AdminUsers(props) {
           <tr>
             <th>Display Name <SortButton field="displayName" /></th>
             <th>Email <SortButton field="email" /></th>
+            <th>UserID <SortButton field="uid" /></th>
             <th>Has Avatar</th>
             <th>Validated <SortButton field="customClaims.validated" /></th>
             <th>PWOT <SortButton field="customClaims.pwot" /></th>
@@ -125,6 +126,7 @@ function AdminUsers(props) {
             <tr key={user.uid}>
               <td>{showEmails ? user.displayName : user.displayName[0] + repeat('*', user.displayName.length - 1)}</td>
               <td>{showEmails ? user.email : '--------------------------------------'}</td>
+              <td>{user.uid}</td>
               <td>{user.photoURL ? 'av' : 'no av'}</td>
               <td>
                 <div className="action-cell">

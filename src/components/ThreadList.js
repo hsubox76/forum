@@ -14,7 +14,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 function ThreadList(props) {
   const [status, setStatus] = useState(LOADING_STATUS.LOADING);
-  const [isHoveringOnLast, setIsHoveringOnLast] = useState(false);
   const contentRef = useRef();
   const titleRef  = useRef();
 
@@ -48,6 +47,12 @@ function ThreadList(props) {
       });
       navigate(`/forum/${props.forumId}/thread/${threadRef.id}`);
     });
+  }
+
+  function handleClickThread(e, link) {
+    if (e.target.tagName !== 'A') {
+      props.navigate(link);
+    }
   }
 
   const forum = useSubscribeToDocumentPath(`forums/${props.forumId}`);
@@ -95,34 +100,35 @@ function ThreadList(props) {
         }
         const isUnread = thread.unreadBy && thread.unreadBy.includes(props.user.uid);
         const threadClasses = ['thread-row'];
-        let link = "thread/" + thread.id;
+        let link = `/forum/${props.forumId}/thread/${thread.id}`;
         if (isUnread) {
           threadClasses.push('unread');
         }
-        if (isUnread || isHoveringOnLast) {
-          link += `?posts=${POSTS_PER_PAGE}&page=last`;
+        const lastPageLink = link += `?posts=${POSTS_PER_PAGE}&page=last`;
+        if (isUnread) {
+          link = lastPageLink;
         }
         return (
-          <Link to={link} key={thread.id} className={threadClasses.join(' ')}>
+          <div onClick={(e) => handleClickThread(e, link)} key={thread.id} className={threadClasses.join(' ')}>
             <div className="thread-title">
               <div className="title-container">
                 {thread.priority > 0
                   && <FontAwesomeIcon className="icon" icon="thumbtack" />}
                 {isUnread
                   && <FontAwesomeIcon className="icon icon-comment" icon="comment" />}
-                <span className="title-text">{thread.title}</span>
-                <span
+                <Link to={link} className="title-text">{thread.title}</Link>
+                <Link
+                  to={link}
                   className="title-page-link"
                 >
                   start
-                </span>
-                <span
-                  onMouseEnter={() => setIsHoveringOnLast(true)}
-                  onMouseLeave={() => setIsHoveringOnLast(false)}
+                </Link>
+                <Link
+                  to={lastPageLink}
                   className="title-page-link"
                 >
                   end
-                </span>
+                </Link>
               </div>
               <div>
                 <span>started by</span>
@@ -146,7 +152,7 @@ function ThreadList(props) {
                 <span className="info">{format(thread.updatedTime, dateFormat)}</span>
               </div>
             </div>
-          </Link>
+          </div>
         );
       })}
       <form className="new-post-container" onSubmit={handleSubmitThread}>

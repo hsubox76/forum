@@ -10,3 +10,17 @@
 .reset-password-link {
 	text-decoration: underline;
 }
+
+.user-info-header {
+	display: flex;
+	align-items: flex-end;
+}
+
+.user-info {
+	margin-left: 10px;
+}
+
+.user-info .username {
+	font-size: 1.1rem;
+	color: var(--color-main);
+}

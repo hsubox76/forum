@@ -363,3 +363,12 @@ button.button-sort {
   border-right: 6px solid transparent;
   border-top: 8px solid var(--color-ok);
 }
+
+a.user-name-link {
+  color: var(--color-ok);
+  text-decoration: none;
+}
+
+a.user-name-link:hover {
+  color: var(--color-highlight);
+}

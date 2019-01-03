@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/Posts.css';
 import { format } from 'date-fns';
-import { Link } from "@reach/router";
 import { COMPACT_DATE_FORMAT, STANDARD_DATE_FORMAT } from '../utils/constants';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useSubscribeToCollection } from '../utils/hooks';
@@ -25,6 +24,13 @@ function ForumList(props) {
 	const dateFormat = isMobile
 		? COMPACT_DATE_FORMAT
 		: STANDARD_DATE_FORMAT;
+
+	function handleClickForum(e, forumId) {
+		if (e.target.tagName !== 'A') {
+			props.navigate(`/forum/${forumId}`);
+		}
+	}
+
 	return (
 		<div className="forum-list-container">
 			<div className="section-header">All Forums</div>
@@ -41,7 +47,7 @@ function ForumList(props) {
 						classes.push('unread');
 					}
 					return (
-						<Link to={"forum/" + forum.id} key={forum.id} className={classes.join(' ')}>
+						<div onClick={(e) => handleClickForum(e, forum.id)} key={forum.id} className={classes.join(' ')}>
 							<div className="forum-title">
 									{isUnread
 										&& <FontAwesomeIcon className="icon icon-comment" icon="comment" />}
@@ -55,7 +61,7 @@ function ForumList(props) {
 								{!isMobile && <span>at</span>}
 								<span className="info">{format(forum.updatedTime, dateFormat)}</span>
 							</div>
-						</Link>
+						</div>
 					);
 			})}
 		</div>
