@@ -27,14 +27,25 @@ exports.setBanned = functions.https.onCall(async (data, context) => {
   checkIfAdmin(context);
   checkIfUid(data);
   if (data.isOn) {
-    await clearClaims(data, context);
+    try {
+      await firestore.doc(`bannedUsers/${data.uid}`).set({ timestamp: Date.now() });
+    } catch (e) {
+      console.error(e);
+    }
+  } else {
+    try {
+      await firestore.doc(`bannedUsers/${data.uid}`).delete();
+    } catch (e) {
+      console.error(e);
+    }
   }
-  const roleResult = await setClaim(data.uid, 'banned', data.isOn);
-  await firestore.doc(`users/${data.uid}`).update({
-    isBanned: data.isOn
-  });
-  await revokeTokens(data.uid);
-  return roleResult;
+  const banResult = await admin.auth().updateUser(data.uid, { disabled: data.isOn });
+  try {
+    await revokeTokens(data.uid);
+  } catch (e) {
+    console.error(e);
+  }
+  return banResult;
 });
 
 exports.eraseAllClaims = functions.https.onCall((clearClaims));
@@ -63,8 +74,6 @@ exports.processInviteCode = functions.https.onCall(async (data, context) => {
       console.error(e);
       return { error: 'Error creating user.' };
     }
-  } else {
-    checkIfUid(data);
   }
 
   const claimUpdate = setClaim(user.uid, 'validated', true);

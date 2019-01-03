@@ -23,13 +23,19 @@ function checkIfAdmin(context) {
 
 async function checkIfBanned(uid) {
   const user = await getUser(uid);
-  if (user.customClaims.banned) {
+  if (user.disabled) {
     return true;
   }
+  const dbBlacklisted = await firestore.collection('bannedUsers')
+    .doc(uid)
+    .get()
+    .then(ref => ref.exists);
+  if (dbBlacklisted) return true;
   return false;
 }
 
 async function throwIfBanned(context) {
+  if (!context || !context.auth) return;
   const isBanned = await checkIfBanned(context.auth.uid);
   if (isBanned) throw new functions.https.HttpsError('permission-denied',
     'User is banned.');

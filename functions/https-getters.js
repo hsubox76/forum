@@ -9,31 +9,47 @@ const {
   throwIfNotValidated
 } = require('./utils.js');
 
+const USER_PROPERTIES = {
+  VIEWABLE_FOR_ALL: [
+    'uid',
+    'displayName',
+    'photoURL'
+  ],
+  VIEWABLE_FOR_ADMIN: [
+    'email',
+    'disabled'
+  ]
+};
+
+const CUSTOM_CLAIMS_PROPERTIES = {
+  VIEWABLE_FOR_ALL: [
+    'admin',
+    'mod',
+    'pwot'
+  ],
+  VIEWABLE_FOR_ADMIN: [
+    'banned',
+    'validated'
+  ]
+}
+
 exports.checkIfBanned = functions.https.onCall(async (data, context) => {
   if (context && context.auth && context.auth.uid) {
-    return checkIfBanned(context.auth.uid);
+    return await checkIfBanned(context.auth.uid);
   }
   return false;
 });
 
 exports.getAllUsers = functions.https.onCall(async (data, context) => {
-  console.log(throwIfNotValidated);
   throwIfNotValidated(context);
-  const userProperties = [
-    'uid',
-    'displayName',
-    'photoURL'
-  ];
-  const customClaimsProperties = [
-    'admin',
-    'mod',
-    'pwot'
-  ];
+  let userProperties = USER_PROPERTIES.VIEWABLE_FOR_ALL;
+  let customClaimsProperties = CUSTOM_CLAIMS_PROPERTIES.VIEWABLE_FOR_ALL;
   if (data && data.getAll &&
       context && context.auth && context.auth.token.admin) {
-    userProperties.push('email');
-    customClaimsProperties.push('banned');
-    customClaimsProperties.push('validated');
+    userProperties =
+      userProperties.concat(USER_PROPERTIES.VIEWABLE_FOR_ADMIN);
+    customClaimsProperties =
+      customClaimsProperties.concat(CUSTOM_CLAIMS_PROPERTIES.VIEWABLE_FOR_ADMIN);
   }
   const listUsersResult = await admin.auth().listUsers();
   return listUsersResult.users.map(userRecord => {
@@ -47,21 +63,14 @@ exports.getAllUsers = functions.https.onCall(async (data, context) => {
 exports.getUser = functions.https.onCall(async (data, context) => {
   throwIfNotValidated(context);
   checkIfUid(data);
-  const userProperties = [
-    'uid',
-    'displayName',
-    'photoURL'
-  ];
-  const customClaimsProperties = [
-    'admin',
-    'mod',
-    'pwot'
-  ];
+  let userProperties = USER_PROPERTIES.VIEWABLE_FOR_ALL;
+  let customClaimsProperties = CUSTOM_CLAIMS_PROPERTIES.VIEWABLE_FOR_ALL;
   if (data && data.getAll &&
       context && context.auth && context.auth.token.admin) {
-    userProperties.push('email');
-    customClaimsProperties.push('banned');
-    customClaimsProperties.push('validated');
+    userProperties =
+      userProperties.concat(USER_PROPERTIES.VIEWABLE_FOR_ADMIN);
+    customClaimsProperties =
+      customClaimsProperties.concat(CUSTOM_CLAIMS_PROPERTIES.VIEWABLE_FOR_ADMIN);
   }
   const userRecord = await getUser(data.uid);
   const newRecord = pick(userRecord, userProperties);

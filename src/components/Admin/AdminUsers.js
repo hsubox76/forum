@@ -66,7 +66,7 @@ function AdminUsers(props) {
 
   function onSortClick(field) {
     let direction = 'desc';
-    if (field === sortField && direction === 'desc') {
+    if (sortField === field && sortDirection === 'desc') {
       console.log('go asc');
       direction = 'asc';
     }
@@ -113,14 +113,14 @@ function AdminUsers(props) {
             <th>Validated <SortButton field="customClaims.validated" /></th>
             <th>PWOT <SortButton field="customClaims.pwot" /></th>
             <th>Is Mod <SortButton field="customClaims.mod" /></th>
-            <th>Banned <SortButton field="customClaims.banned" /></th>
+            <th>Banned <SortButton field="disabled" /></th>
           </tr>
         </thead>
         <tbody>
         {users.map(user => {
           const isAdmin = user.customClaims.admin;
           const isMod = user.customClaims.mod;
-          const isBanned = user.customClaims.banned;
+          const isBanned = user.disabled;
           return (
             <tr key={user.uid}>
               <td>{showEmails ? user.displayName : user.displayName[0] + repeat('*', user.displayName.length - 1)}</td>
