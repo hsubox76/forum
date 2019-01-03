@@ -1,26 +1,34 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useContext } from 'react';
 import '../styles/Posts.css';
 import Post from './Post.js';
 import { Link, navigate } from '@reach/router';
 import { LOADING_STATUS, POSTS_PER_PAGE } from '../utils/constants';
 import range from 'lodash/range';
+import flatten from 'lodash/flatten';
+import uniq from 'lodash/uniq';
 import {
   deleteDoc,
   deleteCollection,
   updateDoc,
   addPost,
-  getClaims
+  getClaims,
+  getUsers
 } from '../utils/dbhelpers';
 import { getParams, getPostRange } from '../utils/utils';
 import { useSubscribeToDocumentPath, useSubscribeToCollection } from '../utils/hooks';
+import UserContext from './UserContext';
+
+let loopCount = 0;
 
 function PostList(props) {
   const contentRef = useRef();
   const newPostRef = useRef();
   const titleRef = useRef();
+  const context = useContext(UserContext);
   const [status, setStatus] = useState(LOADING_STATUS.LOADING);
   const [postBeingEdited, setPostBeingEdited] = useState(null);
   const [claims, setClaims] = useState({});
+  const [userMap, setUserMap] = useState({});
   const [threadTitleEditing, setThreadTitleEditing] = useState(false);
 
   const forum = useSubscribeToDocumentPath(`forums/${props.forumId}`);
@@ -36,6 +44,18 @@ function PostList(props) {
   useEffect(() => {
     getClaims().then(claims => setClaims(claims));
   }, [props.user]);
+
+  useEffect(() => {
+    if (posts && loopCount < 20) {
+      const uids = uniq(
+          flatten(posts.map(post => [post.uid, post.updatedBy])
+        )
+        .filter(uid => uid))
+        .sort();
+      getUsers(uids, context).then(users => setUserMap(users));
+      loopCount++;
+    }
+  }, [posts]);
   
   function handleDeleteThread () {
     props.setDialog({
@@ -133,10 +153,15 @@ function PostList(props) {
   const postsPerPage = params.posts || POSTS_PER_PAGE;
   const pageString = params.page || 0;
   const { start, end, numPages, page } = getPostRange(pageString, postsPerPage, posts.length);
-  const postList = posts ?
-    posts
-      .slice(start, end)
-      .map((post, index) => ({ id: post.id, index: index + start })) : [];
+  const postList = posts
+    ? posts
+        .slice(start, end)
+        .map((post, index) => Object.assign(post, {
+          index: index + start,
+          createdByUser: userMap[post.uid],
+          updatedByUser: userMap[post.updatedBy]
+        }))
+    : [];
       //TODO: should be able to pass postdata straight to post and not have to reload it
       
   const paginationBox = (
@@ -203,20 +228,21 @@ function PostList(props) {
       </div>
       {paginationBox}
       {!posts && "loading"}
-      {postList && postList.map(({ id, index }, listIndex) => (
+      {postList && postList.map((post) => (
         <Post
-          key={id}
-          postId={id}
+          key={post.id}
+          postId={post.id}
+          post={post}
           threadId={props.threadId}
           forumId={props.forumId}
           user={props.user}
-          index={index}
-          isDisabled={postBeingEdited && postBeingEdited !== id}
+          index={post.index}
+          isDisabled={postBeingEdited && postBeingEdited !== post.id}
           isOnlyPost={thread.postCount === 1}
           toggleEditPost={handleToggleEditPost}
           setDialog={props.setDialog}
           handleQuote={handleQuote}
-          scrollToMe={pageString === 'last' && index === end - 1}
+          scrollToMe={pageString === 'last' && post.index === end - 1}
         />
       ))}
       {paginationBox}

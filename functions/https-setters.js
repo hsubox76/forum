@@ -12,20 +12,20 @@ const {
 } = require('./utils.js');
 
 exports.setAvatar = functions.https.onCall(async (data, context) => {
-  checkIfAdmin(context);
-  checkIfUid(data);
+  await checkIfAdmin(context);
+  await checkIfUid(data);
   return await admin.auth().updateUser(data.uid, { photoURL: data.url });
 });
 
 exports.setClaim = functions.https.onCall(async (data, context) => {
-  checkIfAdmin(context);
-  checkIfUid(data);
+  await checkIfAdmin(context);
+  await checkIfUid(data);
   return await setClaim(data.uid, data.claim, data.isOn);
 });
 
 exports.setBanned = functions.https.onCall(async (data, context) => {
-  checkIfAdmin(context);
-  checkIfUid(data);
+  await checkIfAdmin(context);
+  await checkIfUid(data);
   if (data.isOn) {
     try {
       await firestore.doc(`bannedUsers/${data.uid}`).set({ timestamp: Date.now() });

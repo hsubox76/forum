@@ -50,7 +50,6 @@ export function useSubscribeToCollection(collectionName, options) {
     });
     return unsub;
   }, [collectionName]);
-  
   return collection;
 }
 

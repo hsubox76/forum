@@ -41,8 +41,7 @@ exports.checkIfBanned = functions.https.onCall(async (data, context) => {
   return false;
 });
 
-exports.getAllUsers = functions.https.onCall(async (data, context) => {
-  throwIfNotValidated(context);
+function getWhitelistedProperties(data, context) {
   let userProperties = USER_PROPERTIES.VIEWABLE_FOR_ALL;
   let customClaimsProperties = CUSTOM_CLAIMS_PROPERTIES.VIEWABLE_FOR_ALL;
   if (data && data.getAll &&
@@ -52,6 +51,12 @@ exports.getAllUsers = functions.https.onCall(async (data, context) => {
     customClaimsProperties =
       customClaimsProperties.concat(CUSTOM_CLAIMS_PROPERTIES.VIEWABLE_FOR_ADMIN);
   }
+  return { userProperties, customClaimsProperties };
+}
+
+exports.getAllUsers = functions.https.onCall(async (data, context) => {
+  await throwIfNotValidated(context);
+  const { userProperties, customClaimsProperties } = getWhitelistedProperties();
   const listUsersResult = await admin.auth().listUsers();
   return listUsersResult.users.map(userRecord => {
     const newRecord = pick(userRecord, userProperties);
@@ -61,18 +66,31 @@ exports.getAllUsers = functions.https.onCall(async (data, context) => {
   });
 });
 
-exports.getUser = functions.https.onCall(async (data, context) => {
-  throwIfNotValidated(context);
-  checkIfUid(data);
-  let userProperties = USER_PROPERTIES.VIEWABLE_FOR_ALL;
-  let customClaimsProperties = CUSTOM_CLAIMS_PROPERTIES.VIEWABLE_FOR_ALL;
-  if (data && data.getAll &&
-      context && context.auth && context.auth.token.admin) {
-    userProperties =
-      userProperties.concat(USER_PROPERTIES.VIEWABLE_FOR_ADMIN);
-    customClaimsProperties =
-      customClaimsProperties.concat(CUSTOM_CLAIMS_PROPERTIES.VIEWABLE_FOR_ADMIN);
+exports.getUsers = functions.https.onCall(async (data, context) => {
+  await throwIfNotValidated(context);
+  if (!data || !Array.isArray(data.uids)) {
+    throw new functions.https.HttpsError('invalid-argument',
+      'No uids array provided.');
   }
+  const { userProperties, customClaimsProperties } = getWhitelistedProperties();
+  const userFetches = data.uids.map(uid => {
+    return getUser(uid).then(userRecord => {
+      console.log('userRecord for', uid, userRecord);
+      const newRecord = pick(userRecord, userProperties);
+      const customClaims = userRecord.customClaims || {};
+      newRecord.customClaims = pick(customClaims, customClaimsProperties);
+      return newRecord;
+    });
+  });
+  return Promise.all(userFetches)
+    .then((data) => { console.log('successful user fetches', data); return data;})
+    .catch(e => console.error(e));
+});
+
+exports.getUser = functions.https.onCall(async (data, context) => {
+  await throwIfNotValidated(context);
+  await checkIfUid(data);
+  const { userProperties, customClaimsProperties } = getWhitelistedProperties();
   const userRecord = await getUser(data.uid);
   const newRecord = pick(userRecord, userProperties);
   const customClaims = userRecord.customClaims || {};

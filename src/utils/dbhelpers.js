@@ -228,6 +228,38 @@ export function getAllUsers(getAllData) {
 		.catch(e => console.error(e));
 }
 
+export function getUsers(uids, context) {
+	if (uids && uids.length > 0) {
+		const foundUsers = {};
+		const usersToFetch = [];
+		uids.forEach(uid => {
+			if (context.usersByUid[uid]) {
+				foundUsers[uid] = context.usersByUid[uid];
+			} else {
+				usersToFetch.push(uid);
+			}
+		});
+		if (usersToFetch.length > 0) {
+			const fetchUsers = firebase.functions().httpsCallable('getUsers');
+			return fetchUsers({ uids: usersToFetch })
+				.then(response => {
+					if (response.data) {
+						response.data.forEach(user => {
+							foundUsers[user.uid] = user;
+							context.addUserByUid(user.uid, user);
+						});
+						return foundUsers;
+					} else {
+						throw new Error('Did not receive user list');
+					}
+				})
+				.catch(e => console.error(e));
+		} else {
+			return Promise.resolve(foundUsers);
+		}
+	}
+}
+
 // ******************************************************************
 // INVITES
 // ******************************************************************

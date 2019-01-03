@@ -1,17 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import '../styles/Posts.css';
 import { format } from 'date-fns';
+import flatten from 'lodash/flatten';
+import uniq from 'lodash/uniq';
 import { COMPACT_DATE_FORMAT, STANDARD_DATE_FORMAT } from '../utils/constants';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useSubscribeToCollection } from '../utils/hooks';
-import { getClaims } from '../utils/dbhelpers';
+import { getClaims, getUsers } from '../utils/dbhelpers';
 import UserData from './UserData';
+import UserContext from './UserContext';
 
 function ForumList(props) {
 	const [claims, setClaims] = useState(null);
+  const [userMap, setUserMap] = useState({});
+	const context = useContext(UserContext);
+	
 	useEffect(() => {
 		getClaims().then(result => setClaims(result));
 	}, [props.user]);
+
 	const forumList = useSubscribeToCollection('forums', [{ orderBy: 'order' }]);
 	if (!forumList) {
 		return (
@@ -20,6 +27,18 @@ function ForumList(props) {
 			</div>
 		);
 	}
+
+  useEffect(() => {
+    if (forumList) {
+      const uids = uniq(
+          flatten(forumList.map(forum => [forum.createdBy, forum.updatedBy])
+        )
+        .filter(uid => uid))
+        .sort();
+      getUsers(uids, context).then(users => setUserMap(users));
+    }
+	}, [forumList]);
+	
 	const isMobile = window.matchMedia("(max-width: 767px)").matches;
 	const dateFormat = isMobile
 		? COMPACT_DATE_FORMAT
@@ -56,7 +75,7 @@ function ForumList(props) {
 							<div className="forum-meta">
 								<span>last updated by</span>
 								<span className="info truncatable-name">
-									<UserData uid={forum.updatedBy} />
+									<UserData user={userMap[forum.updatedBy]} />
 								</span>
 								{!isMobile && <span>at</span>}
 								<span className="info">{format(forum.updatedTime, dateFormat)}</span>

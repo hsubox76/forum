@@ -8,7 +8,6 @@ import UserData from './UserData';
 import UserContext from './UserContext';
 import { LOADING_STATUS, STANDARD_DATE_FORMAT, reactions } from '../utils/constants';
 import { deleteDoc, updatePost, getClaims, updateReadStatus, updatePostCount } from '../utils/dbhelpers';
-import { useSubscribeToDocumentPath, useGetUser } from '../utils/hooks';
 import ReactionButton from './ReactionButton';
 
 function Post(props) {
@@ -20,10 +19,9 @@ function Post(props) {
 
 	const postPath = `forums/${props.forumId}/threads/${props.threadId}/posts/${props.postId}`;
 	
-	const post = useSubscribeToDocumentPath(postPath);
-	const uid = post ? post.uid : null;
+	const post = props.post;
 
-	let postUser = useGetUser(uid, context);
+	const postUser = post.createdByUser;
 	
 	// scroll to bottom if/when post updates and is last post
 	useEffect(() => {
@@ -195,7 +193,7 @@ function Post(props) {
 					<span>Last edited</span>
 					<span className="edit-data">{format(post.updatedTime, STANDARD_DATE_FORMAT)}</span>
 					<span>by</span>
-					<span className="edit-data"><UserData uid={post.updatedBy} /></span>
+					<span className="edit-data"><UserData user={post.createdByUser} /></span>
 				</div>}
 			{footer}
 		</div>

@@ -26,12 +26,21 @@ async function checkIfBanned(uid) {
   if (user.disabled) {
     return true;
   }
-  const dbBlacklisted = await firestore.collection('bannedUsers')
-    .doc(uid)
-    .get()
-    .then(ref => ref.exists);
-  if (dbBlacklisted) return true;
-  return false;
+  let dbBlacklisted = false;
+  try {
+    console.log('checking db blacklisted');
+    dbBlacklisted = await firestore.collection('bannedUsers')
+      .doc(uid)
+      .get()
+      .then(ref => {
+        console.log('blacklist reference exists?:', ref.exists);
+        return ref.exists;
+      });
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
+  return dbBlacklisted;
 }
 
 async function throwIfBanned(context) {
@@ -74,9 +83,9 @@ function checkIfCodeValid (code) {
 }
 
 async function clearClaims(data, context) {
-  checkIfAdmin(context);
-  checkIfUid(data);
-  throwIfBanned(context);
+  await checkIfAdmin(context);
+  await checkIfUid(data);
+  await throwIfBanned(context);
   let user = await getUser(data.uid);
   await admin.auth().setCustomUserClaims(data.uid, null);
   user = await getUser(data.uid);

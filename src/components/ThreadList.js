@@ -1,6 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect, useContext } from 'react';
 import '../styles/Posts.css';
 import { format } from 'date-fns';
+import flatten from 'lodash/flatten';
+import uniq from 'lodash/uniq';
 import { Link, navigate } from "@reach/router"
 import {
   COMPACT_DATE_FORMAT,
@@ -8,14 +10,36 @@ import {
   LOADING_STATUS,
   POSTS_PER_PAGE } from '../utils/constants';
 import UserData from './UserData';
-import { addDoc, updateDoc } from '../utils/dbhelpers';
+import { addDoc, updateDoc, getUsers } from '../utils/dbhelpers';
 import { useSubscribeToCollection, useSubscribeToDocumentPath } from '../utils/hooks';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import UserContext from './UserContext';
 
 function ThreadList(props) {
   const [status, setStatus] = useState(LOADING_STATUS.LOADING);
+  const [userMap, setUserMap] = useState({});
   const contentRef = useRef();
   const titleRef  = useRef();
+  const context = useContext(UserContext);
+
+  const forum = useSubscribeToDocumentPath(`forums/${props.forumId}`);
+
+  const threads = useSubscribeToCollection(`forums/${props.forumId}/threads`,
+    [
+      { orderBy: ['priority', 'desc'] },
+      { orderBy: ['updatedTime', 'desc'] }
+    ]);
+
+  useEffect(() => {
+    if (threads) {
+      const uids = uniq(
+          flatten(threads.map(thread => [thread.createdBy, thread.updatedBy])
+        )
+        .filter(uid => uid))
+        .sort();
+      getUsers(uids, context).then(users => setUserMap(users));
+    }
+  }, [threads]);
 
   function handleSubmitThread(e) {
     e.preventDefault();
@@ -54,14 +78,6 @@ function ThreadList(props) {
       props.navigate(link);
     }
   }
-
-  const forum = useSubscribeToDocumentPath(`forums/${props.forumId}`);
-
-  const threads = useSubscribeToCollection(`forums/${props.forumId}/threads`,
-    [
-      { orderBy: ['priority', 'desc'] },
-      { orderBy: ['updatedTime', 'desc'] }
-    ]);
 
   if (forum && threads && status === LOADING_STATUS.LOADING) {
     setStatus(LOADING_STATUS.LOADED);
@@ -133,7 +149,7 @@ function ThreadList(props) {
               <div>
                 <span>started by</span>
                 <span className="info truncatable-name">
-                  <UserData uid={thread.createdBy} />
+                  <UserData user={userMap[thread.createdBy]} />
                 </span>
               </div>
             </div>
@@ -146,7 +162,7 @@ function ThreadList(props) {
               <div className="last-updated-info">
                 <span>last updated by</span>
                 <span className="info truncatable-name">
-                  <UserData uid={thread.updatedBy} />
+                  <UserData user={userMap[thread.updatedBy]} />
                 </span>
                 {!isMobile && <span>at</span>}
                 <span className="info">{format(thread.updatedTime, dateFormat)}</span>
