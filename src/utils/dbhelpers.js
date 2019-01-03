@@ -187,7 +187,6 @@ export function updatePost(content, postPath, user) {
 	const now = Date.now();
 	const postData = {
 			content,
-			createdTime: now,
 			updatedTime: now,
 			updatedBy: user.uid
 	};
