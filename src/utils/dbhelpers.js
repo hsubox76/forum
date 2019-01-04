@@ -253,11 +253,15 @@ export function getUsers(uids, context) {
 						throw new Error('Did not receive user list');
 					}
 				})
-				.catch(e => console.error(e));
+				.catch(e => {
+					console.error(e);
+					return Promise.resolve({});
+				});
 		} else {
 			return Promise.resolve(foundUsers);
 		}
 	}
+	return Promise.resolve({});
 }
 
 // ******************************************************************

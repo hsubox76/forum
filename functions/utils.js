@@ -57,7 +57,7 @@ async function throwIfNotValidated(context) {
     throw new functions.https.HttpsError('permission-denied',
       'User is not validated.');
   }
-  throwIfBanned(context);
+  await throwIfBanned(context);
 }
 
 function checkIfUid(data) {
