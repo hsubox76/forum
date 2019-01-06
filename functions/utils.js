@@ -1,6 +1,8 @@
 const functions = require('firebase-functions');
 const firestore = require('./firestore');
 const admin = require('./admin');
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 async function getUser(uid) {
   let user;
@@ -127,6 +129,17 @@ function revokeTokens(uid) {
     .catch(e => console.log(e));
 }
 
+async function sendMail(data) {
+  const msg = {
+    to: data.to,
+    from: 'PWOT2 Forum <pwot2-support@googlegroups.com>',
+    subject: data.subject || '',
+    text: data.content || '',
+  };
+  return sgMail.send(msg)
+    .then(() => console.log('Sent message to ' + msg.to));
+}
+
 module.exports = {
   getUser,
   checkIfAdmin,
@@ -137,5 +150,6 @@ module.exports = {
   checkIfCodeValid,
   clearClaims,
   setClaim,
-  revokeTokens
+  revokeTokens,
+  sendMail
 };

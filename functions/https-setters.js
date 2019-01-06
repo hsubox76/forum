@@ -8,7 +8,8 @@ const {
   checkIfUid,
   checkIfCodeValid,
   clearClaims,
-  revokeTokens
+  revokeTokens,
+  sendMail
 } = require('./utils.js');
 
 exports.setAvatar = functions.https.onCall(async (data, context) => {
@@ -88,4 +89,26 @@ exports.processInviteCode = functions.https.onCall(async (data, context) => {
   return await Promise.all([claimUpdate, inviteUpdate])
     .then(() => console.log(`Validated user ${displayName} / ${email}`))
     .catch(e => console.error(e));
+});
+
+exports.testSendMail = functions.https.onCall(async (data, context) => {
+  await checkIfAdmin(context);
+  let userEmailList = [];
+  try {
+    const userListResult = await admin.auth().listUsers();
+    userEmailList = userListResult.users.map(user => user.email);
+  } catch (e) {
+    console.error(e);
+    return 'Error getting users.';
+  }
+  console.log('bcc', userEmailList.join(','));
+  if (userEmailList.length) {
+    return sendMail({
+      to: 'hsubox@gmail.com',
+      subject: 'hi',
+      content: 'This is a test'
+    });
+  } else {
+    return 'error';
+  }
 });
