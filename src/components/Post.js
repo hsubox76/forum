@@ -193,7 +193,7 @@ function Post(props) {
 					<span>Last edited</span>
 					<span className="edit-data">{format(post.updatedTime, STANDARD_DATE_FORMAT)}</span>
 					<span>by</span>
-					<span className="edit-data"><UserData user={post.createdByUser} /></span>
+					<span className="edit-data"><UserData user={post.updatedByUser} /></span>
 				</div>}
 			{footer}
 		</div>
