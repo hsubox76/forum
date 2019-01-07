@@ -1,5 +1,6 @@
 const functions = require('firebase-functions');
 const admin = require('./admin');
+const firestore = require('./firestore');
 const pick = require('lodash/pick');
 
 const {
@@ -91,9 +92,16 @@ exports.getUser = functions.https.onCall(async (data, context) => {
   await throwIfNotValidated(context);
   await checkIfUid(data);
   const { userProperties, customClaimsProperties } = getWhitelistedProperties();
-  const userRecord = await getUser(data.uid);
-  const newRecord = pick(userRecord, userProperties);
-  const customClaims = userRecord.customClaims || {};
-  newRecord.customClaims = pick(customClaims, customClaimsProperties);
-  return newRecord;
+  const userRecordPromise = getUser(data.uid);
+  const userDataPromise = firestore.doc(`users/${data.uid}`).get().then(doc => doc.data());
+  return Promise.all([userRecordPromise, userDataPromise])
+    .then(([userRecord, userData]) => {
+      const newRecord = pick(userRecord, userProperties);
+      const customClaims = userRecord.customClaims || {};
+      newRecord.customClaims = pick(customClaims, customClaimsProperties);
+      // When more db-only fields are added, do a whitelist like with the userRecord
+      newRecord.bio = userData.bio;
+      return newRecord;
+    })
+    .catch(e => console.error(e));
 });
