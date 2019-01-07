@@ -5,6 +5,7 @@ body {
   --color-ok: #00A896;
   --color-danger: #E76F51;
   --color-neutral: #999;
+  --color-text: #555;
 }
 .App {
   font-size: 16px;

@@ -1,166 +1,205 @@
-import React, { Component } from 'react';
+import React, { useRef, useState } from 'react';
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 import 'firebase/auth';
 import 'firebase/storage';
 import '../styles/Profile.css';
+import { useGetUser } from '../utils/hooks';
+import { updateDoc } from '../utils/dbhelpers';
 
-class Profile extends Component {
-  constructor() {
-    super();
-		this.db = firebase.firestore();
-    this.displayNameRef = React.createRef();
-    this.fileInputRef = React.createRef();
-    this.storageRef = firebase.storage().ref();
-    this.state = {
-      passwordEmailState: 'start',
-      profileChangeState: 'start',
-      avatarError: null
-    };
-  }
-  handleSubmitChanges = (e) => {
+function Profile (props) {
+  const displayNameRef = useRef();
+  const fileInputRef = useRef();
+  const bioRef = useRef();
+  const storageRef = firebase.storage().ref();
+  const [passwordEmailState, setPasswordEmailState] = useState('start');
+  const [profileChangeState, setProfileChangeState] = useState('start');
+  const [avatarError, setAvatarError] = useState(null);
+  const [avatarBlocking, setAvatarBlocking] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(false);
+  const userData = useGetUser(props.user.uid);
+
+  function handleSubmitChanges(e) {
     e.preventDefault();
     const profileUpdatePromises = [];
-    if (this.displayNameRef.current.value !== this.props.user.displayName) {
+    if (displayNameRef.current.value !== props.user.displayName) {
       profileUpdatePromises.push(
-        this.props.user.updateProfile({
-          displayName: this.displayNameRef.current.value
-        })
-      );
-      profileUpdatePromises.push(
-        this.db.collection("users").doc(this.props.user.uid).update({
-            displayName: this.displayNameRef.current.value,
+        props.user.updateProfile({
+          displayName: displayNameRef.current.value
         })
       );
     }
-    if (this.fileInputRef.current.files && this.fileInputRef.current.files.length > 0) {
-      profileUpdatePromises.push(this.uploadAvatar());
+    if (userData && bioRef.current.value !== userData.bio) {
+      profileUpdatePromises.push(
+        updateDoc(`users/${props.user.uid}`, {
+          bio: bioRef.current.value
+        })
+      );
+    }
+    if (fileInputRef.current.files && fileInputRef.current.files.length > 0) {
+      profileUpdatePromises.push(uploadAvatar());
     }
     if (profileUpdatePromises.length > 0) {
-      this.setState({ profileChangeState: 'sending' });
+      setProfileChangeState('sending');
       Promise.all(profileUpdatePromises).then(() => {
-        this.setState({
-          profileChangeState: 'sent',
-          avatarError: null,
-          avatarBlocking: false,
-          previewUrl: null
-        });
+        setProfileChangeState('sent');
+        setAvatarError(null);
+        setAvatarBlocking(false);
+        setPreviewUrl(null);
       });
     } else {
-      this.setState({ profileChangeState: 'nochanges' });
+      setProfileChangeState('nochanges');
     }
   }
-  handleResetPassword = () => {
-    this.setState({passwordEmailState: 'sending'});
+
+  function handleResetPassword() {
+    setPasswordEmailState('sending');
     firebase.auth().sendPasswordResetEmail(
-      this.props.user.email, null)
+      props.user.email, null)
     .then(() => {
       // Password reset email sent.
-      this.setState({passwordEmailState: 'sent'});
+      setPasswordEmailState('sent');
     })
     .catch((error) => {
-      // Error occurred. Inspect error.code.
+      setPasswordEmailState('error');
     });
   }
-  uploadAvatar = () => {
-    this.setState({ avatarError: null });
-    const file = this.fileInputRef.current.files[0];
+
+  function uploadAvatar() {
+    if (avatarBlocking) return;
+    setAvatarError(null);
+    const file = fileInputRef.current.files[0];
     const parts = file.name.split('.');
     const extension = parts[parts.length - 1];
-    const userId = this.props.user.uid;
-    const avatarImageRef = this.storageRef.child(`avatars/${userId}.${extension}`);
+    const userId = props.user.uid;
+    const avatarImageRef = storageRef.child(`avatars/${userId}.${extension}`);
     return avatarImageRef.put(file)
       .then(snapshot => snapshot.ref.getDownloadURL())
-      .then(url => this.props.user.updateProfile({ photoURL: url }))
+      .then(url => props.user.updateProfile({ photoURL: url }))
       .catch(e => {
         console.error(e);
-        this.setState({ avatarError: 'Problem uploading avatar' });
+        setAvatarError('Problem uploading avatar.');
       });
   }
-  onAvatarSelect = (e) => {
-    this.setState({ previewUrl: null, avatarError: null, avatarBlocking: false });
+
+  function onAvatarSelect(e) {
+    setPreviewUrl(null);
+    setAvatarError(null);
+    setAvatarBlocking(false);
     const file = e.target.files[0];
     if (file.size > 200000) {
-      this.setState({ avatarError: 'File size is too big (bytes not pixels).', avatarBlocking: true });
+      setAvatarError('File size is too big (bytes not pixels).');
+      setAvatarBlocking(true);
     }
     if (!file.type.includes('image')) {
-      this.setState({ avatarError: 'This doesn\'t seem to be an image file.', avatarBlocking: true });
+      setAvatarError('This doesn\'t seem to be an image file.');
+      setAvatarBlocking(true);
     }
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
       if (img.width > img.height || img.width < img.height) {
-        this.setState({ avatarError: 'Image is not square, it may get stretched when displayed.', avatarBlocking: this.state.avatarBlocking || false });
+        setAvatarError('Image is not square, it may get stretched when displayed.');
+        setAvatarBlocking(false);
       }
     };
     img.src = url;
-    this.setState({ previewUrl: url });
+    setPreviewUrl(url);
   }
-  render() {
-    let passwordResetEl = (
-      <div>
-        <span className="reset-password-link" onClick={this.handleResetPassword}>Reset password</span>
+
+  const firestoreBasedSection = userData
+    ? (
+      <React.Fragment>
+        <div><label>Update bio:</label></div>
+        <div>
+          <textarea
+            ref={bioRef}
+            disabled={profileChangeState === 'sending'}
+            className="display-name-input"
+            defaultValue={userData ? userData.bio : ''}
+            placeholder="Enter short bio here"
+          />
+        </div>
+      </React.Fragment>
+    )
+    : (
+      <div className="loading-more-data-container">
+        <div>Loading rest of your profile data.</div>
+        <div className="loader loader-sm" />
       </div>
     );
-    if (this.state.passwordEmailState === 'sent') {
-      passwordResetEl = (
-        <div>
-          <div>Password reset link sent to {this.props.user.email}.</div>
-          <div><span className="reset-password-link" onClick={this.handleResetPassword}>Send again</span></div>
-        </div>
-      );
-    } else if (this.state.passwordEmailState === 'sending') {
-      passwordResetEl = <div className="loader"></div>
-    }
-    return (
-      <form className="profile-container" onSubmit={this.handleSubmitChanges}>
-        <div><label>Change display name:</label></div>
-        <div>
-          <input
-            ref={this.displayNameRef}
-            disabled={this.state.profileChangeState === 'sending'}
-            className="display-name-input"
-            defaultValue={this.props.user.displayName}
-          />
-        </div>
-        <div><label>Current avatar:</label></div>
-        <div>
-          {this.props.user.photoURL
-            ? <img className="avatar-profile" alt="User's Avatar" src={this.props.user.photoURL} />
-            : 'none'}
-        </div>
-        {this.state.previewUrl && (
-          <div>
-            <div><label>Avatar to upload:</label></div>
-            <div>
-              {this.state.previewUrl
-                && <img className="avatar-profile" alt="New Avatar" src={this.state.previewUrl} />}
-            </div>
-            <button className="button-cancel" type="nosubmit" onClick={() => {this.setState({ previewUrl: null });}}>cancel</button>
-          </div>
-          )
-        }
-        <div><label>Upload avatar:</label></div>
-        <div>
-          <input 
-            ref={this.fileInputRef}
-            type="file"
-            onChange={this.onAvatarSelect}
-          />
-        </div>
-        <div>
-          {this.state.profileChangeState !== 'sending' && <button>Submit</button>}
-          {this.state.profileChangeState === 'sending' && <div className="loader"></div>}
-        </div>
-        {this.state.profileChangeState === 'sent' && <div>Profile updated.</div>}
-        {this.state.profileChangeState === 'nochanges' && <div>You haven't made any changes.</div>}
-        {this.state.avatarError && <div className="avatar-error">{this.state.avatarError}</div>}
-        <div>
-          {passwordResetEl}
-        </div>
-      </form>
+
+  let passwordResetEl = (
+    <div>
+      <span className="reset-password-link" onClick={handleResetPassword}>Reset password</span>
+    </div>
+  );
+  if (passwordEmailState === 'sent') {
+    passwordResetEl = (
+      <div>
+        <div>Password reset link sent to {props.user.email}.</div>
+        <div><span className="reset-password-link" onClick={handleResetPassword}>Send again</span></div>
+      </div>
     );
+  } else if (passwordEmailState === 'sending') {
+    passwordResetEl = <div className="loader"></div>
   }
+  return (
+    <form className="profile-container" onSubmit={handleSubmitChanges}>
+      <div className="profile-container-title">Your Profile</div>
+      <div><label>Change display name:</label></div>
+      <div>
+        <input
+          ref={displayNameRef}
+          disabled={profileChangeState === 'sending'}
+          className="display-name-input"
+          defaultValue={props.user.displayName}
+        />
+      </div>
+      <div><label>Current avatar:</label></div>
+      <div>
+        {props.user.photoURL
+          ? <img className="avatar-profile" alt="User's Avatar" src={props.user.photoURL} />
+          : 'none'}
+      </div>
+      {previewUrl && (
+        <div>
+          <div><label>Avatar to upload:</label></div>
+          <div>
+            {previewUrl
+              && <img className="avatar-profile" alt="New Avatar" src={previewUrl} />}
+          </div>
+          <button
+            className="button-cancel"
+            type="nosubmit"
+            onClick={() => setPreviewUrl(null)}
+          >
+            cancel
+          </button>
+        </div>
+        )
+      }
+      <div><label>Upload avatar:</label></div>
+      <div>
+        <input 
+          ref={fileInputRef}
+          type="file"
+          onChange={onAvatarSelect}
+        />
+      </div>
+      {firestoreBasedSection}
+      <div>
+        {profileChangeState !== 'sending' && <button>Submit</button>}
+        {profileChangeState === 'sending' && <div className="loader"></div>}
+      </div>
+      {profileChangeState === 'sent' && <div>Profile updated.</div>}
+      {profileChangeState === 'nochanges' && <div>You haven't made any changes.</div>}
+      {avatarError && <div className="avatar-error">{avatarError}</div>}
+      <div>
+        {passwordResetEl}
+      </div>
+    </form>
+  );
 }
 
 export default Profile;

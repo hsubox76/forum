@@ -1,6 +1,28 @@
+.profile-container {
+	border: 1px solid var(--color-highlight);
+	padding: 10px;
+	border-radius: 6px;
+	margin-top: 10px;
+}
+
+.profile-container-title {
+	font-size: 1.5rem;
+	color: var(--color-main);
+	font-weight: 500;
+}
+
 .avatar-profile {
 	width: 120px;
 	height: 120px;
+}
+
+.profile-container input {
+	font-size: .9rem;
+}
+
+.profile-container textarea {
+	font-size: .9rem;
+	height: 60px;
 }
 
 .avatar-error {
@@ -21,6 +43,28 @@
 }
 
 .user-info .username {
+	font-size: 1.2rem;
+	color: var(--color-main);
+	font-weight: 500;
+}
+
+.loading-more-data-container {
+	border: 1px solid var(--color-highlight);
+	padding: 10px;
+	border-radius: 6px;
+}
+
+.profile-container .section-label {
 	font-size: 1.1rem;
 	color: var(--color-main);
+}
+
+.profile-container .text-line {
+	color: var(--color-text);
+}
+
+.profile-container .role {
+	font-size: 1.1rem;
+	color: var(--color-ok);
+	text-transform: capitalize;
 }

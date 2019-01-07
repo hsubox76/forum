@@ -59,7 +59,7 @@ export function useGetUser(uid, context) {
   
   useEffect(() => {
     if (uid) {
-      if (context.usersByUid[uid]) {
+      if (context && context.usersByUid[uid]) {
         setUser(context.usersByUid[uid]);
         return;
       }
@@ -82,7 +82,7 @@ export function useGetUser(uid, context) {
   }, [uid]);
 
   useEffect(() => {
-    if (uid && user) context.addUserByUid(uid, user);
+    if (uid && user && context) context.addUserByUid(uid, user);
   }, [user]);
   
   return user;
