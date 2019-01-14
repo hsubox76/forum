@@ -47,11 +47,30 @@ function PostList(props) {
 
   useEffect(() => {
     if (posts && loopCount < 20) {
-      const uids = uniq(
-          flatten(posts.map(post => [post.uid, post.updatedBy])
-        )
-        .filter(uid => uid))
+      let uids = posts
+        .map(post => {
+          let uids = [post.uid, post.updatedBy];
+          if (post.reactions) {
+            const reactionIds = Object.values(post.reactions);
+            uids = uids.concat(flatten(reactionIds));
+          }
+          return uids;
+        });
+      uids = uniq(flatten(uids))
+        .filter(uid => uid)
         .sort();
+      // const uids = uniq(
+      //     flatten(posts.map(post => {
+      //       const uids = [post.uid, post.updatedBy];
+      //       if (post.reactions) {
+      //         const reactionIds = post.reactions.map(reaction => {
+
+      //         })
+      //       }
+      //     })
+      //   )
+      //   .filter(uid => uid))
+      //   .sort();
       getUsers(uids, context).then(users => setUserMap(users));
       loopCount++;
     }

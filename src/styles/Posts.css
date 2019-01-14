@@ -487,8 +487,9 @@ button.reaction-button:hover {
   z-index: 10;
   white-space: nowrap;
   opacity: 0;
-  transition: opacity 500ms;
-  pointer-events: none;
+  transition: opacity 250ms;
+	pointer-events: none;
+	text-align: left;
 }
 
 .reaction-button {
@@ -497,6 +498,23 @@ button.reaction-button:hover {
 
 .reaction-button:hover .reaction-tooltip {
 	opacity: 1;
+}
+
+.reaction-tooltip .reaction-users {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+}
+
+.reaction-tooltip .reaction-user-name {
+	font-weight: 300;
+	font-size: 0.8rem;
+}
+
+.reaction-tooltip .reaction-user-name:first-child {
+	border-top: 1px solid white;
+	margin-top: 4px;
+	padding-top: 4px;
 }
 
 .icon-reaction {

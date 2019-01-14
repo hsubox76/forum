@@ -25,25 +25,24 @@ function linkifyAndLineBreak(text, tokenIndex, classes, currentUrl) {
 		lines = [text];
 	}
 	lines.forEach((line, lineIndex) => {
-		if (!line) {
-			return;
-		}
-		if (currentUrl) {
-			contentEls.push(<span key={`${tokenIndex}-${lineIndex}`}>{line}</span>);
-		} else {
-			const options = {
-				className: 'user-link'
-			};
-			const linkifiedLine = (
-				<Linkify
-					key={`${tokenIndex}-${lineIndex}`}
-					className={classes.join(' ')}
-					tagName="span" options={options}
-				>
-					{line}
-				</Linkify>
-				);
-			contentEls.push(linkifiedLine);
+		if (line) {
+			if (currentUrl) {
+				contentEls.push(<span key={`${tokenIndex}-${lineIndex}`}>{line}</span>);
+			} else {
+				const options = {
+					className: 'user-link'
+				};
+				const linkifiedLine = (
+					<Linkify
+						key={`${tokenIndex}-${lineIndex}`}
+						className={classes.join(' ')}
+						tagName="span" options={options}
+					>
+						{line}
+					</Linkify>
+					);
+				contentEls.push(linkifiedLine);
+			}
 		}
 		if (lineIndex !== lines.length - 1) {
 			contentEls.push(<span key={`space-${tokenIndex}-${lineIndex}`} className="space" />);
@@ -173,6 +172,7 @@ const TextContent = (props) => {
 			});
 		}
 	}
+
 	let k = 0;
 	function renderNode (node) {
 		const classes = [];
