@@ -105,8 +105,15 @@ exports.testSendMail = functions.https.onCall(async (data, context) => {
   if (userEmailList.length) {
     return sendMail({
       to: 'hsubox@gmail.com',
-      subject: 'hi',
-      content: 'This is a test'
+      subject: 'The PWOT2 forum is up and running',
+      content: `Hi, this is Wombat. You're getting this email because you
+        signed up for the PWOT2 forum at www.pwot2.com at some point.  It's taken
+        a while to ramp up but it's running and people are posting.  I've made
+        everybody mods who originally signed up, and I set up single-use invite
+        codes so you can invite people hopefully without getting random bad people
+        wandering in.  Just a reminder in case you signed up and forgot about it
+        because it wasn't working earlier or there wasn't much activity.  You can
+        email me back at this address if you have any questions or run into bugs.`
     });
   } else {
     return 'error';
