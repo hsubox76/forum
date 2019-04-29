@@ -113,6 +113,11 @@ async function setClaim(uid, claim, isOn = true, overwrite = false) {
     Object.assign(existingClaims, { [claim]: Boolean(isOn) }));
   user = await getUser(uid);
   console.log(`${claim} claim ${actionPhrase} ${user.displayName}`);
+  if (claim === 'mod' || claim === 'pwot' || claim === 'admin') {
+    await firestore().collection('usersPublic').doc(uid).update({
+      claim: Boolean(isOn)
+    });
+  }
   return { customClaims: user.customClaims };
 }
 

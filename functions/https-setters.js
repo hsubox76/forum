@@ -86,7 +86,11 @@ exports.processInviteCode = functions.https.onCall(async (data, context) => {
       usedAt: Date.now(),
       usedBy: `${displayName} (${email})`
     });
-  return await Promise.all([claimUpdate, inviteUpdate])
+
+  const profileUpdate = await firestore().collection('usersPublic')
+    .doc(user.uid)
+    .set({ displayName });
+  return await Promise.all([claimUpdate, inviteUpdate, profileUpdate])
     .then(() => console.log(`Validated user ${displayName} / ${email}`))
     .catch(e => console.error(e));
 });
@@ -118,4 +122,35 @@ exports.testSendMail = functions.https.onCall(async (data, context) => {
   } else {
     return 'error';
   }
+});
+
+exports.showUsers = functions.https.onCall(async (data, context) => {
+  await checkIfAdmin(context);
+  let userList = [];
+  try {
+    userList = await admin.auth().listUsers();
+  } catch (e) {
+    console.error(e);
+    return 'Error getting users.';
+  }
+  const setPromises = [];
+  userList.users.forEach(user => {
+    const profileData = {
+      displayName: user.displayName
+    };
+    if (user.photoURL) {
+      profileData.photoURL = user.photoURL;
+    }
+    if (user.customClaims && user.customClaims.admin) {
+      profileData.admin = user.customClaims.admin;
+    }
+    if (user.customClaims && user.customClaims.mod) {
+      profileData.mod = user.customClaims.mod;
+    }
+    if (user.customClaims && user.customClaims.pwot) {
+      profileData.pwot = user.customClaims.pwot;
+    }
+    setPromises.push(firestore.collection("usersPublic").doc(user.uid).set(profileData));
+  })
+  await Promise.all(setPromises);
 });

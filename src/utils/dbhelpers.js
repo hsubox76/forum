@@ -240,23 +240,24 @@ export function getUsers(uids, context) {
 			}
 		});
 		if (usersToFetch.length > 0) {
-			const fetchUsers = firebase.functions().httpsCallable('getUsers');
-			return fetchUsers({ uids: usersToFetch })
-				.then(response => {
-					if (response.data) {
-						response.data.forEach(user => {
-							foundUsers[user.uid] = user;
-							context.addUserByUid(user.uid, user);
-						});
-						return foundUsers;
-					} else {
-						throw new Error('Did not receive user list');
-					}
-				})
-				.catch(e => {
-					console.error(e);
-					return Promise.resolve({});
+			// const fetchUsers = firebase.functions().httpsCallable('getUsers');
+			let fetchPromises = usersToFetch.map(uid => {
+				return firebase.firestore().collection('usersPublic')
+					.doc(uid)
+					.get()
+					.then(doc => Object.assign(doc.data(), { uid: doc.id }));
+			})
+			return Promise.all(fetchPromises).then(results => {
+				results.forEach(user => {
+					foundUsers[user.uid] = user;
+					context.addUserByUid(user.uid, user);
 				});
+				return foundUsers;
+			})
+			.catch(e => {
+				console.error(e);
+				return Promise.resolve({});
+			});
 		} else {
 			return Promise.resolve(foundUsers);
 		}
