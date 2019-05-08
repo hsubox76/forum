@@ -16,7 +16,7 @@
 }
 
 .form-row input {
-  font-size: .9rem;
+  font-size: 0.9rem;
   padding: 4px;
   flex: 1;
 }
@@ -35,5 +35,5 @@
 }
 
 button {
-  font-size: .9rem;
+  font-size: 0.9rem;
 }

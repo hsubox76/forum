@@ -1,10 +1,10 @@
-import React, { useRef, useState } from 'react';
-import { submitInviteCode } from '../utils/dbhelpers';
-import { navigate } from '@reach/router';
-import firebase from 'firebase/app';
-import 'firebase/auth';
-import get from 'lodash/get';
-import '../styles/CreateAccount.css';
+import React, { useRef, useState } from "react";
+import { submitInviteCode } from "../utils/dbhelpers";
+import { navigate } from "@reach/router";
+import firebase from "firebase/app";
+import "firebase/auth";
+import get from "lodash/get";
+import "../styles/CreateAccount.css";
 
 function CreateAccount(props) {
   const codeRef = useRef();
@@ -18,38 +18,40 @@ function CreateAccount(props) {
   function onForumSubmit(e) {
     e.preventDefault();
     setErrorMessage(null);
-    const password = get(passwordRef, 'current.value');
-    const confirmPassword = get(confirmPasswordRef, 'current.value');
-    const email = get(emailRef, 'current.value');
+    const password = get(passwordRef, "current.value");
+    const confirmPassword = get(confirmPasswordRef, "current.value");
+    const email = get(emailRef, "current.value");
     if (!password) {
-      setErrorMessage('Password cannot be blank.');
+      setErrorMessage("Password cannot be blank.");
       return;
     }
     if (!email) {
-      setErrorMessage('Email cannot be blank.');
+      setErrorMessage("Email cannot be blank.");
       return;
     }
     if (password.length < 8) {
-      setErrorMessage('Password should be at least 8 characters.');
+      setErrorMessage("Password should be at least 8 characters.");
       return;
     }
     if (password !== confirmPassword) {
-      setErrorMessage('Password fields don\'t match.');
+      setErrorMessage("Password fields don't match.");
       return;
     }
     const userData = {
       email,
-      displayName: get(displayNameRef, 'current.value'),
+      displayName: get(displayNameRef, "current.value"),
       password
-    }
+    };
     setSending(true);
-    submitInviteCode(get(codeRef, 'current.value'), userData, true)
+    submitInviteCode(get(codeRef, "current.value"), userData, true)
       .then(result => {
-        if (get(result, 'data.error')) {
+        if (get(result, "data.error")) {
           throw new Error(result.data.error);
         } else {
-          return firebase.auth().signInWithEmailAndPassword(email, password)
-            .then(() => navigate('/'));
+          return firebase
+            .auth()
+            .signInWithEmailAndPassword(email, password)
+            .then(() => navigate("/"));
         }
       })
       .catch(e => setErrorMessage(e.message))
@@ -57,10 +59,10 @@ function CreateAccount(props) {
   }
 
   function fill() {
-    passwordRef.current.value = 'password';
-    confirmPasswordRef.current.value = 'password';
-    emailRef.current.value = 'test@testing.com';
-    displayNameRef.current.value = 'Test Name';
+    passwordRef.current.value = "password";
+    confirmPasswordRef.current.value = "password";
+    emailRef.current.value = "test@testing.com";
+    displayNameRef.current.value = "Test Name";
   }
 
   // if (props.user && props.claims.validated) {
@@ -92,21 +94,21 @@ function CreateAccount(props) {
         </div>
         <div className="form-row">
           <label>code</label>
-          <input ref={codeRef} defaultValue={props.code || ''} />
+          <input ref={codeRef} defaultValue={props.code || ""} />
         </div>
         <div className="button-container">
-          <button disabled={sending} className="button-edit">create my account</button>
+          <button disabled={sending} className="button-edit">
+            create my account
+          </button>
         </div>
         {sending && <div className="loader" />}
       </form>
-      {window.location.hostname === 'localhost' && (
-        <button className="button-danger" onClick={fill}>fill with test data</button>
+      {window.location.hostname === "localhost" && (
+        <button className="button-danger" onClick={fill}>
+          fill with test data
+        </button>
       )}
-      {errorMessage && (
-        <div className="error-message">
-          {errorMessage}
-        </div>
-      )}
+      {errorMessage && <div className="error-message">{errorMessage}</div>}
     </div>
   );
 }

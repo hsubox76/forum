@@ -1,9 +1,9 @@
 .admin-container {
-	padding: 20px;
+  padding: 20px;
 }
 
 .admin-table {
-	padding: 10px;
+  padding: 10px;
 }
 
 .table-title {
@@ -14,38 +14,38 @@
 }
 
 .action-cell {
-	display: flex;
-	justify-content: flex-end;
-	align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .action-cell button {
-	margin-left: 8px;
+  margin-left: 8px;
 }
 
 .invite-gen-form {
-	margin: 20px;
-	border: 1px solid grey;
-	border-radius: 10px;
-	padding: 10px;
-	width: 350px;
+  margin: 20px;
+  border: 1px solid grey;
+  border-radius: 10px;
+  padding: 10px;
+  width: 350px;
 }
 
 .invite-code {
-	color: var(--color-ok);
-	font-weight: 500;
-	border: 1px solid grey;
-	border-radius: 8px;
-	margin: 5px 0;
-	padding: 10px 5px;
-	width: 330px;
-	font-size: .8rem;
+  color: var(--color-ok);
+  font-weight: 500;
+  border: 1px solid grey;
+  border-radius: 8px;
+  margin: 5px 0;
+  padding: 10px 5px;
+  width: 330px;
+  font-size: 0.8rem;
 }
 
 .instructions {
-	font-size: .9rem;
+  font-size: 0.9rem;
 }
 
 button {
-	margin-right: 5px;
+  margin-right: 5px;
 }
