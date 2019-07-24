@@ -8,7 +8,7 @@
     "@fortawesome/react-fontawesome": "^0.1.3",
     "@reach/router": "^1.2.1",
     "date-fns": "^1.29.0",
-    "firebase": "^5.5.1",
+    "firebase": "^6.3.1",
     "i": "^0.3.6",
     "linkifyjs": "^2.1.7",
     "lodash": "^4.17.13",
