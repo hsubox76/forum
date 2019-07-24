@@ -2,6 +2,7 @@ import firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/firestore";
 import "firebase/functions";
+import "firebase/performance";
 import pick from "lodash/pick";
 
 let checkingIfBannedPromise = null;
@@ -281,7 +282,8 @@ export function getUsers(uids, context) {
       }
     });
     if (usersToFetch.length > 0) {
-      // const fetchUsers = firebase.functions().httpsCallable('getUsers');
+      const trace = firebase.performance().trace('getUsersFromFirestore');
+      trace.start();
       let fetchPromises = usersToFetch.map(uid => {
         return firebase
           .firestore()
@@ -292,6 +294,7 @@ export function getUsers(uids, context) {
       });
       return Promise.all(fetchPromises)
         .then(results => {
+          trace.stop();
           results.forEach(user => {
             foundUsers[user.uid] = user;
             context.addUserByUid(user.uid, user);
@@ -300,6 +303,7 @@ export function getUsers(uids, context) {
         })
         .catch(e => {
           console.error(e);
+          trace.stop();
           return Promise.resolve({});
         });
     } else {

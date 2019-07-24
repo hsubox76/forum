@@ -4,6 +4,7 @@ import "./styles/index.css";
 import App from "./components/App";
 // import SiteDown from './components/SiteDown';
 import firebase from "firebase/app";
+import 'firebase/performance';
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
   faThumbtack,
@@ -37,5 +38,6 @@ const config = {
 };
 
 firebase.initializeApp(config);
+firebase.performance();
 
 ReactDOM.render(<App />, document.getElementById("root"));
