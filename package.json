@@ -13,7 +13,6 @@
     "i": "^0.3.6",
     "linkifyjs": "^2.1.7",
     "lodash": "^4.17.13",
-    "npm": "^6.4.1",
     "react": "^16.7.0-alpha.2",
     "react-dom": "^16.7.0-alpha.2",
     "react-firebaseui": "^3.0.7",

@@ -21,7 +21,7 @@ function AdminUsers(props) {
 
   useEffect(() => {
     getAllUsers(true).then(users => sortUsers(sortField, sortDirection, users));
-  }, []);
+  }, [sortField, sortDirection]);
 
   function onBanClick(uid, isBanned) {
     setPageDisabled(true);

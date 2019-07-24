@@ -40,7 +40,7 @@ const ReactionButton = props => {
             const user = get(context.usersByUid, response);
             if (user) {
               return (
-                <div key={user.uid} className="reaction-user-name">
+                <div key={user.uid + props.reaction.faName} className="reaction-user-name">
                   {user.displayName}
                 </div>
               );

@@ -56,17 +56,17 @@ export function useSubscribeToCollection(collectionName, options) {
       });
       return unsub;
     },
-    [collectionName]
+    [collectionName, options]
   );
   return collection;
 }
 
 export function useGetUser(uid, context) {
   const [user, setUser] = useState(null);
-  let unmounting = false;
 
   useEffect(
     () => {
+      let unmounting = false;
       if (uid) {
         if (context && context.usersByUid[uid]) {
           setUser(context.usersByUid[uid]);
@@ -91,14 +91,14 @@ export function useGetUser(uid, context) {
       }
       return () => (unmounting = true);
     },
-    [uid]
+    [uid, context]
   );
 
   useEffect(
     () => {
       if (uid && user && context) context.addUserByUid(uid, user);
     },
-    [user]
+    [user, context, uid]
   );
 
   return user;

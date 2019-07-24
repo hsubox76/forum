@@ -75,7 +75,7 @@ function PostList(props) {
         loopCount++;
       }
     },
-    [posts]
+    [posts, context]
   );
 
   function handleDeleteThread() {

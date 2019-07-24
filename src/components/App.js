@@ -98,6 +98,7 @@ class App extends Component {
     this.setState({
       usersByUid: Object.assign({}, this.state.usersByUid, { [uid]: userData })
     });
+    return userData;
   };
   handleSetDialog = dialog => {
     this.setState({ dialog });

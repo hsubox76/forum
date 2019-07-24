@@ -270,6 +270,17 @@ export function getAllUsers(getAllData) {
     .catch(e => console.error(e));
 }
 
+export function getUser(uid, context) {
+  if (context.usersByUid[uid]) {
+    return Promise.resolve(context.usersByUid[uid]);
+  } else {
+    return getDoc(`usersPublic/${uid}`)
+      .then(user => 
+        context.addUserByUid(uid, user)
+      );
+  }
+}
+
 export function getUsers(uids, context) {
   if (uids && uids.length > 0) {
     const foundUsers = {};
@@ -285,19 +296,14 @@ export function getUsers(uids, context) {
       const trace = firebase.performance().trace('getUsersFromFirestore');
       trace.start();
       let fetchPromises = usersToFetch.map(uid => {
-        return firebase
-          .firestore()
-          .collection("usersPublic")
-          .doc(uid)
-          .get()
-          .then(doc => Object.assign(doc.data(), { uid: doc.id }));
+        return getDoc(`usersPublic/${uid}`);
       });
       return Promise.all(fetchPromises)
         .then(results => {
           trace.stop();
           results.forEach(user => {
-            foundUsers[user.uid] = user;
-            context.addUserByUid(user.uid, user);
+            foundUsers[user.id] = user;
+            context.addUserByUid(user.id, user);
           });
           return foundUsers;
         })

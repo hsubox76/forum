@@ -23,13 +23,6 @@ function ForumList(props) {
   );
 
   const forumList = useSubscribeToCollection("forums", [{ orderBy: "order" }]);
-  if (!forumList) {
-    return (
-      <div className="forum-list-container">
-        <div className="loader loader-med" />
-      </div>
-    );
-  }
 
   useEffect(
     () => {
@@ -42,8 +35,16 @@ function ForumList(props) {
         getUsers(uids, context).then(users => setUserMap(users));
       }
     },
-    [forumList]
+    [forumList, context]
   );
+
+  if (!forumList) {
+    return (
+      <div className="forum-list-container">
+        <div className="loader loader-med" />
+      </div>
+    );
+  }
 
   const isMobile = window.matchMedia("(max-width: 767px)").matches;
   const dateFormat = isMobile ? COMPACT_DATE_FORMAT : STANDARD_DATE_FORMAT;

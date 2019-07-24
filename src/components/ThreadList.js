@@ -44,7 +44,7 @@ function ThreadList(props) {
         getUsers(uids, context).then(users => setUserMap(users));
       }
     },
-    [threads]
+    [threads, context]
   );
 
   function handleSubmitThread(e) {

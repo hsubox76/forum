@@ -23,6 +23,7 @@ import ReactionButton from "./ReactionButton";
 function Post(props) {
   const [status, setStatus] = useState(null);
   const [claims, setClaims] = useState(false);
+  const [scrolledOnce, setScrolledOnce] = useState(false);
   const context = useContext(UserContext);
   const postRef = useRef();
   const contentRef = useRef();
@@ -38,11 +39,12 @@ function Post(props) {
   // scroll to bottom if/when post updates and is last post
   useEffect(
     () => {
-      if (props.scrollToMe && post) {
+      if (props.scrollToMe && post && !scrolledOnce) {
         postRef.current && postRef.current.scrollIntoView();
+        setScrolledOnce(true);
       }
     },
-    [post, props.scrollToMe]
+    [post, props.scrollToMe, scrolledOnce]
   );
 
   useEffect(
@@ -61,7 +63,7 @@ function Post(props) {
         props.threadId,
         props.forumId
       );
-  }, []);
+  }, [props.user, props.postId, props.threadId, props.forumId]);
 
   function toggleEditMode() {
     if (status === LOADING_STATUS.EDITING) {
@@ -167,7 +169,7 @@ function Post(props) {
       <div className="reactions-container">
         {reactions.map(reaction => (
           <ReactionButton
-            key={reaction.faName}
+            key={post.postId + '_' + reaction.faName}
             currentReaction={currentReaction}
             reaction={reaction}
             post={post}
