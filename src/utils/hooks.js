@@ -31,12 +31,14 @@ export function useSubscribeToDocumentPath(docPath) {
 
 export function useSubscribeToCollection(collectionName, options) {
   const [collection, updateCollection] = useState(null);
+  const stringifiedOptions = JSON.stringify(options);
 
   useEffect(
     () => {
       let ref = firebase.firestore().collection(collectionName);
-      if (options) {
-        options.forEach(option => {
+      if (stringifiedOptions) {
+        const opts = JSON.parse(stringifiedOptions);
+        opts.forEach(option => {
           const prop = Object.keys(option)[0];
           const val = option[prop];
           if (Array.isArray(val)) {
@@ -56,7 +58,7 @@ export function useSubscribeToCollection(collectionName, options) {
       });
       return unsub;
     },
-    [collectionName, options]
+    [collectionName, stringifiedOptions]
   );
   return collection;
 }
