@@ -26,14 +26,16 @@ function ForumList(props) {
 
   useEffect(
     () => {
+      let unmounting = false;
       if (forumList) {
         const uids = uniq(
           flatten(
             forumList.map(forum => [forum.createdBy, forum.updatedBy])
           ).filter(uid => uid)
         ).sort();
-        getUsers(uids, context).then(users => setUserMap(users));
+        getUsers(uids, context).then(users => !unmounting && setUserMap(users));
       }
+      return () => { unmounting = true };
     },
     [forumList, context]
   );

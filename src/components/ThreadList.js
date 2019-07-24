@@ -35,14 +35,16 @@ function ThreadList(props) {
 
   useEffect(
     () => {
+      let unmounting = false;
       if (threads) {
         const uids = uniq(
           flatten(
             threads.map(thread => [thread.createdBy, thread.updatedBy])
           ).filter(uid => uid)
         ).sort();
-        getUsers(uids, context).then(users => setUserMap(users));
+        getUsers(uids, context).then(users => !unmounting && setUserMap(users));
       }
+      return () => { unmounting = true };
     },
     [threads, context]
   );
