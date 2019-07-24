@@ -39,7 +39,6 @@ class App extends Component {
     };
     this.inviteCodeRef = React.createRef();
     this.db = firebase.firestore();
-    this.db.settings({ timestampsInSnapshots: true });
     this.uiConfig = {
       // Popup signin flow rather than redirect flow.
       signInFlow: "popup",
