@@ -23,8 +23,6 @@ import {
 } from "../utils/hooks";
 import UserContext from "./UserContext";
 
-let loopCount = 0;
-
 function PostList(props) {
   const contentRef = useRef();
   const newPostRef = useRef();
@@ -59,7 +57,7 @@ function PostList(props) {
 
   useEffect(
     () => {
-      if (posts && loopCount < 20) {
+      if (posts) {
         let uids = posts.map(post => {
           let uids = [post.uid, post.updatedBy];
           if (post.reactions) {
@@ -72,7 +70,6 @@ function PostList(props) {
           .filter(uid => uid)
           .sort();
         getUsers(uids, context).then(users => setUserMap(users));
-        loopCount++;
       }
     },
     [posts, context]
