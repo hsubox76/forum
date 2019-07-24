@@ -17,7 +17,7 @@
     "react": "^16.7.0-alpha.2",
     "react-dom": "^16.7.0-alpha.2",
     "react-firebaseui": "^3.0.7",
-    "react-scripts": "2.1.1"
+    "react-scripts": "3.0.1"
   },
   "scripts": {
     "start": "REACT_APP_FORUM_API_KEY=$FORUM_API_KEY REACT_APP_FORUM_PROJECT_ID=$FORUM_PROJECT_ID REACT_APP_COMMIT_REF=$COMMIT_REF react-scripts start",
