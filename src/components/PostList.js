@@ -59,7 +59,6 @@ function PostList(props) {
 
   useEffect(
     () => {
-      let unmounting = false;
       if (posts && loopCount < 20) {
         let uids = posts.map(post => {
           let uids = [post.uid, post.updatedBy];
@@ -72,10 +71,9 @@ function PostList(props) {
         uids = uniq(flatten(uids))
           .filter(uid => uid)
           .sort();
-        getUsers(uids, context).then(users => !unmounting && setUserMap(users));
+        getUsers(uids, context).then(users => setUserMap(users));
         loopCount++;
       }
-      return () => { unmounting = true };
     },
     [posts, context]
   );
