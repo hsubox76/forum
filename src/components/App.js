@@ -17,7 +17,6 @@ import UserContext from "./UserContext.js";
 import CreateAccount from "./CreateAccount.js";
 import firebase from "firebase/app";
 import "firebase/auth";
-import "firebase/firestore";
 import get from "lodash/get";
 import { getClaims, getIsBanned, submitInviteCode } from "../utils/dbhelpers";
 // import registerServiceWorker from '../registerServiceWorker';
@@ -38,7 +37,6 @@ class App extends Component {
       refreshing: false
     };
     this.inviteCodeRef = React.createRef();
-    this.db = firebase.firestore();
     this.uiConfig = {
       // Popup signin flow rather than redirect flow.
       signInFlow: "popup",
