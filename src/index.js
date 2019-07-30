@@ -34,7 +34,8 @@ const config = {
   databaseURL:
     "https://" + process.env.REACT_APP_FORUM_PROJECT_ID + ".firebaseio.com",
   projectId: process.env.REACT_APP_FORUM_PROJECT_ID,
-  storageBucket: process.env.REACT_APP_FORUM_PROJECT_ID + ".appspot.com"
+  storageBucket: process.env.REACT_APP_FORUM_PROJECT_ID + ".appspot.com",
+  appId: "1:112329939446:web:bdd30a41a23575bc"
 };
 
 firebase.initializeApp(config);
