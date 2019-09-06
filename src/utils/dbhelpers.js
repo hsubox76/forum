@@ -138,7 +138,12 @@ export function getCollection(collectionPath) {
 		.catch(e => console.error(e));
 }
 
-export function updateDoc(docPath, data) {
+export async function updateDoc(docPath, data) {
+  const doc = await firebase.firestore().doc(docPath).get();
+  if (!doc.exists) {
+    console.warn(`Failed to update doc at ${docPath}: it does not exist.`);
+    return Promise.resolve();
+  }
   return firebase
     .firestore()
     .doc(docPath)
