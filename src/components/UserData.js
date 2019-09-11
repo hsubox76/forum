@@ -3,8 +3,9 @@ import { Link } from "@reach/router";
 
 function UserData(props) {
   if (props.user) {
+    console.log(props.user);
     return (
-      <Link className="user-name-link" to={`/user/${props.user.uid}`}>
+      <Link className="user-name-link" to={`/user/${props.user.id}`}>
         {props.user.displayName}
       </Link>
     );

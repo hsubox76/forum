@@ -202,16 +202,16 @@ function Post(props) {
             />
           )}
           {postUser ? (
-            <Link className="user-name-link" to={`/user/${postUser.uid}`}>
+            <Link className="user-name-link" to={`/user/${postUser.id}`}>
               {postUser.displayName}
             </Link>
           ) : (
             <div className="loader loader-small" />
           )}
-          {get(postUser, "customClaims.admin") && (
+          {get(postUser, "admin") && (
             <div className="role-icon">A</div>
           )}
-          {get(postUser, "customClaims.mod") && (
+          {get(postUser, "mod") && (
             <div className="role-icon">M</div>
           )}
         </div>
