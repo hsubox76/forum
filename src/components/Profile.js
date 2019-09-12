@@ -1,4 +1,5 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useContext } from "react";
+import UserContext from "./UserContext";
 import firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/storage";
@@ -7,6 +8,7 @@ import { useGetUser } from "../utils/hooks";
 import { updateDoc } from "../utils/dbhelpers";
 
 function Profile(props) {
+  const context = useContext(UserContext);
   const displayNameRef = useRef();
   const fileInputRef = useRef();
   const bioRef = useRef();
@@ -16,7 +18,7 @@ function Profile(props) {
   const [avatarError, setAvatarError] = useState(null);
   const [avatarBlocking, setAvatarBlocking] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(false);
-  const userData = useGetUser(props.user.uid);
+  const userData = useGetUser(props.user.uid, context);
 
   function handleSubmitChanges(e) {
     e.preventDefault();

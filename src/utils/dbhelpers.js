@@ -308,10 +308,11 @@ export function getUsers(uids, context) {
       return Promise.all(fetchPromises)
         .then(results => {
           trace.stop();
+          let newUsers = {};
           results.forEach(user => {
-            foundUsers[user.id] = user;
-            context.addUserByUid(user.id, user);
+            foundUsers[user.id] = newUsers[user.id] = user;
           });
+          context.mergeUsers(newUsers);
           return foundUsers;
         })
         .catch(e => {

@@ -1,11 +1,16 @@
-import React, { useContext } from "react";
-import { useGetUser } from "../utils/hooks";
+import React, { useEffect, useState, useContext } from "react";
 import UserContext from "./UserContext";
+import { getUser } from "../utils/dbhelpers";
 import "../styles/Profile.css";
 
 function UserPage(props) {
   const context = useContext(UserContext);
-  const user = useGetUser(props.userId, context);
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    if (context.usersByUid[props.userId]) return;
+    getUser(props.userId, context).then(userData => setUser(userData));
+  }, [props.userId, context]);
+
   if (!user) {
     return (
       <div className="loading-page">
