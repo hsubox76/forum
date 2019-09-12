@@ -20,9 +20,7 @@ class Invite extends Component {
   };
   onGenerateCode = e => {
     e.preventDefault();
-    const createdByName = `${this.props.user.displayName} (${
-      this.props.user.email
-    })`;
+    const createdByName = `${this.props.user.displayName} (${this.props.user.email})`;
     generateInviteCode(createdByName, this.props.user.uid).then(code => {
       this.setState({ code });
       getAllInvitesFor(this.props.user.uid).then(invites =>

@@ -7,9 +7,7 @@ import get from "lodash/get";
 const ReactionButton = props => {
   const context = useContext(UserContext);
   const post = props.post;
-  const postPath = `forums/${props.forumId}/threads/${props.threadId}/posts/${
-    props.postId
-  }`;
+  const postPath = `forums/${props.forumId}/threads/${props.threadId}/posts/${props.postId}`;
 
   function handleClick(userSelected) {
     updateReaction(
@@ -40,7 +38,10 @@ const ReactionButton = props => {
             const user = get(context.usersByUid, response);
             if (user) {
               return (
-                <div key={props.postId + user.id + props.reaction.faName} className="reaction-user-name">
+                <div
+                  key={props.postId + user.id + props.reaction.faName}
+                  className="reaction-user-name"
+                >
                   {user.displayName}
                 </div>
               );

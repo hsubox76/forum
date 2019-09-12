@@ -118,16 +118,16 @@ export function addDoc(collectionPath, data) {
     .firestore()
     .collection(collectionPath)
     .add(data)
-		.catch(e => console.error(e));
+    .catch(e => console.error(e));
 }
 
 export function getDoc(docPath) {
   return firebase
     .firestore()
     .doc(docPath)
-		.get()
-		.then(snap => Object.assign(snap.data(), {id: snap.id}))
-		.catch(e => console.error(e));
+    .get()
+    .then(snap => Object.assign(snap.data(), { id: snap.id }))
+    .catch(e => console.error(e));
 }
 
 export function getCollection(collectionPath) {
@@ -135,11 +135,14 @@ export function getCollection(collectionPath) {
     .firestore()
     .collection(collectionPath)
     .get()
-		.catch(e => console.error(e));
+    .catch(e => console.error(e));
 }
 
 export async function updateDoc(docPath, data) {
-  const doc = await firebase.firestore().doc(docPath).get();
+  const doc = await firebase
+    .firestore()
+    .doc(docPath)
+    .get();
   if (!doc.exists) {
     console.warn(`Failed to update doc at ${docPath}: it does not exist.`);
     return Promise.resolve();
@@ -279,10 +282,9 @@ export function getUser(uid, context) {
   if (context.usersByUid[uid]) {
     return Promise.resolve(context.usersByUid[uid]);
   } else {
-    return getDoc(`usersPublic/${uid}`)
-      .then(user => 
-        context.addUserByUid(uid, user)
-      );
+    return getDoc(`usersPublic/${uid}`).then(user =>
+      context.addUserByUid(uid, user)
+    );
   }
 }
 
@@ -298,7 +300,7 @@ export function getUsers(uids, context) {
       }
     });
     if (usersToFetch.length > 0) {
-      const trace = firebase.performance().trace('getUsersFromFirestore');
+      const trace = firebase.performance().trace("getUsersFromFirestore");
       trace.start();
       let fetchPromises = usersToFetch.map(uid => {
         return getDoc(`usersPublic/${uid}`);

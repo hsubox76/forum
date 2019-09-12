@@ -101,7 +101,7 @@ class App extends Component {
     return userData;
   };
   handleSetDialog = dialog => {
-    this.setState({ popup: Object.assign({ type: 'dialog' }, dialog) });
+    this.setState({ popup: Object.assign({ type: "dialog" }, dialog) });
   };
   handleSetPopup = popup => {
     this.setState({ popup });

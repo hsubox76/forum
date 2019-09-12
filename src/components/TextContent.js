@@ -190,7 +190,7 @@ const TextContent = props => {
         if (context.usersByUid[node.tagAttrs.uid]) {
           quoteAuthor = context.usersByUid[node.tagAttrs.uid].displayName;
         } else {
-          quoteAuthor = '?';
+          quoteAuthor = "?";
           // and fetch
           getUser(node.tagAttrs.uid, context);
         }

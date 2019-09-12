@@ -15,30 +15,26 @@ function ForumList(props) {
   const [userMap, setUserMap] = useState({});
   const context = useContext(UserContext);
 
-  useEffect(
-    () => {
-      getClaims().then(result => setClaims(result));
-    },
-    [props.user]
-  );
+  useEffect(() => {
+    getClaims().then(result => setClaims(result));
+  }, [props.user]);
 
   const forumList = useSubscribeToCollection("forums", [{ orderBy: "order" }]);
 
-  useEffect(
-    () => {
-      let unmounting = false;
-      if (forumList) {
-        const uids = uniq(
-          flatten(
-            forumList.map(forum => [forum.createdBy, forum.updatedBy])
-          ).filter(uid => uid)
-        ).sort();
-        getUsers(uids, context).then(users => !unmounting && setUserMap(users));
-      }
-      return () => { unmounting = true };
-    },
-    [forumList, context]
-  );
+  useEffect(() => {
+    let unmounting = false;
+    if (forumList) {
+      const uids = uniq(
+        flatten(
+          forumList.map(forum => [forum.createdBy, forum.updatedBy])
+        ).filter(uid => uid)
+      ).sort();
+      getUsers(uids, context).then(users => !unmounting && setUserMap(users));
+    }
+    return () => {
+      unmounting = true;
+    };
+  }, [forumList, context]);
 
   if (!forumList) {
     return (

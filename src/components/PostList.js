@@ -48,32 +48,26 @@ function PostList(props) {
     setStatus(LOADING_STATUS.LOADED);
   }
 
-  useEffect(
-    () => {
-      getClaims().then(claims => setClaims(claims));
-    },
-    [props.user]
-  );
+  useEffect(() => {
+    getClaims().then(claims => setClaims(claims));
+  }, [props.user]);
 
-  useEffect(
-    () => {
-      if (posts) {
-        let uids = posts.map(post => {
-          let uids = [post.uid, post.updatedBy];
-          if (post.reactions) {
-            const reactionIds = Object.values(post.reactions);
-            uids = uids.concat(flatten(reactionIds));
-          }
-          return uids;
-        });
-        uids = uniq(flatten(uids))
-          .filter(uid => uid)
-          .sort();
-        getUsers(uids, context).then(users => setUserMap(users));
-      }
-    },
-    [posts, context]
-  );
+  useEffect(() => {
+    if (posts) {
+      let uids = posts.map(post => {
+        let uids = [post.uid, post.updatedBy];
+        if (post.reactions) {
+          const reactionIds = Object.values(post.reactions);
+          uids = uids.concat(flatten(reactionIds));
+        }
+        return uids;
+      });
+      uids = uniq(flatten(uids))
+        .filter(uid => uid)
+        .sort();
+      getUsers(uids, context).then(users => setUserMap(users));
+    }
+  }, [posts, context]);
 
   function handleDeleteThread() {
     props.setPopup({
@@ -159,7 +153,9 @@ function PostList(props) {
       .then(listSnap => {
         let newPosts = [];
         let mergedPosts = [];
-        listSnap.forEach(postSnap => newPosts.push(Object.assign(postSnap.data(), { id: postSnap.id })));
+        listSnap.forEach(postSnap =>
+          newPosts.push(Object.assign(postSnap.data(), { id: postSnap.id }))
+        );
         mergedPosts = newPosts
           .concat(posts.map(post => Object.assign(post)))
           .sort((a, b) => {
@@ -170,22 +166,28 @@ function PostList(props) {
             }
             return 0;
           });
-        // add second thread's posts to this thread 
+        // add second thread's posts to this thread
         const postAddPromises = newPosts.map(post => {
           if (!post.updatedByUser) {
             post.updatedByUser = post.uid;
           }
-          return addDoc(`forums/${props.forumId}/threads/${props.threadId}/posts`, post);
+          return addDoc(
+            `forums/${props.forumId}/threads/${props.threadId}/posts`,
+            post
+          );
         });
         return Promise.all(postAddPromises).then(() => ({
           postCount: posts.length + newPosts.length,
           createdTime: mergedPosts[0].createdTime,
           createdBy: mergedPosts[0].uid
-        }))
+        }));
       })
       // update thread's post count
-      .then((postUpdates) => {
-        updateDoc(`forums/${props.forumId}/threads/${props.threadId}`, postUpdates);
+      .then(postUpdates => {
+        updateDoc(
+          `forums/${props.forumId}/threads/${props.threadId}`,
+          postUpdates
+        );
       })
       .then(() => {
         // delete second thread
@@ -262,7 +264,9 @@ function PostList(props) {
         Object.assign(post, {
           index: index + start,
           createdByUser: userMap[post.uid],
-          updatedByUser: post.updatedBy ? userMap[post.updatedBy] : userMap[post.uid]
+          updatedByUser: post.updatedBy
+            ? userMap[post.updatedBy]
+            : userMap[post.uid]
         })
       )
     : [];

@@ -28,31 +28,23 @@ function Post(props) {
   const postRef = useRef();
   const contentRef = useRef();
 
-  const postPath = `forums/${props.forumId}/threads/${props.threadId}/posts/${
-    props.postId
-  }`;
+  const postPath = `forums/${props.forumId}/threads/${props.threadId}/posts/${props.postId}`;
 
   const post = props.post;
 
   const postUser = post.createdByUser;
 
   // scroll to bottom if/when post updates and is last post
-  useEffect(
-    () => {
-      if (props.scrollToMe && post && !scrolledOnce) {
-        postRef.current && postRef.current.scrollIntoView();
-        setScrolledOnce(true);
-      }
-    },
-    [post, props.scrollToMe, scrolledOnce]
-  );
+  useEffect(() => {
+    if (props.scrollToMe && post && !scrolledOnce) {
+      postRef.current && postRef.current.scrollIntoView();
+      setScrolledOnce(true);
+    }
+  }, [post, props.scrollToMe, scrolledOnce]);
 
-  useEffect(
-    () => {
-      getClaims().then(setClaims);
-    },
-    [props.user]
-  );
+  useEffect(() => {
+    getClaims().then(setClaims);
+  }, [props.user]);
 
   useEffect(() => {
     return () =>
@@ -169,7 +161,7 @@ function Post(props) {
       <div className="reactions-container">
         {reactions.map(reaction => (
           <ReactionButton
-            key={post.postId + '_' + reaction.faName}
+            key={post.postId + "_" + reaction.faName}
             currentReaction={currentReaction}
             reaction={reaction}
             post={post}
@@ -208,12 +200,8 @@ function Post(props) {
           ) : (
             <div className="loader loader-small" />
           )}
-          {get(postUser, "admin") && (
-            <div className="role-icon">A</div>
-          )}
-          {get(postUser, "mod") && (
-            <div className="role-icon">M</div>
-          )}
+          {get(postUser, "admin") && <div className="role-icon">A</div>}
+          {get(postUser, "mod") && <div className="role-icon">M</div>}
         </div>
         <div className="post-header-right">
           <div>#{props.index}</div>
