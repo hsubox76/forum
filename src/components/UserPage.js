@@ -7,9 +7,14 @@ function UserPage(props) {
   const context = useContext(UserContext);
   const [user, setUser] = useState(null);
   useEffect(() => {
-    if (context.usersByUid[props.userId]) return;
+    if (user || context.usersByUid[props.userId]) {
+      if (!user) {
+        setUser(context.usersByUid[props.userId])
+      }
+      return;
+    };
     getUser(props.userId, context).then(userData => setUser(userData));
-  }, [props.userId, context]);
+  }, [props.userId, context, user]);
 
   if (!user) {
     return (
