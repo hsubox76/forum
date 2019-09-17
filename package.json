@@ -18,6 +18,7 @@
     "react-scripts": "3.0.1"
   },
   "scripts": {
+    "build:local": "REACT_APP_FORUM_API_KEY=$FORUM_API_KEY REACT_APP_FORUM_PROJECT_ID=$FORUM_PROJECT_ID REACT_APP_COMMIT_REF=$(git rev-parse --short HEAD) react-scripts build",
     "start": "REACT_APP_FORUM_API_KEY=$FORUM_API_KEY REACT_APP_FORUM_PROJECT_ID=$FORUM_PROJECT_ID REACT_APP_COMMIT_REF=$COMMIT_REF react-scripts start",
     "build": "REACT_APP_FORUM_API_KEY=$FORUM_API_KEY REACT_APP_FORUM_PROJECT_ID=$FORUM_PROJECT_ID REACT_APP_COMMIT_REF=$COMMIT_REF react-scripts build",
     "test": "react-scripts test --env=jsdom",

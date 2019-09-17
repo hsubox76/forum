@@ -7,7 +7,7 @@
   "hosting": 
     {
       "predeploy": [
-        "yarn --prefix \"$RESOURCE_DIR\" build"
+        "yarn --prefix \"$RESOURCE_DIR\" build:local"
       ],
       "public": "build",
       "rewrites": [{
