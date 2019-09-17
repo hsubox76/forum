@@ -200,16 +200,18 @@ const TextContent = props => {
     } else if (node.tagType === "italic") {
       classes.push("italic");
     } else if (node.tagType === "img") {
-      const url = encodeURI(node.children[0].text);
-      return (
-        <img
-          alt="user inserted"
-          key={"image-" + k++}
-          src={url}
-          width={node.tagAttrs.width || null}
-          height={node.tagAttrs.height || null}
-        />
-      );
+      if (node.children[0]) {
+        const url = encodeURI(node.children[0].text);
+        return (
+          <img
+            alt="user inserted"
+            key={"image-" + k++}
+            src={url}
+            width={node.tagAttrs.width || null}
+            height={node.tagAttrs.height || null}
+          />
+        );
+      }
     }
     return (
       <div key={node.level + "-" + k++} className={classes.join(" ")}>
