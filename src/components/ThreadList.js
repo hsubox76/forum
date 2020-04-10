@@ -3,12 +3,14 @@ import "../styles/Posts.css";
 import { format } from "date-fns";
 import flatten from "lodash/flatten";
 import uniq from "lodash/uniq";
+import range from "lodash/range";
 import { Link, navigate } from "@reach/router";
 import {
   COMPACT_DATE_FORMAT,
   STANDARD_DATE_FORMAT,
   LOADING_STATUS,
-  POSTS_PER_PAGE
+  POSTS_PER_PAGE,
+  THREADS_PER_PAGE
 } from "../utils/constants";
 import UserData from "./UserData";
 import { addDoc, updateDoc, getUsers } from "../utils/dbhelpers";
@@ -16,6 +18,7 @@ import {
   useSubscribeToCollection,
   useSubscribeToDocumentPath
 } from "../utils/hooks";
+import { getParams, getPostRange } from "../utils/utils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import UserContext from "./UserContext";
 
@@ -102,6 +105,47 @@ function ThreadList(props) {
   const isMobile = window.matchMedia("(max-width: 767px)").matches;
   const dateFormat = isMobile ? COMPACT_DATE_FORMAT : STANDARD_DATE_FORMAT;
 
+  const params = getParams(props.location.search);
+  const threadsPerPage = params.threads || THREADS_PER_PAGE;
+  const pageString = params.page || 0;
+  const { start, end, numPages, page } = getPostRange(
+    pageString,
+    threadsPerPage,
+    threads.length
+  );
+  const threadList = threads
+    ? threads.slice(start, end).map((thread, index) =>
+        Object.assign(thread, {
+          index: index + start
+        })
+      )
+    : [];
+  //TODO: should be able to pass postdata straight to post and not have to reload it
+
+  const paginationBox = (
+    <div className="pagination-control">
+      page
+      {range(numPages).map(pageNum => {
+        const pageLink =
+          `/forum/${props.forumId}` +
+          `?page=${pageNum}&threads=${threadsPerPage}`;
+        const classes = ["page-link"];
+        if (pageNum === page) {
+          classes.push("selected");
+        }
+        return (
+          <Link
+            key={"page-" + pageNum}
+            className={classes.join(" ")}
+            to={pageLink}
+          >
+            {pageNum}
+          </Link>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div className="thread-list-container">
       <div className="section-header">
@@ -113,7 +157,8 @@ function ThreadList(props) {
           <span className="thread-title">{(forum && forum.name) || ""}</span>
         </div>
       </div>
-      {threads.map(thread => {
+      {paginationBox}
+      {threadList.map(thread => {
         if (!thread) {
           return (
             <div key={thread.id} className="thread-row">

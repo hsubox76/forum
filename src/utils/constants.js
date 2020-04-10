@@ -2,6 +2,7 @@ export const STANDARD_DATE_FORMAT = "hh:mm a MMM dd, yyyy";
 export const COMPACT_DATE_FORMAT = "hh:mma MM/dd/yy";
 
 export const POSTS_PER_PAGE = 15;
+export const THREADS_PER_PAGE = 10;
 
 export const LOADING_STATUS = {
   LOADING: "loading",
