@@ -173,6 +173,7 @@ function ThreadList(props) {
         if (isUnread) {
           threadClasses.push("unread");
         }
+        const firstPageLink = (link += `?posts=${POSTS_PER_PAGE}&page=0`)
         const lastPageLink = (link += `?posts=${POSTS_PER_PAGE}&page=last`);
         if (isUnread) {
           link = lastPageLink;
@@ -197,7 +198,7 @@ function ThreadList(props) {
                 <Link to={link} className="title-text">
                   {thread.title}
                 </Link>
-                <Link to={link} className="title-page-link">
+                <Link to={firstPageLink} className="title-page-link">
                   start
                 </Link>
                 <Link to={lastPageLink} className="title-page-link">
