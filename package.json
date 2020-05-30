@@ -15,14 +15,18 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-firebaseui": "^4.1.0",
-    "react-scripts": "^3.4.1"
+    "react-scripts": "^3.4.1",
+    "tailwindcss": "^1.4.6"
   },
   "scripts": {
     "build:local": "REACT_APP_FORUM_API_KEY=$FORUM_API_KEY REACT_APP_FORUM_PROJECT_ID=$FORUM_PROJECT_ID REACT_APP_COMMIT_REF=$(git rev-parse --short HEAD) react-scripts build",
-    "start": "REACT_APP_FORUM_API_KEY=$FORUM_API_KEY REACT_APP_FORUM_PROJECT_ID=$FORUM_PROJECT_ID REACT_APP_COMMIT_REF=$COMMIT_REF react-scripts start",
-    "build": "REACT_APP_FORUM_API_KEY=$FORUM_API_KEY REACT_APP_FORUM_PROJECT_ID=$FORUM_PROJECT_ID REACT_APP_COMMIT_REF=$COMMIT_REF react-scripts build",
+    "start": "run-p watch:css start:react",
+    "start:react": "REACT_APP_FORUM_API_KEY=$FORUM_API_KEY REACT_APP_FORUM_PROJECT_ID=$FORUM_PROJECT_ID REACT_APP_COMMIT_REF=$COMMIT_REF react-scripts start",
+    "build": "yarn build:css && REACT_APP_FORUM_API_KEY=$FORUM_API_KEY REACT_APP_FORUM_PROJECT_ID=$FORUM_PROJECT_ID REACT_APP_COMMIT_REF=$COMMIT_REF react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "build:css": "postcss src/styles/index.css -o src/styles/main.css", 
+    "watch:css": "postcss -w src/styles/index.css -o src/styles/main.css"
   },
   "now": {
     "alias": "pwot2",
@@ -36,5 +40,9 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ]
+  ],
+  "devDependencies": {
+    "autoprefixer": "^9.8.0",
+    "postcss-cli": "^7.1.1"
+  }
 }

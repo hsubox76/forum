@@ -157,6 +157,10 @@ function ThreadList(props) {
           <span className="thread-title">{(forum && forum.name) || ""}</span>
         </div>
       </div>
+      <div>
+        <input name="notif" type="checkbox" />
+        <label htmlFor="notif">Send me an email on any new post in this forum.</label>
+      </div>
       {paginationBox}
       {threadList.map(thread => {
         if (!thread) {

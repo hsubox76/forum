@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import "./styles/index.css";
+import "./styles/main.css";
 import App from "./components/App";
 // import SiteDown from './components/SiteDown';
 import firebase from "firebase/app";
@@ -15,7 +15,7 @@ import {
   faSadTear,
   faHeart,
   faThumbsUp,
-  faThumbsDown
+  faThumbsDown,
 } from "@fortawesome/free-solid-svg-icons";
 
 library.add(faThumbtack);
@@ -35,7 +35,7 @@ const config = {
     "https://" + process.env.REACT_APP_FORUM_PROJECT_ID + ".firebaseio.com",
   projectId: process.env.REACT_APP_FORUM_PROJECT_ID,
   storageBucket: process.env.REACT_APP_FORUM_PROJECT_ID + ".appspot.com",
-  appId: "1:112329939446:web:bdd30a41a23575bc"
+  appId: "1:112329939446:web:bdd30a41a23575bc",
 };
 
 firebase.initializeApp(config);

@@ -288,6 +288,10 @@ export function getUser(uid, context) {
   }
 }
 
+export function getProfile(uid) {
+  return getDoc(`users/${uid}`);
+}
+
 export function getUsers(uids, context) {
   if (uids && uids.length > 0) {
     const foundUsers = {};

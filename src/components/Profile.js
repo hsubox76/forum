@@ -1,14 +1,11 @@
-import React, { useRef, useState, useContext } from "react";
-import UserContext from "./UserContext";
+import React, { useRef, useState, useEffect } from "react";
 import firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/storage";
 import "../styles/Profile.css";
-import { useGetUser } from "../utils/hooks";
-import { updateDoc } from "../utils/dbhelpers";
+import { updateDoc, getProfile } from "../utils/dbhelpers";
 
 function Profile(props) {
-  const context = useContext(UserContext);
   const displayNameRef = useRef();
   const fileInputRef = useRef();
   const bioRef = useRef();
@@ -18,7 +15,11 @@ function Profile(props) {
   const [avatarError, setAvatarError] = useState(null);
   const [avatarBlocking, setAvatarBlocking] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(false);
-  const userData = useGetUser(props.user.uid, context);
+  const [profileData, setProfileData] = useState();
+
+  useEffect(() => {
+    getProfile(props.user.uid).then(setProfileData);
+  }, [props.user.uid]);
 
   function handleSubmitChanges(e) {
     e.preventDefault();
@@ -30,7 +31,7 @@ function Profile(props) {
         })
       );
     }
-    if (userData && bioRef.current.value !== userData.bio) {
+    if (profileData && bioRef.current.value !== profileData.bio) {
       profileUpdatePromises.push(
         updateDoc(`users/${props.user.uid}`, {
           bio: bioRef.current.value
@@ -112,8 +113,8 @@ function Profile(props) {
     setPreviewUrl(url);
   }
 
-  const firestoreBasedSection = userData ? (
-    <React.Fragment>
+  const firestoreBasedSection = profileData ? (
+    <>
       <div>
         <label>Update bio:</label>
       </div>
@@ -122,11 +123,16 @@ function Profile(props) {
           ref={bioRef}
           disabled={profileChangeState === "sending"}
           className="display-name-input"
-          defaultValue={userData ? userData.bio : ""}
+          defaultValue={profileData ? profileData.bio : ""}
           placeholder="Enter short bio here"
         />
       </div>
-    </React.Fragment>
+      <div>Email Notifications</div>
+      <div>
+        <input type="checkbox" />
+        <label htmlFor="notif-all">All posts</label>
+      </div>
+    </>
   ) : (
     <div className="loading-more-data-container">
       <div>Loading rest of your profile data.</div>

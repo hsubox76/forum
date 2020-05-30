@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useContext } from "react";
-import "../styles/Posts.css";
 import { format } from "date-fns";
 import flatten from "lodash/flatten";
 import uniq from "lodash/uniq";
@@ -16,7 +15,7 @@ function ForumList(props) {
   const context = useContext(UserContext);
 
   useEffect(() => {
-    getClaims().then(result => setClaims(result));
+    getClaims().then((result) => setClaims(result));
   }, [props.user]);
 
   const forumList = useSubscribeToCollection("forums", [{ orderBy: "order" }]);
@@ -26,10 +25,10 @@ function ForumList(props) {
     if (forumList) {
       const uids = uniq(
         flatten(
-          forumList.map(forum => [forum.createdBy, forum.updatedBy])
-        ).filter(uid => uid)
+          forumList.map((forum) => [forum.createdBy, forum.updatedBy])
+        ).filter((uid) => uid)
       ).sort();
-      getUsers(uids, context).then(users => !unmounting && setUserMap(users));
+      getUsers(uids, context).then((users) => !unmounting && setUserMap(users));
     }
     return () => {
       unmounting = true;
@@ -54,17 +53,17 @@ function ForumList(props) {
   }
 
   return (
-    <div className="forum-list-container">
-      <div className="section-header">All Forums</div>
+    <div className="container mx-auto w-4/5">
+      <div className="text-2xl text-main p-2">All Forums</div>
       {forumList
         .filter(
-          forum =>
+          (forum) =>
             forum &&
             (!forum.requiresClaims ||
-              forum.requiresClaims.some(reqClaim => claims[reqClaim]))
+              forum.requiresClaims.some((reqClaim) => claims[reqClaim]))
         )
-        .map(forum => {
-          const classes = ["forum-row"];
+        .map((forum) => {
+          const classes = ["row-item"];
           const isUnread =
             forum.unreadBy && forum.unreadBy.includes(props.user.uid);
           if (isUnread) {
@@ -72,11 +71,11 @@ function ForumList(props) {
           }
           return (
             <div
-              onClick={e => handleClickForum(e, forum.id)}
+              onClick={(e) => handleClickForum(e, forum.id)}
               key={forum.id}
               className={classes.join(" ")}
             >
-              <div className="forum-title">
+              <div className="text-lg font-semibold">
                 {isUnread && (
                   <FontAwesomeIcon
                     className="icon icon-comment"
@@ -85,13 +84,13 @@ function ForumList(props) {
                 )}
                 <span className="title-text">{forum.name}</span>
               </div>
-              <div className="forum-meta">
+              <div className="flex space-x-1">
                 <span>last updated by</span>
-                <span className="info truncatable-name">
+                <span className="font-semibold text-ok hover:text-highlight truncate" style={{ maxWidth: 100 }}>
                   <UserData user={userMap[forum.updatedBy]} />
                 </span>
                 {!isMobile && <span>at</span>}
-                <span className="info">
+                <span className="font-semibold text-main">
                   {format(forum.updatedTime, dateFormat)}
                 </span>
               </div>

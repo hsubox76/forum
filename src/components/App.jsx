@@ -1,20 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
-import "../styles/App.css";
 import { Router, Link, LocationProvider, createHistory } from "@reach/router";
 import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
 import Dialog from "./Dialog.js";
-import MergePopup from "./MergePopup.js";
-import ForumList from "./ForumList.js";
-import Help from "./Help.js";
-import NotFound from "./NotFound.js";
-import Admin from "./Admin/Admin.js";
-import Invite from "./Invite.js";
-import ThreadList from "./ThreadList.js";
-import PostList from "./PostList.js";
-import Profile from "./Profile.js";
-import UserPage from "./UserPage.js";
-import UserContext from "./UserContext.js";
-import CreateAccount from "./CreateAccount.js";
+import MergePopup from "./MergePopup";
+import ForumList from "./ForumList";
+import Help from "./Help";
+import NotFound from "./NotFound";
+import Admin from "./Admin/Admin";
+import Invite from "./Invite";
+import ThreadList from "./ThreadList";
+import PostList from "./PostList";
+import Profile from "./Profile";
+import UserPage from "./UserPage";
+import UserContext from "./UserContext";
+import CreateAccount from "./CreateAccount";
 import firebase from "firebase/app";
 import "firebase/auth";
 import get from "lodash/get";
@@ -182,24 +181,26 @@ const App = () => {
   return (
     <LocationProvider history={history}>
       <UserContext.Provider value={{ usersByUid: usersByUid, addUserByUid: handleAddUserByUid, mergeUsers: handleMergeUsers }}>
-        <div className="App">
-          <div className="page-header">
+        <div className="container mx-auto">
+          <div className="bg-main text-white flex items-center justify-between p-2">
             <div>
-              <Link to="/">Home</Link>
+              <Link to="/" className="text-lg">Home</Link>
             </div>
-            <div className="account-area">
-              <span className="logged-in-user">
+            <div className="flex">
+              <span className="font-bold px-2 mx-2 border rounded py-1">
                 {user.displayName}
               </span>
-              <Link to="/help">Help</Link>
-              <Link to="/invite">Invite</Link>
-              <Link to="/profile">Edit profile</Link>
-              <span
-                className="sign-out-button"
-                onClick={() => firebase.auth().signOut()}
-              >
-                Logout
-              </span>
+              <div className="flex divide-x items-center">
+                <Link to="/help" className="px-2">Help</Link>
+                <Link to="/invite" className="px-2">Invite</Link>
+                <Link to="/profile" className="px-2">Edit profile</Link>
+                <button
+                  className="px-2"
+                  onClick={() => firebase.auth().signOut()}
+                >
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
           <Router>
@@ -224,8 +225,8 @@ const App = () => {
             <NotFound default />
           </Router>
           {popupElement}
-          <div className="footer">
-            <div>
+          <div className="flex flex-row-reverse">
+            <div className="border p-1 rounded text-sm">
               COMMIT_REF:{" "}
               {process.env.REACT_APP_COMMIT_REF &&
                 process.env.REACT_APP_COMMIT_REF.substr(0, 7)}
