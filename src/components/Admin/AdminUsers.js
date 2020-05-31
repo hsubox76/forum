@@ -99,21 +99,23 @@ function AdminUsers(props) {
 
   return (
     <React.Fragment>
-      <button className="button-edit" onClick={() => verifyAllUsers(users)}>
-        verify all users
-      </button>
-      <button className="button-edit" onClick={() => pwotAllUsers(users)}>
-        pwot all users
-      </button>
-      <button className="button-edit" onClick={migrateAllAvatars}>
-        migrate all avatars
-      </button>
-      <button className="button-edit" onClick={migrateToTree}>
-        migrate to tree structure
-      </button>
-      <button className="button-edit" onClick={() => toggleShowEmails()}>
-        {showEmails ? "hide" : "show"} user personal info
-      </button>
+      <div class="flex space-x-2">
+        <button className="btn btn-ok" onClick={() => verifyAllUsers(users)}>
+          verify all users
+        </button>
+        <button className="btn btn-ok" onClick={() => pwotAllUsers(users)}>
+          pwot all users
+        </button>
+        <button className="btn btn-ok" onClick={migrateAllAvatars}>
+          migrate all avatars
+        </button>
+        <button className="btn btn-ok" onClick={migrateToTree}>
+          migrate to tree structure
+        </button>
+        <button className="btn btn-ok" onClick={() => toggleShowEmails()}>
+          {showEmails ? "hide" : "show"} user personal info
+        </button>
+      </div>
       <table>
         <thead>
           <tr>

@@ -103,7 +103,7 @@ function Post(props) {
       adminButtons.push(
         <button
           key={name}
-          className={`small button-${buttonType}`}
+          className={`btn btn-${buttonType}`}
           disabled={status === LOADING_STATUS.SUBMITTING || disabledCondition}
           onClick={action}
         >
@@ -113,18 +113,18 @@ function Post(props) {
     }
 
     if (status !== LOADING_STATUS.EDITING) {
-      addButton("quote", "edit", () => props.handleQuote(post));
+      addButton("quote", "neutral", () => props.handleQuote(post));
     }
     if (claims.admin || claims.mod || props.user.uid === post.uid) {
       if (status === LOADING_STATUS.EDITING) {
-        addButton("cancel", "cancel", toggleEditMode);
-        addButton("ok", "edit", handleEditPost);
+        addButton("cancel", "neutral", toggleEditMode);
+        addButton("ok", "ok", handleEditPost);
       } else {
-        addButton("edit", "edit", toggleEditMode, props.isDisabled);
+        addButton("edit", "ok", toggleEditMode, props.isDisabled);
         const deleteAction = props.isOnlyPost
           ? props.deleteThread
           : handleDeletePost;
-        addButton("delete", "delete", deleteAction, props.isDisabled);
+        addButton("delete", "danger", deleteAction, props.isDisabled);
       }
     }
     return adminButtons;
@@ -157,8 +157,8 @@ function Post(props) {
     );
   }
   const footer = (
-    <div className="post-footer">
-      <div className="reactions-container">
+    <div className="flex justify-between">
+      <div className="flex">
         {reactions.map(reaction => (
           <ReactionButton
             key={post.postId + "_" + reaction.faName}
@@ -172,7 +172,7 @@ function Post(props) {
       <div>{renderAdminButtons()}</div>
     </div>
   );
-  const classes = ["post-container"];
+  const classes = ["px-2 py-1 border-main border rounded my-2"];
   if (status === LOADING_STATUS.EDITING) {
     classes.push("editing");
   }
@@ -184,17 +184,17 @@ function Post(props) {
   }
   return (
     <div key={post.id} ref={postRef} className={classes.join(" ")}>
-      <div className="post-header">
-        <div className="post-user">
+      <div className="flex justify-between items-center">
+        <div className="flex items-baseline space-x-2">
           {postUser && postUser.photoURL && (
             <img
-              className="avatar-post"
+              className="w-16 h-16"
               alt="User's Avatar"
               src={postUser.photoURL}
             />
           )}
           {postUser ? (
-            <Link className="user-name-link" to={`/user/${postUser.id}`}>
+            <Link className="font-medium text-ok" to={`/user/${postUser.id}`}>
               {postUser.displayName}
             </Link>
           ) : (
@@ -203,14 +203,14 @@ function Post(props) {
           {get(postUser, "admin") && <div className="role-icon">A</div>}
           {get(postUser, "mod") && <div className="role-icon">M</div>}
         </div>
-        <div className="post-header-right">
+        <div className="flex flex-col items-end self-stretch justify-between">
           <div>#{props.index}</div>
-          <div className="post-date">
+          <div className="text-sm">
             {format(post.createdTime, STANDARD_DATE_FORMAT)}
           </div>
         </div>
       </div>
-      <div className="post-content">
+      <div className="text-text my-3 overflow-x-auto">
         {status === LOADING_STATUS.EDITING ? (
           <form className="edit-post-container" onSubmit={handleEditPost}>
             <textarea
@@ -229,13 +229,13 @@ function Post(props) {
         )}
       </div>
       {post.updatedBy && (
-        <div className="post-edited">
+        <div className="flex space-x-1 text-sm">
           <span>Last edited</span>
-          <span className="edit-data">
+          <span className="text-ok font-medium">
             {format(post.updatedTime, STANDARD_DATE_FORMAT)}
           </span>
           <span>by</span>
-          <span className="edit-data">
+          <span className="text-ok font-medium">
             <UserData user={post.updatedByUser} />
           </span>
         </div>

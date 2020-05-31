@@ -1,20 +1,27 @@
 import React from "react";
-import "../styles/Help.css";
 
 const Help = () => (
-  <div className="help-page">
-    <h1 className="title">Help</h1>
-    <h2 className="header">Tags</h2>
+  <div className="container mx-auto">
+    <h1 className="text-3xl text-main my-2">Help</h1>
+    <h2 className="text-2xl">Tags</h2>
+    <div className="flex border-b-2 border-main text-lg">
+      <div className="w-20 p-1 font-medium">type</div>
+      <div className="w-64 p-1 font-medium">example</div>
+      <div className="p-1 font-medium">syntax</div>
+    </div>
     <div className="help-row">
-      <div className="label bold">bold</div>
+      <div className="label">bold</div>
+      <div className="example font-medium">bold</div>
       <div className="text">[b]bold[/b]</div>
     </div>
     <div className="help-row">
-      <div className="label italic">italic</div>
+      <div className="label">italic</div>
+      <div className="example italic">italic</div>
       <div className="text">[i]italic[/i]</div>
     </div>
     <div className="help-row">
-      <div className="label">
+      <div className="label">spoiler</div>
+      <div className="example">
         <span className="spoiler" style={{ color: "#555" }}>
           spoiler
         </span>
@@ -23,6 +30,7 @@ const Help = () => (
     </div>
     <div className="help-row">
       <div className="label">image</div>
+      <div className="example"></div>
       <div className="text">
         <div className="aside">Specify width, height, both, or neither.</div>
         <div className="aside">
@@ -38,11 +46,13 @@ const Help = () => (
     </div>
     <div className="help-row">
       <div className="label">link</div>
+      <div className="example"><span className="underline text-highlight">check this out</span></div>
       <div className="text">[url="http://website.com"]check this out[/url]</div>
     </div>
     <div className="help-row">
       <div className="label">plain url</div>
-      <div className="text">paste any url and it will be clickable</div>
+      <div className="example"><span className="underline text-highlight">http://www.whatever.com</span></div>
+      <div className="text">paste any url and it will be clickable (not a tag)</div>
     </div>
   </div>
 );

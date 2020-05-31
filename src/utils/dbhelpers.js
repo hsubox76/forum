@@ -278,8 +278,8 @@ export function getAllUsers(getAllData) {
     .catch(e => console.error(e));
 }
 
-export function getUser(uid, context) {
-  if (context.usersByUid[uid]) {
+export function getUser(uid, context, forceGet) {
+  if (context.usersByUid[uid] && !forceGet) {
     return Promise.resolve(context.usersByUid[uid]);
   } else {
     return getDoc(`usersPublic/${uid}`).then(user =>
@@ -288,8 +288,28 @@ export function getUser(uid, context) {
   }
 }
 
-export function getProfile(uid) {
-  return getDoc(`users/${uid}`);
+export async function updateForumNotifications(uid, forumId, notificationsOn) {
+  firebase
+      .firestore()
+      .collection('users')
+      .doc(uid)
+      .update({
+        "notifications.forums": notificationsOn
+          ? firebase.firestore.FieldValue.arrayRemove(forumId)
+          : firebase.firestore.FieldValue.arrayUnion(forumId),
+      });
+}
+
+export async function updateThreadNotifications(uid, threadId, notificationsOn) {
+  firebase
+      .firestore()
+      .collection('users')
+      .doc(uid)
+      .update({
+        "notifications.threads": notificationsOn
+          ? firebase.firestore.FieldValue.arrayRemove(threadId)
+          : firebase.firestore.FieldValue.arrayUnion(threadId),
+      });
 }
 
 export function getUsers(uids, context) {

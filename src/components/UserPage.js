@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import UserContext from "./UserContext";
 import { getUser } from "../utils/dbhelpers";
-import "../styles/Profile.css";
 
 function UserPage(props) {
   const context = useContext(UserContext);
@@ -13,7 +12,7 @@ function UserPage(props) {
       }
       return;
     };
-    getUser(props.userId, context).then(userData => setUser(userData));
+    getUser(props.userId, context, true).then(userData => setUser(userData));
   }, [props.userId, context, user]);
 
   if (!user) {
@@ -30,20 +29,20 @@ function UserPage(props) {
   );
   return (
     <div className="profile-container">
-      <div className="user-info-header">
+      <div className="flex items-end my-2">
         <img
-          className="avatar-profile"
+          className="w-24 h-24"
           alt="User's Avatar"
           src={user.photoURL}
         />
-        <div className="user-info">
-          <div className="username">{user.displayName}</div>
-          {user.mod && <div className="role">moderator</div>}
-          {user.admin && <div className="role">admin</div>}
+        <div className="ml-2">
+          <div className="text-xl text-main">{user.displayName}</div>
+          {user.mod && <div className="text-lg">moderator</div>}
+          {user.admin && <div className="text-lg">admin</div>}
         </div>
       </div>
       <div>
-        <div className="section-label">Bio</div>
+        <div className="text-xl">Bio</div>
         <div>{bio}</div>
       </div>
     </div>

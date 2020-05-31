@@ -415,7 +415,7 @@ ul {
  */
 
 html {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"; /* 1 */
+  font-family: Roboto, sans-serif; /* 1 */
   line-height: 1.5; /* 2 */
 }
 
@@ -551,7 +551,7 @@ pre,
 code,
 kbd,
 samp {
-  font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 /**
@@ -587,6 +587,38 @@ video {
   height: auto;
 }
 
+th, td {
+  text-align: left;
+  padding: 0.5rem;
+}
+
+td {
+  border-width: 1px;
+  --border-opacity: 1;
+  border-color: #05668d;
+  border-color: rgba(5, 102, 141, var(--border-opacity));
+}
+
+input, textarea {
+  border-width: 1px;
+  --border-opacity: 1;
+  border-color: #999;
+  border-color: rgba(153, 153, 153, var(--border-opacity));
+  border-radius: 0.25rem;
+}
+
+img {
+  max-width: 300px;
+  max-height: 250px;
+}
+
+@media only screen and (min-width: 768px) {
+  img {
+    max-width: 600px;
+    max-height: 400px;
+  }
+}
+
 .container {
   width: 100%;
 }
@@ -613,6 +645,49 @@ video {
   .container {
     max-width: 1280px;
   }
+}
+
+.btn {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.btn-ok {
+  --bg-opacity: 1;
+  background-color: #00a896;
+  background-color: rgba(0, 168, 150, var(--bg-opacity));
+  --text-opacity: 1;
+  color: #eee;
+  color: rgba(238, 238, 238, var(--text-opacity));
+}
+
+.btn-danger {
+  --bg-opacity: 1;
+  background-color: #e76f51;
+  background-color: rgba(231, 111, 81, var(--bg-opacity));
+  --text-opacity: 1;
+  color: #eee;
+  color: rgba(238, 238, 238, var(--text-opacity));
+}
+
+.btn-neutral {
+  border-width: 1px;
+  --border-opacity: 1;
+  border-color: #999;
+  border-color: rgba(153, 153, 153, var(--border-opacity));
+}
+
+.btn:hover {
+  box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
+}
+
+.btn-neutral:hover {
+  --bg-opacity: 1;
+  background-color: #e2e8f0;
+  background-color: rgba(226, 232, 240, var(--bg-opacity));
 }
 
 .space-y-0 > :not(template) ~ :not(template) {
@@ -6340,15 +6415,7 @@ video {
 }
 
 .font-sans {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-}
-
-.font-serif {
-  font-family: Georgia, Cambria, "Times New Roman", Times, serif;
-}
-
-.font-mono {
-  font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: Roboto, sans-serif;
 }
 
 .font-hairline {
@@ -8008,6 +8075,26 @@ video {
 }
 
 .focus\:opacity-100:focus {
+  opacity: 1;
+}
+
+.disabled\:opacity-0:disabled {
+  opacity: 0;
+}
+
+.disabled\:opacity-25:disabled {
+  opacity: 0.25;
+}
+
+.disabled\:opacity-50:disabled {
+  opacity: 0.5;
+}
+
+.disabled\:opacity-75:disabled {
+  opacity: 0.75;
+}
+
+.disabled\:opacity-100:disabled {
   opacity: 1;
 }
 
@@ -12528,6 +12615,10 @@ video {
   box-shadow: none;
 }
 
+.shadow-highlight {
+  box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
+}
+
 .hover\:shadow-xs:hover {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
@@ -12568,6 +12659,10 @@ video {
   box-shadow: none;
 }
 
+.hover\:shadow-highlight:hover {
+  box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
+}
+
 .focus\:shadow-xs:focus {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
@@ -12606,6 +12701,10 @@ video {
 
 .focus\:shadow-none:focus {
   box-shadow: none;
+}
+
+.focus\:shadow-highlight:focus {
+  box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
 }
 
 .fill-current {
@@ -17384,14 +17483,159 @@ video {
   display: flex;
   border-radius: 0.25rem;
   justify-content: space-between;
-  margin: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
   cursor: pointer;
+  align-items: center;
 }
 
 .row-item:hover {
   --bg-opacity: 1;
   background-color: #eee;
   background-color: rgba(238, 238, 238, var(--bg-opacity));
+}
+
+.row-item.unread {
+  box-shadow: inset 0 0 0 2px #028090;
+}
+
+.list-head {
+  font-size: 1.5rem;
+  --text-opacity: 1;
+  color: #05668d;
+  color: rgba(5, 102, 141, var(--text-opacity));
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+
+.role-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-width: 2px;
+  --border-opacity: 1;
+  border-color: #05668d;
+  border-color: rgba(5, 102, 141, var(--border-opacity));
+  --text-opacity: 1;
+  color: #05668d;
+  color: rgba(5, 102, 141, var(--text-opacity));
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reaction-tooltip {
+  position: absolute;
+  --bg-opacity: 1;
+  background-color: #05668d;
+  background-color: rgba(5, 102, 141, var(--bg-opacity));
+  padding: 0.5rem;
+  z-index: 10;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  border-radius: 0.25rem;
+  --text-opacity: 1;
+  color: #fff;
+  color: rgba(255, 255, 255, var(--text-opacity));
+  top: 25px;
+  left: 0;
+}
+
+.reaction-button:focus {
+  border-width: 4px;
+  --border-opacity: 1;
+  border-color: #00a896;
+  border-color: rgba(0, 168, 150, var(--border-opacity));
+}
+
+button:hover > .reaction-tooltip {
+  opacity: 1;
+}
+
+button:hover {
+  box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
+}
+
+.help-row {
+  display: flex;
+  font-size: 1.125rem;
+  border-bottom-width: 1px;
+  --border-opacity: 1;
+  border-color: #999;
+  border-color: rgba(153, 153, 153, var(--border-opacity));
+}
+
+.help-row > div {
+  padding: 0.5rem;
+}
+
+.help-row .label {
+  --text-opacity: 1;
+  color: #fff;
+  color: rgba(255, 255, 255, var(--text-opacity));
+  --bg-opacity: 1;
+  background-color: #05668d;
+  background-color: rgba(5, 102, 141, var(--bg-opacity));
+  width: 5rem;
+}
+
+.help-row .example {
+  width: 16rem;
+  border-right-width: 2px;
+  --border-opacity: 1;
+  border-color: #999;
+  border-color: rgba(153, 153, 153, var(--border-opacity));
+}
+
+.spoiler {
+  --text-opacity: 1;
+  color: #555;
+  color: rgba(85, 85, 85, var(--text-opacity));
+  --bg-opacity: 1;
+  background-color: #555;
+  background-color: rgba(85, 85, 85, var(--bg-opacity));
+}
+
+.spoiler:hover {
+  --text-opacity: 1;
+  color: #555;
+  color: rgba(85, 85, 85, var(--text-opacity));
+  --bg-opacity: 1;
+  background-color: #eee;
+  background-color: rgba(238, 238, 238, var(--bg-opacity));
+}
+
+.invite-code {
+  padding: 0.25rem;
+  border-width: 1px;
+  --border-opacity: 1;
+  border-color: #999;
+  border-color: rgba(153, 153, 153, var(--border-opacity));
+  border-radius: 0.25rem;
+  --text-opacity: 1;
+  color: #00a896;
+  color: rgba(0, 168, 150, var(--text-opacity));
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  width: 350px;
+}
+
+.form-row {
+  display: flex;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-row label {
+  width: 100px;
+}
+
+.form-row input {
+  flex: 1 1 0%;
+  padding: 0.25rem;
 }
 
 @media (min-width: 640px) {
@@ -23120,15 +23364,7 @@ video {
   }
 
   .sm\:font-sans {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  }
-
-  .sm\:font-serif {
-    font-family: Georgia, Cambria, "Times New Roman", Times, serif;
-  }
-
-  .sm\:font-mono {
-    font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: Roboto, sans-serif;
   }
 
   .sm\:font-hairline {
@@ -24729,66 +24965,6 @@ video {
 
   .sm\:object-top {
     object-position: top;
-  }
-
-  .sm\:opacity-0 {
-    opacity: 0;
-  }
-
-  .sm\:opacity-25 {
-    opacity: 0.25;
-  }
-
-  .sm\:opacity-50 {
-    opacity: 0.5;
-  }
-
-  .sm\:opacity-75 {
-    opacity: 0.75;
-  }
-
-  .sm\:opacity-100 {
-    opacity: 1;
-  }
-
-  .sm\:hover\:opacity-0:hover {
-    opacity: 0;
-  }
-
-  .sm\:hover\:opacity-25:hover {
-    opacity: 0.25;
-  }
-
-  .sm\:hover\:opacity-50:hover {
-    opacity: 0.5;
-  }
-
-  .sm\:hover\:opacity-75:hover {
-    opacity: 0.75;
-  }
-
-  .sm\:hover\:opacity-100:hover {
-    opacity: 1;
-  }
-
-  .sm\:focus\:opacity-0:focus {
-    opacity: 0;
-  }
-
-  .sm\:focus\:opacity-25:focus {
-    opacity: 0.25;
-  }
-
-  .sm\:focus\:opacity-50:focus {
-    opacity: 0.5;
-  }
-
-  .sm\:focus\:opacity-75:focus {
-    opacity: 0.75;
-  }
-
-  .sm\:focus\:opacity-100:focus {
-    opacity: 1;
   }
 
   .sm\:outline-none {
@@ -29308,6 +29484,10 @@ video {
     box-shadow: none;
   }
 
+  .sm\:shadow-highlight {
+    box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
+  }
+
   .sm\:hover\:shadow-xs:hover {
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
   }
@@ -29348,6 +29528,10 @@ video {
     box-shadow: none;
   }
 
+  .sm\:hover\:shadow-highlight:hover {
+    box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
+  }
+
   .sm\:focus\:shadow-xs:focus {
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
   }
@@ -29386,6 +29570,10 @@ video {
 
   .sm\:focus\:shadow-none:focus {
     box-shadow: none;
+  }
+
+  .sm\:focus\:shadow-highlight:focus {
+    box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
   }
 
   .sm\:fill-current {
@@ -39879,15 +40067,7 @@ video {
   }
 
   .md\:font-sans {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  }
-
-  .md\:font-serif {
-    font-family: Georgia, Cambria, "Times New Roman", Times, serif;
-  }
-
-  .md\:font-mono {
-    font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: Roboto, sans-serif;
   }
 
   .md\:font-hairline {
@@ -41488,66 +41668,6 @@ video {
 
   .md\:object-top {
     object-position: top;
-  }
-
-  .md\:opacity-0 {
-    opacity: 0;
-  }
-
-  .md\:opacity-25 {
-    opacity: 0.25;
-  }
-
-  .md\:opacity-50 {
-    opacity: 0.5;
-  }
-
-  .md\:opacity-75 {
-    opacity: 0.75;
-  }
-
-  .md\:opacity-100 {
-    opacity: 1;
-  }
-
-  .md\:hover\:opacity-0:hover {
-    opacity: 0;
-  }
-
-  .md\:hover\:opacity-25:hover {
-    opacity: 0.25;
-  }
-
-  .md\:hover\:opacity-50:hover {
-    opacity: 0.5;
-  }
-
-  .md\:hover\:opacity-75:hover {
-    opacity: 0.75;
-  }
-
-  .md\:hover\:opacity-100:hover {
-    opacity: 1;
-  }
-
-  .md\:focus\:opacity-0:focus {
-    opacity: 0;
-  }
-
-  .md\:focus\:opacity-25:focus {
-    opacity: 0.25;
-  }
-
-  .md\:focus\:opacity-50:focus {
-    opacity: 0.5;
-  }
-
-  .md\:focus\:opacity-75:focus {
-    opacity: 0.75;
-  }
-
-  .md\:focus\:opacity-100:focus {
-    opacity: 1;
   }
 
   .md\:outline-none {
@@ -46067,6 +46187,10 @@ video {
     box-shadow: none;
   }
 
+  .md\:shadow-highlight {
+    box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
+  }
+
   .md\:hover\:shadow-xs:hover {
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
   }
@@ -46107,6 +46231,10 @@ video {
     box-shadow: none;
   }
 
+  .md\:hover\:shadow-highlight:hover {
+    box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
+  }
+
   .md\:focus\:shadow-xs:focus {
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
   }
@@ -46145,6 +46273,10 @@ video {
 
   .md\:focus\:shadow-none:focus {
     box-shadow: none;
+  }
+
+  .md\:focus\:shadow-highlight:focus {
+    box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
   }
 
   .md\:fill-current {
@@ -56638,15 +56770,7 @@ video {
   }
 
   .lg\:font-sans {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  }
-
-  .lg\:font-serif {
-    font-family: Georgia, Cambria, "Times New Roman", Times, serif;
-  }
-
-  .lg\:font-mono {
-    font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: Roboto, sans-serif;
   }
 
   .lg\:font-hairline {
@@ -58247,66 +58371,6 @@ video {
 
   .lg\:object-top {
     object-position: top;
-  }
-
-  .lg\:opacity-0 {
-    opacity: 0;
-  }
-
-  .lg\:opacity-25 {
-    opacity: 0.25;
-  }
-
-  .lg\:opacity-50 {
-    opacity: 0.5;
-  }
-
-  .lg\:opacity-75 {
-    opacity: 0.75;
-  }
-
-  .lg\:opacity-100 {
-    opacity: 1;
-  }
-
-  .lg\:hover\:opacity-0:hover {
-    opacity: 0;
-  }
-
-  .lg\:hover\:opacity-25:hover {
-    opacity: 0.25;
-  }
-
-  .lg\:hover\:opacity-50:hover {
-    opacity: 0.5;
-  }
-
-  .lg\:hover\:opacity-75:hover {
-    opacity: 0.75;
-  }
-
-  .lg\:hover\:opacity-100:hover {
-    opacity: 1;
-  }
-
-  .lg\:focus\:opacity-0:focus {
-    opacity: 0;
-  }
-
-  .lg\:focus\:opacity-25:focus {
-    opacity: 0.25;
-  }
-
-  .lg\:focus\:opacity-50:focus {
-    opacity: 0.5;
-  }
-
-  .lg\:focus\:opacity-75:focus {
-    opacity: 0.75;
-  }
-
-  .lg\:focus\:opacity-100:focus {
-    opacity: 1;
   }
 
   .lg\:outline-none {
@@ -62826,6 +62890,10 @@ video {
     box-shadow: none;
   }
 
+  .lg\:shadow-highlight {
+    box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
+  }
+
   .lg\:hover\:shadow-xs:hover {
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
   }
@@ -62866,6 +62934,10 @@ video {
     box-shadow: none;
   }
 
+  .lg\:hover\:shadow-highlight:hover {
+    box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
+  }
+
   .lg\:focus\:shadow-xs:focus {
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
   }
@@ -62904,6 +62976,10 @@ video {
 
   .lg\:focus\:shadow-none:focus {
     box-shadow: none;
+  }
+
+  .lg\:focus\:shadow-highlight:focus {
+    box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
   }
 
   .lg\:fill-current {
@@ -73397,15 +73473,7 @@ video {
   }
 
   .xl\:font-sans {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  }
-
-  .xl\:font-serif {
-    font-family: Georgia, Cambria, "Times New Roman", Times, serif;
-  }
-
-  .xl\:font-mono {
-    font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: Roboto, sans-serif;
   }
 
   .xl\:font-hairline {
@@ -75006,66 +75074,6 @@ video {
 
   .xl\:object-top {
     object-position: top;
-  }
-
-  .xl\:opacity-0 {
-    opacity: 0;
-  }
-
-  .xl\:opacity-25 {
-    opacity: 0.25;
-  }
-
-  .xl\:opacity-50 {
-    opacity: 0.5;
-  }
-
-  .xl\:opacity-75 {
-    opacity: 0.75;
-  }
-
-  .xl\:opacity-100 {
-    opacity: 1;
-  }
-
-  .xl\:hover\:opacity-0:hover {
-    opacity: 0;
-  }
-
-  .xl\:hover\:opacity-25:hover {
-    opacity: 0.25;
-  }
-
-  .xl\:hover\:opacity-50:hover {
-    opacity: 0.5;
-  }
-
-  .xl\:hover\:opacity-75:hover {
-    opacity: 0.75;
-  }
-
-  .xl\:hover\:opacity-100:hover {
-    opacity: 1;
-  }
-
-  .xl\:focus\:opacity-0:focus {
-    opacity: 0;
-  }
-
-  .xl\:focus\:opacity-25:focus {
-    opacity: 0.25;
-  }
-
-  .xl\:focus\:opacity-50:focus {
-    opacity: 0.5;
-  }
-
-  .xl\:focus\:opacity-75:focus {
-    opacity: 0.75;
-  }
-
-  .xl\:focus\:opacity-100:focus {
-    opacity: 1;
   }
 
   .xl\:outline-none {
@@ -79585,6 +79593,10 @@ video {
     box-shadow: none;
   }
 
+  .xl\:shadow-highlight {
+    box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
+  }
+
   .xl\:hover\:shadow-xs:hover {
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
   }
@@ -79625,6 +79637,10 @@ video {
     box-shadow: none;
   }
 
+  .xl\:hover\:shadow-highlight:hover {
+    box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
+  }
+
   .xl\:focus\:shadow-xs:focus {
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
   }
@@ -79663,6 +79679,10 @@ video {
 
   .xl\:focus\:shadow-none:focus {
     box-shadow: none;
+  }
+
+  .xl\:focus\:shadow-highlight:focus {
+    box-shadow: inset 0 0 0 50px rgba(255, 255, 255, 0.2);
   }
 
   .xl\:fill-current {

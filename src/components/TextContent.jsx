@@ -30,7 +30,7 @@ function linkifyAndLineBreak(text, tokenIndex, classes, currentUrl) {
         contentEls.push(<span key={`${tokenIndex}-${lineIndex}`}>{line}</span>);
       } else {
         const options = {
-          className: "user-link"
+          className: "text-highlight underline"
         };
         const linkifiedLine = (
           <Linkify
@@ -47,7 +47,7 @@ function linkifyAndLineBreak(text, tokenIndex, classes, currentUrl) {
     }
     if (lineIndex !== lines.length - 1) {
       contentEls.push(
-        <span key={`space-${tokenIndex}-${lineIndex}`} className="space" />
+        <div key={`space-${tokenIndex}-${lineIndex}`} className="h-2" />
       );
     }
   });
@@ -182,7 +182,7 @@ const TextContent = props => {
     const classes = [];
     let quoteAuthor = "";
     if (node.tagType === "quote") {
-      classes.push("quote-box");
+      classes.push("border border-highlight mx-2 my-1 bg-light p-2");
       if (node.tagAttrs.name) {
         quoteAuthor = node.tagAttrs.name;
       }
@@ -196,7 +196,7 @@ const TextContent = props => {
         }
       }
     } else if (node.tagType === "bold") {
-      classes.push("bold");
+      classes.push("font-medium");
     } else if (node.tagType === "italic") {
       classes.push("italic");
     } else if (node.tagType === "img") {
@@ -216,7 +216,7 @@ const TextContent = props => {
     return (
       <div key={node.level + "-" + k++} className={classes.join(" ")}>
         {node.tagType === "quote" && (
-          <div className="quote-info">{quoteAuthor} said:</div>
+          <div className="font-medium text-sm bg-gray-300 p-1 mb-1">{quoteAuthor} said:</div>
         )}
         {node.children.map((child, childIndex) => {
           if (child.tagType === "text") {

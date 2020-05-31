@@ -10,10 +10,18 @@ const colors = {
 module.exports = {
   purge: [],
   theme: {
+    fontFamily: {
+      sans: ['Roboto', 'sans-serif']
+    },
     extend: {
-      colors
+      colors,
+      boxShadow: {
+        highlight: 'inset 0 0 0 50px rgba(255, 255, 255, 0.2)'
+      }
     },
   },
-  variants: {},
+  variants: {
+    opacity: ['hover', 'focus', 'disabled']
+  },
   plugins: [],
 }

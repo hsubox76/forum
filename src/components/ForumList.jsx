@@ -54,7 +54,7 @@ function ForumList(props) {
 
   return (
     <div className="container mx-auto w-4/5">
-      <div className="text-2xl text-main p-2">All Forums</div>
+      <div className="list-head">All Forums</div>
       {forumList
         .filter(
           (forum) =>
@@ -75,7 +75,7 @@ function ForumList(props) {
               key={forum.id}
               className={classes.join(" ")}
             >
-              <div className="text-lg font-semibold">
+              <div className="text-xl font-medium">
                 {isUnread && (
                   <FontAwesomeIcon
                     className="icon icon-comment"

@@ -21,26 +21,30 @@ const ReactionButton = props => {
     }
   }
   const responses = get(post, ["reactions", props.reaction.faName]) || [];
-  const classes = ["reaction-button"];
+  const classes = ["reaction-button relative rounded-full w-8 h-8 focus:outline-none"];
   const userSelected = props.currentReaction === props.reaction.faName;
-  if (userSelected) {
-    classes.push("user-selected");
-  }
   if (responses.length) {
-    classes.push("has-count");
+    classes.push("w-12");
+    if (!userSelected) {
+      classes.push('bg-main');
+    } else {
+      classes.push('bg-ok');
+    }
+  } else {
+    classes.push('bg-neutral');
   }
   const tooltip = (
-    <div className="reaction-tooltip">
-      <div className="reaction-desc">{props.reaction.desc}</div>
-      {responses && (
-        <div className="reaction-users">
+    <div className="reaction-tooltip text-left">
+      <div>{props.reaction.desc}</div>
+      {responses && responses.length > 0 && (
+        <div className="border-t border-light">
           {responses.map(response => {
             const user = get(context.usersByUid, response);
             if (user) {
               return (
                 <div
                   key={props.postId + user.id + props.reaction.faName}
-                  className="reaction-user-name"
+                  className="text-sm"
                 >
                   {user.displayName}
                 </div>
@@ -59,12 +63,12 @@ const ReactionButton = props => {
     >
       {tooltip}
       <FontAwesomeIcon
-        className="icon icon-reaction"
+        className="text-white"
         icon={props.reaction.faName}
         size="lg"
       />
       {responses.length > 0 && (
-        <span className="reaction-count">{responses.length}</span>
+        <span className="text-white ml-2">{responses.length}</span>
       )}
     </button>
   );

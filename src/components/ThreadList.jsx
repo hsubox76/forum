@@ -1,26 +1,26 @@
 import React, { useRef, useState, useEffect, useContext } from "react";
-import "../styles/Posts.css";
 import { format } from "date-fns";
 import flatten from "lodash/flatten";
 import uniq from "lodash/uniq";
-import range from "lodash/range";
 import { Link, navigate } from "@reach/router";
 import {
   COMPACT_DATE_FORMAT,
   STANDARD_DATE_FORMAT,
   LOADING_STATUS,
   POSTS_PER_PAGE,
-  THREADS_PER_PAGE
+  THREADS_PER_PAGE,
 } from "../utils/constants";
 import UserData from "./UserData";
-import { addDoc, updateDoc, getUsers } from "../utils/dbhelpers";
+import { addDoc, updateDoc, getUsers, updateForumNotifications } from "../utils/dbhelpers";
 import {
   useSubscribeToCollection,
-  useSubscribeToDocumentPath
+  useSubscribeToDocumentPath,
 } from "../utils/hooks";
 import { getParams, getPostRange } from "../utils/utils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSquare, faCheckSquare } from "@fortawesome/free-regular-svg-icons";
 import UserContext from "./UserContext";
+import PaginationControl from "./pagination-control";
 
 function ThreadList(props) {
   const [status, setStatus] = useState(LOADING_STATUS.LOADING);
@@ -33,7 +33,7 @@ function ThreadList(props) {
 
   const threads = useSubscribeToCollection(`forums/${props.forumId}/threads`, [
     { orderBy: ["priority", "desc"] },
-    { orderBy: ["updatedTime", "desc"] }
+    { orderBy: ["updatedTime", "desc"] },
   ]);
 
   useEffect(() => {
@@ -41,20 +41,20 @@ function ThreadList(props) {
     if (threads) {
       const uids = uniq(
         flatten(
-          threads.map(thread => [thread.createdBy, thread.updatedBy])
-        ).filter(uid => uid)
+          threads.map((thread) => [thread.createdBy, thread.updatedBy])
+        ).filter((uid) => uid)
       ).sort();
-      getUsers(uids, context).then(users => !unmounting && setUserMap(users));
+      getUsers(uids, context).then((users) => !unmounting && setUserMap(users));
     }
     return () => {
       unmounting = true;
     };
   }, [threads, context]);
 
-  function handleSubmitThread(e) {
+  async function handleSubmitThread(e) {
     e.preventDefault();
     const time = Date.now();
-    addDoc(`forums/${props.forumId}/threads`, {
+    const threadRef = await addDoc(`forums/${props.forumId}/threads`, {
       createdBy: props.user.uid,
       title: titleRef.current.value,
       updatedBy: props.user.uid,
@@ -63,26 +63,21 @@ function ThreadList(props) {
       updatedTime: time,
       forumId: props.forumId,
       priority: 0,
-      isSticky: false
-    })
-      .then(async threadRef => {
-        await addDoc(`forums/${props.forumId}/threads/${threadRef.id}/posts`, {
-          uid: props.user.uid,
-          content: contentRef.current.value,
-          createdTime: time
-        });
-        return threadRef;
-      })
-      .then(threadRef => {
-        contentRef.current.value = "";
-        titleRef.current.value = "";
-        //TODO: Update updated times with cloud functions
-        updateDoc(`forums/${props.forumId}`, {
-          updatedBy: props.user.uid,
-          updatedTime: time
-        });
-        navigate(`/forum/${props.forumId}/thread/${threadRef.id}`);
-      });
+      isSticky: false,
+    });
+    await addDoc(`forums/${props.forumId}/threads/${threadRef.id}/posts`, {
+      uid: props.user.uid,
+      content: contentRef.current.value,
+      createdTime: time,
+    });
+    contentRef.current.value = "";
+    titleRef.current.value = "";
+    //TODO: Update updated times with cloud functions
+    updateDoc(`forums/${props.forumId}`, {
+      updatedBy: props.user.uid,
+      updatedTime: time,
+    });
+    navigate(`/forum/${props.forumId}/thread/${threadRef.id}`);
   }
 
   function handleClickThread(e, link) {
@@ -116,119 +111,119 @@ function ThreadList(props) {
   const threadList = threads
     ? threads.slice(start, end).map((thread, index) =>
         Object.assign(thread, {
-          index: index + start
+          index: index + start,
         })
       )
     : [];
   //TODO: should be able to pass postdata straight to post and not have to reload it
 
   const paginationBox = (
-    <div className="pagination-control">
-      page
-      {range(numPages).map(pageNum => {
-        const pageLink =
-          `/forum/${props.forumId}` +
-          `?page=${pageNum}&threads=${threadsPerPage}`;
-        const classes = ["page-link"];
-        if (pageNum === page) {
-          classes.push("selected");
-        }
-        return (
-          <Link
-            key={"page-" + pageNum}
-            className={classes.join(" ")}
-            to={pageLink}
-          >
-            {pageNum}
-          </Link>
-        );
-      })}
-    </div>
+    <PaginationControl
+      linkRoot={`/forum/${props.forumId}`}
+      type="thread"
+      numPages={numPages}
+      itemsPerPage={threadsPerPage}
+      page={page}
+    />
   );
 
+  function toggleNotifications() {
+    if (!props.userSettings) return;
+    const notificationsOn = props.userSettings.notifications.forums.includes(
+      props.forumId
+    );
+    updateForumNotifications(props.user.uid, props.forumId, notificationsOn);
+  }
+
   return (
-    <div className="thread-list-container">
-      <div className="section-header">
-        <div>
-          <Link className="thread-label" to="/">
-            Home
-          </Link>
-          <span className="title-caret">&gt;</span>
-          <span className="thread-title">{(forum && forum.name) || ""}</span>
+    <div className="container w-4/5 mx-auto">
+      <div className="list-head">
+        <div className="flex space-x-2">
+          <Link to="/">Home</Link>
+          <span>&gt;</span>
+          <span className="font-normal">{(forum && forum.name) || ""}</span>
         </div>
       </div>
-      <div>
-        <input name="notif" type="checkbox" />
-        <label htmlFor="notif">Send me an email on any new post in this forum.</label>
+      <div className="my-2 flex space-x-2 items-center text-lg border-2 border-ok px-2 rounded">
+        <button onClick={toggleNotifications}>
+          {props.userSettings &&
+          props.userSettings.notifications.forums.includes(props.forumId) ? (
+            <FontAwesomeIcon className="text-ok" icon={faCheckSquare} />
+          ) : (
+            <FontAwesomeIcon className="text-ok" icon={faSquare} />
+          )}
+        </button>
+        <div>Send me an email on any new post in this forum.</div>
       </div>
       {paginationBox}
-      {threadList.map(thread => {
+      {threadList.map((thread) => {
         if (!thread) {
           return (
-            <div key={thread.id} className="thread-row">
+            <div key={thread.id} className="row-item">
               <div className="loader loader-med" />
             </div>
           );
         }
         const isUnread =
           thread.unreadBy && thread.unreadBy.includes(props.user.uid);
-        const threadClasses = ["thread-row"];
+        const threadClasses = ["row-item"];
         let link = `/forum/${props.forumId}/thread/${thread.id}`;
         if (isUnread) {
           threadClasses.push("unread");
         }
-        const firstPageLink = (link += `?posts=${POSTS_PER_PAGE}&page=0`)
+        const firstPageLink = (link += `?posts=${POSTS_PER_PAGE}&page=0`);
         const lastPageLink = (link += `?posts=${POSTS_PER_PAGE}&page=last`);
         if (isUnread) {
           link = lastPageLink;
         }
         return (
           <div
-            onClick={e => handleClickThread(e, link)}
+            onClick={(e) => handleClickThread(e, link)}
             key={thread.id}
             className={threadClasses.join(" ")}
           >
-            <div className="thread-title">
-              <div className="title-container">
+            <div>
+              <div className="flex items-center space-x-1">
                 {thread.priority > 0 && (
                   <FontAwesomeIcon className="icon" icon="thumbtack" />
                 )}
-                {isUnread && (
-                  <FontAwesomeIcon
-                    className="icon icon-comment"
-                    icon="comment"
-                  />
-                )}
-                <Link to={link} className="title-text">
+                {isUnread && <FontAwesomeIcon icon="comment" />}
+                <Link to={link} className="text-main font-medium">
                   {thread.title}
                 </Link>
-                <Link to={firstPageLink} className="title-page-link">
+                <Link
+                  to={firstPageLink}
+                  className="text-sm text-main underline"
+                >
                   start
                 </Link>
-                <Link to={lastPageLink} className="title-page-link">
+                <Link to={lastPageLink} className="text-sm text-main underline">
                   end
                 </Link>
               </div>
-              <div>
+              <div className="flex text-sm space-x-1">
                 <span>started by</span>
-                <span className="info truncatable-name">
+                <span className="text-ok font-medium truncate">
                   <UserData user={userMap[thread.createdBy]} />
                 </span>
               </div>
             </div>
-            <div className="thread-meta">
+            <div className="flex flex-col items-end text-sm">
               {thread.postCount && (
-                <div className="post-count">
-                  <span className="post-num">{thread.postCount}</span> posts
+                <div>
+                  <span className="text-main font-medium">
+                    {thread.postCount}
+                  </span>{" "}
+                  posts
                 </div>
               )}
-              <div className="last-updated-info">
+              <div className="flex space-x-1">
                 <span>last updated by</span>
-                <span className="info truncatable-name">
+                <span className="text-ok font-medium">
                   <UserData user={userMap[thread.updatedBy]} />
                 </span>
                 {!isMobile && <span>at</span>}
-                <span className="info">
+                <span className="text-main font-medium">
                   {format(thread.updatedTime, dateFormat)}
                 </span>
               </div>
@@ -236,26 +231,31 @@ function ThreadList(props) {
           </div>
         );
       })}
-      <form className="new-post-container" onSubmit={handleSubmitThread}>
-        <div className="section-header">Start a new thread:</div>
-        <div className="form-line">
-          <label>Thread title</label>
+      <form
+        className="container mt-4 border-t-2 border-main"
+        onSubmit={handleSubmitThread}
+      >
+        <div className="list-head">Start a new thread:</div>
+        <div className="flex flex-col my-1">
+          <label htmlFor="threadTitle">Thread title</label>
           <input
+            id="threadTitle"
             ref={titleRef}
-            className="title-input"
+            className="border border-neutral p-2 rounded"
             placeholder="Title of new thread"
           />
         </div>
-        <div className="form-line">
-          <label>First post</label>
+        <div className="flex flex-col my-1">
+          <label htmlFor="postContent">First post</label>
           <textarea
+            id="postContent"
             ref={contentRef}
-            className="content-input"
+            className="border border-neutral p-2 rounded h-64"
             placeholder="Content of new post"
           />
         </div>
-        <div className="form-line">
-          <button>Post New Thread</button>
+        <div className="my-2">
+          <button className="btn btn-ok">Post New Thread</button>
         </div>
       </form>
     </div>

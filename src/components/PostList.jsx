@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState, useContext } from "react";
-import "../styles/Posts.css";
-import Post from "./Post.js";
+import Post from "./Post";
 import { Link, navigate } from "@reach/router";
 import { LOADING_STATUS, POSTS_PER_PAGE } from "../utils/constants";
-import range from "lodash/range";
 import flatten from "lodash/flatten";
 import uniq from "lodash/uniq";
 import {
@@ -14,7 +12,8 @@ import {
   addPost,
   getClaims,
   getUsers,
-  addDoc
+  addDoc,
+  updateThreadNotifications
 } from "../utils/dbhelpers";
 import { getParams, getPostRange } from "../utils/utils";
 import {
@@ -22,6 +21,9 @@ import {
   useSubscribeToCollection
 } from "../utils/hooks";
 import UserContext from "./UserContext";
+import PaginationControl from './pagination-control';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSquare, faCheckSquare } from "@fortawesome/free-regular-svg-icons";
 
 function PostList(props) {
   const contentRef = useRef();
@@ -272,33 +274,25 @@ function PostList(props) {
     : [];
   //TODO: should be able to pass postdata straight to post and not have to reload it
 
-  const paginationBox = (
-    <div className="pagination-control">
-      page
-      {range(numPages).map(pageNum => {
-        const pageLink =
-          `/forum/${props.forumId}` +
-          `/thread/${props.threadId}` +
-          `?page=${pageNum}&posts=${postsPerPage}`;
-        const classes = ["page-link"];
-        if (pageNum === page) {
-          classes.push("selected");
-        }
-        return (
-          <Link
-            key={"page-" + pageNum}
-            className={classes.join(" ")}
-            to={pageLink}
-          >
-            {pageNum}
-          </Link>
-        );
-      })}
-    </div>
-  );
+  const paginationBox = 
+  <PaginationControl
+    linkRoot={`/forum/${props.forumId}/thread/${props.threadId}`}
+    type="post"
+    numPages={numPages}
+    itemsPerPage={postsPerPage}
+    page={page}
+  />
+
+  function toggleNotifications() {
+    if (!props.userSettings) return;
+    const notificationsOn = props.userSettings.notifications.threads.includes(
+      props.threadId
+    );
+    updateThreadNotifications(props.user.uid, props.threadId, notificationsOn);
+  }
 
   const threadTitle = threadTitleEditing ? (
-    <div className="thread-title">
+    <div>
       <input
         ref={titleRef}
         className="title-edit-input"
@@ -316,36 +310,45 @@ function PostList(props) {
   );
 
   return (
-    <div className="post-list-container">
-      <div className="section-header">
-        <div className="breadcrumbs">
-          <span>
-            <Link className="thread-label" to="/">
+    <div className="container w-4/5 mx-auto">
+      <div className="flex justify-between items-center">
+        <div className="list-head">
+            <Link to="/">
               Home
             </Link>
-            <span className="title-caret">&gt;</span>
-          </span>
-          <span>
-            <Link className="thread-label" to={`/forum/${props.forumId}`}>
+            <span className="mx-2">&gt;</span>
+            <Link to={`/forum/${props.forumId}`}>
               {forum && forum.name}
             </Link>
-            <span className="title-caret">&gt;</span>
-          </span>
-          {threadTitle}
+            <span className="mx-2">&gt;</span>
+          <div className="font-normal">
+            {threadTitle}
+          </div>
         </div>
         {(claims.admin || claims.mod) && !threadTitleEditing && (
           <div className="thread-buttons">
-            <button className="button-merge" onClick={handleMergeThread}>
+            <button className="btn btn-neutral" onClick={handleMergeThread}>
               merge
             </button>
-            <button className="button-edit" onClick={toggleEditThread}>
+            <button className="btn btn-ok" onClick={toggleEditThread}>
               edit
             </button>
-            <button className="button-delete" onClick={handleDeleteThread}>
+            <button className="btn btn-danger" onClick={handleDeleteThread}>
               delete
             </button>
           </div>
         )}
+      </div>
+      <div className="my-2 flex space-x-2 items-center text-lg border-2 border-ok px-2 rounded">
+        <button onClick={toggleNotifications}>
+          {props.userSettings &&
+          props.userSettings.notifications.threads.includes(props.threadId) ? (
+            <FontAwesomeIcon className="text-ok" icon={faCheckSquare} />
+          ) : (
+            <FontAwesomeIcon className="text-ok" icon={faSquare} />
+          )}
+        </button>
+        <div>Send me an email on any new post in this thread.</div>
       </div>
       {paginationBox}
       {!posts && "loading"}
@@ -369,20 +372,21 @@ function PostList(props) {
         ))}
       {paginationBox}
       <form
-        className="new-post-container"
+        className="container mt-4 border-t-2 border-main"
         ref={newPostRef}
         onSubmit={handleSubmitPost}
       >
-        <div className="form-line">
-          <label>Add a post</label>
+        <div className="flex flex-col my-1">
+          <label className="list-head" htmlFor="postContent">Add a post</label>
           <textarea
             ref={contentRef}
-            className="content-input"
+            id="postContent"
+            className="border border-neutral p-2 rounded"
             placeholder="Type new post here"
           />
         </div>
-        <div className="form-line">
-          <button>Submit Post</button>
+        <div className="my-2">
+          <button className="btn btn-ok">Submit Post</button>
         </div>
       </form>
     </div>

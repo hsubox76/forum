@@ -18,6 +18,7 @@ import firebase from "firebase/app";
 import "firebase/auth";
 import get from "lodash/get";
 import { getClaims, getIsBanned, submitInviteCode } from "../utils/dbhelpers";
+import { useUserSettings } from "../utils/hooks";
 
 const history = createHistory(window);
 
@@ -26,20 +27,20 @@ const uiConfig = {
   signInFlow: "popup",
   signInOptions: [
     firebase.auth.EmailAuthProvider.PROVIDER_ID,
-    firebase.auth.GoogleAuthProvider.PROVIDER_ID
-  ]
+    firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+  ],
 };
 
 const logoutIfBanned = () => {
-    getIsBanned().then(isBanned => {
-      if (isBanned) {
-        firebase.auth().signOut();
-      }
-    });
-  };
+  getIsBanned().then((isBanned) => {
+    if (isBanned) {
+      firebase.auth().signOut();
+    }
+  });
+};
 
 const App = () => {
-  const [user, setUser] = useState('unknown');
+  const [user, setUser] = useState("unknown");
   const [claims, setClaims] = useState(null);
   const [popup, setPopup] = useState(null);
   const [inviteStatus, setInviteStatus] = useState(null);
@@ -53,42 +54,49 @@ const App = () => {
     history.listen(() => {
       logoutIfBanned();
     });
-    unregisterAuthObserver.current = firebase.auth().onAuthStateChanged(user => {
-      setUser(user);
-      if (user) {
-        // Force get new token (temp while modding lots of people?)
-        user.getIdToken(true).then(() => {
-          logoutIfBanned();
-          getClaims().then(claims => setClaims(claims));
-        });
-      }
-    });
+    unregisterAuthObserver.current = firebase
+      .auth()
+      .onAuthStateChanged((user) => {
+        setUser(user);
+        if (user) {
+          // Force get new token (temp while modding lots of people?)
+          user.getIdToken(true).then(() => {
+            logoutIfBanned();
+            getClaims().then((claims) => setClaims(claims));
+          });
+        }
+      });
     // On unmount??
     return () => {
       unregisterAuthObserver.current && unregisterAuthObserver.current();
       window.removeEventListener("popstate", logoutIfBanned);
-    }
+    };
   }, []);
+
+  const userSettings = useUserSettings(user.uid);
 
   function handleMergeUsers(usersToMerge) {
     setUsersByUid(Object.assign({}, usersByUid, usersToMerge));
   }
 
   function handleAddUserByUid(uid, userData) {
-    if (usersByUid[uid] && usersByUid[uid].displayName === userData.displayName) {
+    if (
+      usersByUid[uid] &&
+      usersByUid[uid].displayName === userData.displayName
+    ) {
       return;
     }
     setUsersByUid(Object.assign({}, usersByUid, { [uid]: userData }));
     return userData;
-  };
+  }
 
   function handleSetDialog(dialog) {
     setPopup(Object.assign({ type: "dialog" }, dialog));
-  };
+  }
 
   function handleSetPopup(popup) {
     setPopup(popup);
-  };
+  }
 
   function handleCodeSubmit(e) {
     e.preventDefault();
@@ -98,7 +106,7 @@ const App = () => {
 
     setInviteStatus({ error: null, processingCode: true });
     submitInviteCode(code, user)
-      .then(result => {
+      .then((result) => {
         if (get(result, "data.error")) throw new Error(result.data.error);
         setInviteStatus({ error: null, processingCode: false });
         firebase
@@ -106,15 +114,12 @@ const App = () => {
           .currentUser.getIdToken(true)
           .then(() => window.location.reload());
       })
-      .catch(e => {
+      .catch((e) => {
         setInviteStatus({ error: e.message, processingCode: false });
       });
-  };
+  }
 
-  if (
-    user === "unknown" ||
-    (user && !claims)
-  ) {
+  if (user === "unknown" || (user && !claims)) {
     return (
       <div className="loading-page">
         <div className="loader loader-big" />
@@ -136,10 +141,7 @@ const App = () => {
   } else if (claims && !claims.validated) {
     return (
       <div className="App">
-        <form
-          className="invite-code-container"
-          onSubmit={handleCodeSubmit}
-        >
+        <form className="invite-code-container" onSubmit={handleCodeSubmit}>
           <label>enter code</label>
           <input className="invite-input" ref={inviteCodeRef} />
           {inviteStatus.processingCode ? (
@@ -159,20 +161,10 @@ const App = () => {
   if (popup) {
     switch (popup.type) {
       case "dialog":
-        popupElement = (
-          <Dialog
-            {...popup}
-            onClose={() => setPopup(null)}
-          />
-        );
+        popupElement = <Dialog {...popup} onClose={() => setPopup(null)} />;
         break;
       case "merge":
-        popupElement = (
-          <MergePopup
-            {...popup}
-            onClose={() => setPopup(null)}
-          />
-        );
+        popupElement = <MergePopup {...popup} onClose={() => setPopup(null)} />;
         break;
       default:
         popupElement = null;
@@ -180,20 +172,34 @@ const App = () => {
   }
   return (
     <LocationProvider history={history}>
-      <UserContext.Provider value={{ usersByUid: usersByUid, addUserByUid: handleAddUserByUid, mergeUsers: handleMergeUsers }}>
+      <UserContext.Provider
+        value={{
+          usersByUid: usersByUid,
+          addUserByUid: handleAddUserByUid,
+          mergeUsers: handleMergeUsers,
+        }}
+      >
         <div className="container mx-auto">
           <div className="bg-main text-white flex items-center justify-between p-2">
             <div>
-              <Link to="/" className="text-lg">Home</Link>
+              <Link to="/" className="text-lg">
+                Home
+              </Link>
             </div>
             <div className="flex">
               <span className="font-bold px-2 mx-2 border rounded py-1">
                 {user.displayName}
               </span>
               <div className="flex divide-x items-center">
-                <Link to="/help" className="px-2">Help</Link>
-                <Link to="/invite" className="px-2">Invite</Link>
-                <Link to="/profile" className="px-2">Edit profile</Link>
+                <Link to="/help" className="px-2">
+                  Help
+                </Link>
+                <Link to="/invite" className="px-2">
+                  Invite
+                </Link>
+                <Link to="/profile" className="px-2">
+                  Edit profile
+                </Link>
                 <button
                   className="px-2"
                   onClick={() => firebase.auth().signOut()}
@@ -203,25 +209,26 @@ const App = () => {
               </div>
             </div>
           </div>
-          <Router>
+          <Router primary={false}>
             <ForumList path="/" user={user} />
-            <ThreadList path="forum/:forumId" user={user} />
+            <ThreadList
+              path="forum/:forumId"
+              user={user}
+              userSettings={userSettings}
+            />
             <PostList
               path="forum/:forumId/thread/:threadId"
               user={user}
               setDialog={handleSetDialog}
               setPopup={handleSetPopup}
+              userSettings={userSettings}
             />
             <Help path="help" />
-            <Profile path="profile" user={user} />
+            <Profile path="profile" user={user} userSettings={userSettings} />
             <UserPage path="user/:userId" />
             <Admin path="admin/*" user={user} />
             <Invite path="invite" user={user} />
-            <CreateAccount
-              path="code/:code"
-              user={user}
-              claims={claims}
-            />
+            <CreateAccount path="code/:code" user={user} claims={claims} />
             <NotFound default />
           </Router>
           {popupElement}
@@ -236,6 +243,6 @@ const App = () => {
       </UserContext.Provider>
     </LocationProvider>
   );
-}
+};
 
 export default App;

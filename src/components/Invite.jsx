@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import "../styles/Admin.css";
 import { format } from "date-fns";
 import { STANDARD_DATE_FORMAT } from "../utils/constants";
 import { generateInviteCode, getAllInvitesFor } from "../utils/dbhelpers";
@@ -99,9 +98,9 @@ class Invite extends Component {
       <div>You haven't created any invites yet.</div>
     );
     return (
-      <div className="invite-container">
-        <form className="invite-gen-form" onSubmit={this.onGenerateCode}>
-          <button className="button-edit">generate invite code</button>
+      <div className="container mx-auto">
+        <form className="flex flex-col items-start p-2 border border-neutral rounded my-2" onSubmit={this.onGenerateCode}>
+          <button className="btn btn-ok">generate invite code</button>
           {this.state.code && (
             <input
               onClick={e => e.target.select()}
@@ -111,23 +110,23 @@ class Invite extends Component {
             />
           )}
           {this.state.code && (
-            <div className="instructions">
+            <div className="m-1">
               Give this link to a friend. It'll take them to a one-time use page
               where they can sign up.
             </div>
           )}
           {this.state.inviteError && (
-            <div className="invite-error">{this.state.inviteError}</div>
+            <div className="text-danger">{this.state.inviteError}</div>
           )}
         </form>
-        <div className="admin-table">
-          <div className="table-title">Invites You've Created</div>
+        <div className="my-4">
+          <div className="text-2xl text-main">Invites You've Created</div>
           {unusedInvitesTable}
           {noInvitesMessage}
         </div>
         {usedInvites.length > 0 && (
-          <div className="admin-table">
-            <div className="table-title">Used Invites</div>
+          <div className="my-4">
+            <div className="text-2xl text-main">Used Invites</div>
             {usedInvitesTable}
           </div>
         )}

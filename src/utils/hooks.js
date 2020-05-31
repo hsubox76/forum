@@ -53,3 +53,23 @@ export function useSubscribeToCollection(collectionName, options) {
   return collection;
 }
 
+export function useUserSettings(uid) {
+  const [userSettings, setUserSettings] = useState(null);
+
+  useEffect(() => {
+    if (!uid) return;
+    const unsub = firebase
+      .firestore()
+      .doc(`users/${uid}`)
+      .onSnapshot(docRef => {
+        const docData = docRef.data();
+        if (!docData) {
+          return;
+        }
+        setUserSettings(Object.assign({ notifications: { forums: [], threads: [], all: false }}, docData));
+      });
+    return unsub;
+  }, [uid]);
+
+  return userSettings;
+}

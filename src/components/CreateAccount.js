@@ -74,7 +74,7 @@ function CreateAccount(props) {
   // }
 
   return (
-    <div className="create-account-container">
+    <div className="container mx-auto w-full lg:w-1/2">
       <form className="signup-form" onSubmit={onForumSubmit}>
         <div className="form-row">
           <label>email</label>
@@ -96,19 +96,17 @@ function CreateAccount(props) {
           <label>code</label>
           <input ref={codeRef} defaultValue={props.code || ""} />
         </div>
-        <div className="button-container">
-          <button disabled={sending} className="button-edit">
+          <button disabled={sending} className="btn btn-ok my-2">
             create my account
           </button>
-        </div>
         {sending && <div className="loader" />}
       </form>
       {window.location.hostname === "localhost" && (
-        <button className="button-danger" onClick={fill}>
+        <button className="btn btn-danger" onClick={fill}>
           fill with test data
         </button>
       )}
-      {errorMessage && <div className="error-message">{errorMessage}</div>}
+      {errorMessage && <div className="text-danger">{errorMessage}</div>}
     </div>
   );
 }
