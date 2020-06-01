@@ -2,6 +2,11 @@ import React, { useRef } from "react";
 import { useSubscribeToCollection } from "../utils/hooks";
 import { format } from "date-fns";
 import { COMPACT_DATE_FORMAT } from "../utils/constants";
+import { DialogData, Thread } from "../utils/types";
+
+interface MergePopupTypes extends DialogData {
+  onClose: () => void;
+}
 
 export default function MergePopup({
   forumId,
@@ -12,16 +17,18 @@ export default function MergePopup({
   onClose = () => {},
   onOk = () => {},
   onCancel = () => {},
-}) {
-  const threads = useSubscribeToCollection(`forums/${forumId}/threads`, [
-    { orderBy: ["priority", "desc"] },
-    { orderBy: ["updatedTime", "desc"] },
-  ]);
+}: MergePopupTypes) {
+  const threads: Thread[] | null = useSubscribeToCollection<Thread>(
+    `forums/${forumId}/threads`,
+    [{ orderBy: ["priority", "desc"] }, { orderBy: ["updatedTime", "desc"] }]
+  );
 
-  const selectRef = useRef();
+  const selectRef = useRef<HTMLSelectElement | null>(null);
+
+  if (!threads) return null;
 
   function handleOkClick() {
-    onOk(selectRef.current.value);
+    onOk(selectRef.current?.value);
     onClose();
   }
 

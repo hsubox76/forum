@@ -1,19 +1,25 @@
 import React, { useState, useRef } from "react";
 import firebase from "firebase/app";
 
+interface AvatarUploadProps {
+  user: firebase.User;
+  profileChangeState: string;
+  setProfileChangeState: (state: string) => void;
+}
+
 export default function AvatarUpload({
   user,
   profileChangeState,
   setProfileChangeState,
-}) {
-  const [avatarError, setAvatarError] = useState(null);
-  const [avatarBlocking, setAvatarBlocking] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(false);
-  const [fileToUpload, setFileToUpload] = useState();
-  const fileInputRef = useRef();
+}: AvatarUploadProps) {
+  const [avatarError, setAvatarError] = useState<string|null>(null);
+  const [avatarBlocking, setAvatarBlocking] = useState<boolean>(false);
+  const [previewUrl, setPreviewUrl] = useState<string|null>(null);
+  const [fileToUpload, setFileToUpload] = useState<File|null>();
+  const fileInputRef = useRef<HTMLInputElement|null>(null);
   const storageRef = firebase.storage().ref();
 
-  async function handleChangeAvatar(e) {
+  async function handleChangeAvatar(e: React.MouseEvent) {
     e.preventDefault();
     if (fileToUpload) {
       try {
@@ -32,7 +38,7 @@ export default function AvatarUpload({
     }
   }
 
-  function uploadAvatar(file) {
+  function uploadAvatar(file: File) {
     if (avatarBlocking) return;
     setAvatarError(null);
     const parts = file.name.split(".");
@@ -48,12 +54,13 @@ export default function AvatarUpload({
       });
   }
 
-  function onAvatarSelect(e) {
+  function onAvatarSelect(e: React.ChangeEvent) {
     setPreviewUrl(null);
     setAvatarError(null);
     setAvatarBlocking(false);
     setFileToUpload(null);
-    const file = e.target.files[0];
+    const file = (e.target as HTMLInputElement)?.files?.[0];
+    if (!file) return;
     if (file.size > 200000) {
       setAvatarError("File size is too big (bytes not pixels).");
       setAvatarBlocking(true);
@@ -97,7 +104,7 @@ export default function AvatarUpload({
           </div>
           <button
             className="btn btn-neutral"
-            type="nosubmit"
+            type="button"
             onClick={() => setPreviewUrl(null)}
           >
             cancel

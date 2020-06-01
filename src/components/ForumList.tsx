@@ -8,6 +8,7 @@ import { useSubscribeToCollection } from "../utils/hooks";
 import { getClaims, getUsers } from "../utils/dbhelpers";
 import UserData from "./UserData";
 import UserContext from "./UserContext";
+import { Forum } from "../utils/types";
 
 function ForumList(props) {
   const [claims, setClaims] = useState(null);
@@ -18,14 +19,14 @@ function ForumList(props) {
     getClaims().then((result) => setClaims(result));
   }, [props.user]);
 
-  const forumList = useSubscribeToCollection("forums", [{ orderBy: "order" }]);
+  const forumList: Forum[] = useSubscribeToCollection("forums", [{ orderBy: "order" }]);
 
   useEffect(() => {
     let unmounting = false;
     if (forumList) {
       const uids = uniq(
         flatten(
-          forumList.map((forum) => [forum.createdBy, forum.updatedBy])
+          forumList.map((forum) => [forum.updatedBy])
         ).filter((uid) => uid)
       ).sort();
       getUsers(uids, context).then((users) => !unmounting && setUserMap(users));

@@ -26,17 +26,18 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSquare, faCheckSquare } from "@fortawesome/free-regular-svg-icons";
 import UserContext from "./UserContext";
 import PaginationControl from "./pagination-control";
+import { Forum, Thread } from "../utils/types";
 
 function ThreadList(props) {
   const [status, setStatus] = useState(LOADING_STATUS.LOADING);
   const [userMap, setUserMap] = useState({});
-  const contentRef = useRef();
-  const titleRef = useRef();
+  const contentRef = useRef<HTMLTextAreaElement|undefined>();
+  const titleRef = useRef<HTMLInputElement|undefined>();
   const context = useContext(UserContext);
 
-  const forum = useSubscribeToDocumentPath(`forums/${props.forumId}`);
+  const forum: Forum = useSubscribeToDocumentPath(`forums/${props.forumId}`);
 
-  const threads = useSubscribeToCollection(`forums/${props.forumId}/threads`, [
+  const threads: Thread[] = useSubscribeToCollection(`forums/${props.forumId}/threads`, [
     { orderBy: ["priority", "desc"] },
     { orderBy: ["updatedTime", "desc"] },
   ]);
@@ -61,7 +62,7 @@ function ThreadList(props) {
     const time = Date.now();
     const threadRef = await addDoc(`forums/${props.forumId}/threads`, {
       createdBy: props.user.uid,
-      title: titleRef.current.value,
+      title: titleRef.current?.value,
       updatedBy: props.user.uid,
       postCount: 1,
       createdTime: time,
@@ -70,6 +71,11 @@ function ThreadList(props) {
       priority: 0,
       isSticky: false,
     });
+    if (!threadRef) {
+      //TODO: Make visible.
+      console.error('Error creating thread.')
+      return;
+    }
     await addDoc(`forums/${props.forumId}/threads/${threadRef.id}/posts`, {
       uid: props.user.uid,
       content: contentRef.current.value,

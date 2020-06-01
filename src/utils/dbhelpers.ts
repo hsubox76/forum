@@ -4,23 +4,34 @@ import "firebase/firestore";
 import "firebase/functions";
 import "firebase/performance";
 import pick from "lodash/pick";
+import omit from "lodash/omit";
+import { UserContextInterface } from "../components/UserContext";
+import {
+  UserPublic,
+  Claims,
+  ReactionType,
+  PostInterface,
+  Forum,
+  Thread,
+  Invite,
+} from "./types";
 
-let checkingIfBannedPromise = null;
+let checkingIfBannedPromise: Promise<boolean> | null = null;
 
 // ******************************************************************
 // ADMIN MAINTENANCE
 // ******************************************************************
-export function toggleBan(uid, shouldBan) {
+export function toggleBan(uid: string, shouldBan: boolean) {
   const setBanned = firebase.functions().httpsCallable("setBanned");
   return setBanned({ uid, isOn: shouldBan });
 }
 
-export function toggleMod(uid, shouldMod) {
+export function toggleMod(uid: string, shouldMod: boolean) {
   const setClaim = firebase.functions().httpsCallable("setClaim");
   return setClaim({ claim: "mod", uid, isOn: shouldMod });
 }
 
-export function toggleVal(uid, shouldVal) {
+export function toggleVal(uid: string, shouldVal: boolean) {
   const setClaim = firebase.functions().httpsCallable("setClaim");
   return setClaim({ claim: "validated", uid, isOn: shouldVal });
 }
@@ -29,7 +40,7 @@ export function toggleVal(uid, shouldVal) {
 // ADMIN SPECIAL CASE
 // ******************************************************************
 
-export function verifyAllUsers(users) {
+export function verifyAllUsers(users: Array<{ uid: string }>) {
   const setClaim = firebase.functions().httpsCallable("setClaim");
   const promiseList = users.map((user) =>
     setClaim({ claim: "validated", uid: user.uid, isOn: true })
@@ -37,7 +48,7 @@ export function verifyAllUsers(users) {
   return Promise.all(promiseList);
 }
 
-export function pwotAllUsers(users) {
+export function pwotAllUsers(users: Array<{ uid: string }>) {
   const setClaim = firebase.functions().httpsCallable("setClaim");
   const promiseList = users.map((user) =>
     setClaim({ claim: "pwot", uid: user.uid, isOn: true })
@@ -66,10 +77,10 @@ export async function migrateToTree() {
     .collection("threads")
     .get()
     .then((q) => {
-      const promises = [];
+      const promises: Array<Promise<void>> = [];
       q.forEach((thread) => {
         const forumId = thread.data().forumId;
-        promises.push(() =>
+        promises.push(
           db
             .collection("forums")
             .doc(forumId)
@@ -85,7 +96,7 @@ export async function migrateToTree() {
     .then((q) => {
       q.forEach(async (thread) => {
         const postIds = thread.data().postIds;
-        postIds.forEach(async (postId) => {
+        postIds.forEach(async (postId: string) => {
           const post = await db.collection("posts").doc(postId).get();
           db.collection("forums")
             .doc(thread.data().forumId)
@@ -93,7 +104,7 @@ export async function migrateToTree() {
             .doc(thread.id)
             .collection("posts")
             .doc(post.id)
-            .set(post.data());
+            .set(post.data() || {});
         });
       });
     });
@@ -110,45 +121,84 @@ export async function migrateToTree() {
 // DATABASE UPDATES
 // ******************************************************************
 
-export function addDoc(collectionPath, data) {
-  return firebase
-    .firestore()
-    .collection(collectionPath)
-    .add(data)
-    .catch((e) => console.error(e));
+/**
+ * Attach and remove ID from fetched Firestore docs.
+ */
+export function createConverter<T extends { id: string }>() {
+  return {
+    toFirestore(data: T): firebase.firestore.DocumentData {
+      return omit(data, "id");
+    },
+    fromFirestore(snapshot: firebase.firestore.QueryDocumentSnapshot): T {
+      return { ...snapshot.data(), id: snapshot.id } as T;
+    },
+  };
 }
 
-export function getDoc(docPath) {
-  return firebase
-    .firestore()
-    .doc(docPath)
-    .get()
-    .then((snap) => Object.assign(snap.data(), { id: snap.id }))
-    .catch((e) => console.error(e));
+export async function addDoc<T extends { id: string }>(
+  collectionPath: string,
+  data: T
+) {
+  const converter = createConverter<T>();
+  try {
+    return firebase
+      .firestore()
+      .collection(collectionPath)
+      .withConverter(converter)
+      .add(data);
+  } catch (e) {
+    console.error(`Error adding doc to ${collectionPath}.`);
+  }
 }
 
-export function getCollection(collectionPath) {
-  return firebase
-    .firestore()
-    .collection(collectionPath)
-    .get()
-    .catch((e) => console.error(e));
+export async function getDoc<T extends { id: string }>(docPath: string) {
+  const converter = createConverter<T>();
+  try {
+    const snap = await firebase
+      .firestore()
+      .doc(docPath)
+      .withConverter(converter)
+      .get();
+    return snap.data();
+  } catch (e) {
+    console.error(`Error fetching ${docPath}.`);
+  }
 }
 
-export async function updateDoc(docPath, data) {
+export async function getCollection<T extends { id: string }>(
+  collectionPath: string
+) {
+  const converter = createConverter<T>();
+  try {
+    return firebase
+      .firestore()
+      .collection(collectionPath)
+      .withConverter(converter)
+      .get();
+  } catch (e) {
+    console.error(`Error fetching ${collectionPath}.`);
+  }
+}
+
+export async function updateDoc<T extends { id: string }>(
+  docPath: string,
+  data: { [key: string]: any }
+) {
   const doc = await firebase.firestore().doc(docPath).get();
   if (!doc.exists) {
     console.warn(`Failed to update doc at ${docPath}: it does not exist.`);
     return Promise.resolve();
   }
+  const converter = createConverter<T>();
   return firebase
     .firestore()
     .doc(docPath)
+    .withConverter(converter)
     .update(data)
     .catch((e) => console.error(e));
 }
 
-export function deleteDoc(docPath) {
+export function deleteDoc(docPath: string) {
   return firebase
     .firestore()
     .doc(docPath)
@@ -157,20 +207,25 @@ export function deleteDoc(docPath) {
     .catch((e) => console.error(e));
 }
 
-export function deleteCollection(collectionPath) {
+export function deleteCollection(collectionPath: string) {
   return firebase
     .firestore()
     .collection(collectionPath)
     .get()
     .then((q) => {
-      const deletePromises = [];
+      const deletePromises: Array<Promise<void>> = [];
       q.forEach((doc) => doc.ref.delete());
       return Promise.all(deletePromises);
     })
     .catch((e) => console.error(e));
 }
 
-export function updateReaction(uid, postPath, reactionType, shouldAdd) {
+export function updateReaction(
+  uid: string,
+  postPath: string,
+  reactionType: ReactionType,
+  shouldAdd: boolean
+) {
   const operation = shouldAdd ? "arrayUnion" : "arrayRemove";
   updateDoc(postPath, {
     [`reactions.${reactionType}`]: firebase.firestore.FieldValue[operation](
@@ -179,32 +234,47 @@ export function updateReaction(uid, postPath, reactionType, shouldAdd) {
   });
 }
 
-export async function updatePostCount(forumId, threadId) {
+export async function updatePostCount(forumId: string, threadId: string) {
   const threadPosts = await firebase
     .firestore()
     .collection(`forums/${forumId}/threads/${threadId}/posts`)
     .get();
-  updateDoc(`forums/${forumId}/threads/${threadId}`, {
+  updateDoc<Thread>(`forums/${forumId}/threads/${threadId}`, {
     postCount: threadPosts.size,
   });
 }
 
-export function updateReadStatus(didRead, user, postId, threadId, forumId) {
+export function updateReadStatus(
+  didRead: boolean,
+  user: firebase.User,
+  postId: string,
+  threadId: string,
+  forumId: string
+) {
   const operation = didRead ? "arrayRemove" : "arrayUnion";
-  updateDoc(`forums/${forumId}/threads/${threadId}/posts/${postId}`, {
+  updateDoc<PostInterface>(
+    `forums/${forumId}/threads/${threadId}/posts/${postId}`,
+    {
+      unreadBy: firebase.firestore.FieldValue[operation](user.uid),
+    }
+  );
+  updateDoc<Thread>(`forums/${forumId}/threads/${threadId}`, {
     unreadBy: firebase.firestore.FieldValue[operation](user.uid),
   });
-  updateDoc(`forums/${forumId}/threads/${threadId}`, {
-    unreadBy: firebase.firestore.FieldValue[operation](user.uid),
-  });
-  updateDoc(`forums/${forumId}`, {
+  updateDoc<Forum>(`forums/${forumId}`, {
     unreadBy: firebase.firestore.FieldValue[operation](user.uid),
   });
 }
 
-export function addPost(content, forum, thread, user) {
+export async function addPost(
+  content: string,
+  forum: Forum,
+  thread: Thread,
+  user: firebase.User
+) {
   const now = Date.now();
   const postData = {
+    id: "?",
     content,
     parentForum: forum.id,
     parentThread: thread.id,
@@ -212,29 +282,37 @@ export function addPost(content, forum, thread, user) {
     updatedTime: now,
     uid: user.uid,
   };
-  return addDoc(`forums/${forum.id}/threads/${thread.id}/posts`, postData).then(
-    (docRef) => {
-      updatePostCount(forum.id, thread.id);
-      updateDoc(`forums/${forum.id}/threads/${thread.id}`, {
-        updatedTime: now,
-        updatedBy: user.uid,
-      });
-      updateDoc(`forums/${forum.id}`, {
-        updatedBy: user.uid,
-        updatedTime: now,
-      });
+  await addDoc<PostInterface>(
+    `forums/${forum.id}/threads/${thread.id}/posts`,
+    postData
+  );
+  const postCountPromise = updatePostCount(forum.id, thread.id);
+  const threadPromise = updateDoc<Thread>(
+    `forums/${forum.id}/threads/${thread.id}`,
+    {
+      updatedTime: now,
+      updatedBy: user.uid,
     }
   );
+  const forumPromise = updateDoc<Forum>(`forums/${forum.id}`, {
+    updatedBy: user.uid,
+    updatedTime: now,
+  });
+  await Promise.all([postCountPromise, threadPromise, forumPromise]);
 }
 
-export function updatePost(content, postPath, user) {
+export function updatePost(
+  content: string,
+  postPath: string,
+  user: firebase.User
+) {
   const now = Date.now();
   const postData = {
     content,
     updatedTime: now,
     updatedBy: user.uid,
   };
-  return updateDoc(postPath, postData);
+  return updateDoc<PostInterface>(postPath, postData);
 }
 
 // ******************************************************************
@@ -242,20 +320,16 @@ export function updatePost(content, postPath, user) {
 // ******************************************************************
 
 // Get claims of current user
-export function getClaims() {
-  return firebase
-    .auth()
-    .currentUser.getIdTokenResult()
-    .then((idTokenResult) => {
-      return idTokenResult.claims || {};
-    });
+export async function getClaims(): Promise<Claims> {
+  const idTokenResult = await firebase.auth().currentUser?.getIdTokenResult();
+  return idTokenResult?.claims || {};
 }
 
 // Get database banned listing
-export function getIsBanned() {
+export async function getIsBanned(): Promise<boolean> {
   if (checkingIfBannedPromise) return checkingIfBannedPromise;
   if (!firebase.auth().currentUser) {
-    return Promise.resolve("false");
+    return false;
   }
   const checkIfBanned = firebase.functions().httpsCallable("checkIfBanned");
   checkingIfBannedPromise = checkIfBanned()
@@ -267,25 +341,33 @@ export function getIsBanned() {
   return checkingIfBannedPromise;
 }
 
-export function getAllUsers(getAllData) {
+export function getAllUsers(getAllData: boolean) {
   const fetchAllUsers = firebase.functions().httpsCallable("getAllUsers");
   return fetchAllUsers({ getAll: getAllData })
     .then((response) => response.data)
     .catch((e) => console.error(e));
 }
 
-export function getUser(uid, context, forceGet) {
+export async function getUser(
+  uid: string,
+  context: UserContextInterface,
+  forceGet: boolean
+) {
   if (context.usersByUid[uid] && !forceGet) {
-    return Promise.resolve(context.usersByUid[uid]);
+    return context.usersByUid[uid];
   } else {
-    return getDoc(`usersPublic/${uid}`).then((user) => {
-      context.addUserByUid(uid, user);
+    return getDoc<UserPublic>(`usersPublic/${uid}`).then((user) => {
+      user && context.addUserByUid(uid, user);
       return user;
     });
   }
 }
 
-export async function updateForumNotifications(uid, forumId, notificationsOn) {
+export async function updateForumNotifications(
+  uid: string,
+  forumId: string,
+  notificationsOn: boolean
+) {
   firebase
     .firestore()
     .collection("users")
@@ -298,9 +380,9 @@ export async function updateForumNotifications(uid, forumId, notificationsOn) {
 }
 
 export async function updateThreadNotifications(
-  uid,
-  threadId,
-  notificationsOn
+  uid: string,
+  threadId: string,
+  notificationsOn: boolean
 ) {
   firebase
     .firestore()
@@ -313,43 +395,43 @@ export async function updateThreadNotifications(
     });
 }
 
-export function getUsers(uids, context) {
+export async function getUsers(uids: string[], context: UserContextInterface) {
   if (uids && uids.length > 0) {
-    const foundUsers = {};
-    const usersToFetch = [];
+    const foundUsers: { [uid: string]: UserPublic } = {};
+    const uidsToFetch: string[] = [];
     uids.forEach((uid) => {
       if (context.usersByUid[uid]) {
         foundUsers[uid] = context.usersByUid[uid];
       } else {
-        usersToFetch.push(uid);
+        uidsToFetch.push(uid);
       }
     });
-    if (usersToFetch.length > 0) {
+    if (uidsToFetch.length > 0) {
       const trace = firebase.performance().trace("getUsersFromFirestore");
       trace.start();
-      let fetchPromises = usersToFetch.map((uid) => {
-        return getDoc(`usersPublic/${uid}`);
+      let fetchPromises = uidsToFetch.map((uid) => {
+        return getDoc<UserPublic>(`usersPublic/${uid}`);
       });
-      return Promise.all(fetchPromises)
-        .then((results) => {
-          trace.stop();
-          let newUsers = {};
-          results.forEach((user) => {
-            foundUsers[user.id] = newUsers[user.id] = user;
-          });
-          context.mergeUsers(newUsers);
-          return foundUsers;
-        })
-        .catch((e) => {
-          console.error(e);
-          trace.stop();
-          return Promise.resolve({});
+      try {
+        const results = await Promise.all(fetchPromises);
+        trace.stop();
+        let newUsers: { [uid: string]: UserPublic } = {};
+        results.forEach((user) => {
+          if (!user) return;
+          foundUsers[user.id] = newUsers[user.id] = user;
         });
+        context.mergeUsers(newUsers);
+        return foundUsers;
+      } catch (e) {
+        console.error(e);
+        trace.stop();
+        return {};
+      }
     } else {
-      return Promise.resolve(foundUsers);
+      return foundUsers;
     }
   }
-  return Promise.resolve({});
+  return {};
 }
 
 // ******************************************************************
@@ -357,26 +439,28 @@ export function getUsers(uids, context) {
 // ******************************************************************
 export function getAllInvites() {
   const db = firebase.firestore();
+  const converter = createConverter<Invite>();
   return db
     .collection("invites")
+    .withConverter(converter)
     .get()
     .then((querySnapshot) => {
-      const invites = [];
-      querySnapshot.forEach((doc) =>
-        invites.push(Object.assign(doc.data(), { id: doc.id }))
-      );
+      const invites: Invite[] = [];
+      querySnapshot.forEach((doc) => invites.push(doc.data()));
       return invites;
     });
 }
 
-export function getAllInvitesFor(uid) {
+export function getAllInvitesFor(uid: string) {
   const db = firebase.firestore();
+  const converter = createConverter<Invite>();
   return db
     .collection("invites")
     .where("createdByUid", "==", uid)
+    .withConverter(converter)
     .get()
     .then((querySnapshot) => {
-      const invites = [];
+      const invites: Invite[] = [];
       querySnapshot.forEach((doc) =>
         invites.push(Object.assign(doc.data(), { id: doc.id }))
       );
@@ -384,7 +468,10 @@ export function getAllInvitesFor(uid) {
     });
 }
 
-export function generateInviteCode(createdByName, createdByUid) {
+export function generateInviteCode(
+  createdByName: string,
+  createdByUid: string
+) {
   const db = firebase.firestore();
   return db
     .collection("invites")
@@ -399,7 +486,11 @@ export function generateInviteCode(createdByName, createdByUid) {
     });
 }
 
-export function submitInviteCode(code, user, shouldCreate = false) {
+export function submitInviteCode(
+  code: string,
+  user: firebase.User,
+  shouldCreate = false
+) {
   const processInviteCode = firebase
     .functions()
     .httpsCallable("processInviteCode");

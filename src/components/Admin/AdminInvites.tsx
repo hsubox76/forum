@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { STANDARD_DATE_FORMAT } from "../../utils/constants";
 import { getAllInvites } from "../../utils/dbhelpers";
+import { Invite } from "../../utils/types";
+import { RouteComponentProps } from "@reach/router";
 
-function AdminInvites(props) {
-  const [invites, setInvites] = useState([]);
+function AdminInvites(props: RouteComponentProps) {
+  const [invites, setInvites] = useState<Invite[]>([]);
 
   useEffect(() => {
     getAllInvites().then((invites) => setInvites(invites));

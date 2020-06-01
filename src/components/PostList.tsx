@@ -24,24 +24,25 @@ import UserContext from "./UserContext";
 import PaginationControl from "./pagination-control";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSquare, faCheckSquare } from "@fortawesome/free-regular-svg-icons";
+import { PostInterface, Thread, Forum, Claims } from "../utils/types";
 
 function PostList(props) {
-  const contentRef = useRef();
-  const newPostRef = useRef();
-  const titleRef = useRef();
+  const contentRef = useRef<HTMLTextAreaElement|undefined>();
+  const newPostRef = useRef<HTMLFormElement|undefined>();
+  const titleRef = useRef<HTMLInputElement|undefined>();
   const context = useContext(UserContext);
   const [status, setStatus] = useState(LOADING_STATUS.LOADING);
   const [postBeingEdited, setPostBeingEdited] = useState(null);
-  const [claims, setClaims] = useState({});
-  const [userMap, setUserMap] = useState({});
+  const [claims, setClaims] = useState<Claims>({});
+  const [userMap, setUserMap] = useState<{ [uid: string]: any }>({});
   const [threadTitleEditing, setThreadTitleEditing] = useState(false);
 
-  const forum = useSubscribeToDocumentPath(`forums/${props.forumId}`);
-  const thread = useSubscribeToDocumentPath(
+  const forum = useSubscribeToDocumentPath<Forum>(`forums/${props.forumId}`);
+  const thread = useSubscribeToDocumentPath<Thread>(
     `forums/${props.forumId}/threads/${props.threadId}`
   );
 
-  let posts = useSubscribeToCollection(
+  let posts = useSubscribeToCollection<PostInterface>(
     `forums/${props.forumId}/threads/${props.threadId}/posts`,
     [{ orderBy: "createdTime" }]
   );
@@ -151,11 +152,11 @@ function PostList(props) {
 
   function mergeThread(threadToMerge) {
     // setStatus(LOADING_STATUS.LOADING);
-    getCollection(`forums/${props.forumId}/threads/${threadToMerge}/posts`)
+    getCollection<PostInterface>(`forums/${props.forumId}/threads/${threadToMerge}/posts`)
       .then((listSnap) => {
         let newPosts = [];
         let mergedPosts = [];
-        listSnap.forEach((postSnap) =>
+        listSnap && listSnap.forEach((postSnap) =>
           newPosts.push(Object.assign(postSnap.data(), { id: postSnap.id }))
         );
         mergedPosts = newPosts

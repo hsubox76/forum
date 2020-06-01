@@ -1,6 +1,7 @@
 import React from "react";
+import { RouteComponentProps } from "@reach/router";
 
-const Help = () => (
+const Help = (props: RouteComponentProps) => (
   <div className="container mx-auto">
     <h1 className="text-3xl text-main my-2">Help</h1>
     <h2 className="text-2xl">Tags</h2>

@@ -1,5 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Router, Link, LocationProvider, createHistory } from "@reach/router";
+import React, { useState, useEffect, useRef, FormEvent } from "react";
+import {
+  Router,
+  Link,
+  LocationProvider,
+  createHistory,
+  HistorySource,
+} from "@reach/router";
 import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
 import Dialog from "./Dialog";
 import MergePopup from "./MergePopup";
@@ -19,7 +25,9 @@ import "firebase/auth";
 import get from "lodash/get";
 import { getClaims, getIsBanned, submitInviteCode } from "../utils/dbhelpers";
 import { useUserSettings } from "../utils/hooks";
+import { Claims, UserPublic, DialogData } from "../utils/types";
 
+// @ts-ignore
 const history = createHistory(window);
 
 const uiConfig = {
@@ -40,12 +48,17 @@ const logoutIfBanned = () => {
 };
 
 const App = () => {
-  const [user, setUser] = useState("unknown");
-  const [claims, setClaims] = useState(null);
-  const [popup, setPopup] = useState(null);
-  const [inviteStatus, setInviteStatus] = useState(null);
-  const inviteCodeRef = useRef(null);
-  const [usersByUid, setUsersByUid] = useState({});
+  const [user, setUser] = useState<firebase.User | undefined | null>();
+  const [claims, setClaims] = useState<Claims>();
+  const [popup, setPopup] = useState<DialogData | null>(null);
+  const [inviteStatus, setInviteStatus] = useState({
+    error: null,
+    processingCode: false
+  });
+  const inviteCodeRef = useRef<HTMLInputElement | null>(null);
+  const [usersByUid, setUsersByUid] = useState<{ [uid: string]: UserPublic }>(
+    {}
+  );
 
   const unregisterAuthObserver = useRef(() => {});
 
@@ -73,13 +86,13 @@ const App = () => {
     };
   }, []);
 
-  const userSettings = useUserSettings(user.uid);
+  const userSettings = useUserSettings(user?.uid);
 
-  function handleMergeUsers(usersToMerge) {
+  function handleMergeUsers(usersToMerge: { [uid: string]: UserPublic }) {
     setUsersByUid(Object.assign({}, usersByUid, usersToMerge));
   }
 
-  function handleAddUserByUid(uid, userData) {
+  function handleAddUserByUid(uid: string, userData: UserPublic) {
     if (
       usersByUid[uid] &&
       usersByUid[uid].displayName === userData.displayName
@@ -90,36 +103,33 @@ const App = () => {
     return userData;
   }
 
-  function handleSetDialog(dialog) {
-    setPopup(Object.assign({ type: "dialog" }, dialog));
+  function handleSetDialog(dialog: DialogData) {
+    setPopup({ ...dialog, type: "dialog" });
   }
 
-  function handleSetPopup(popup) {
+  function handleSetPopup(popup: DialogData) {
     setPopup(popup);
   }
 
-  function handleCodeSubmit(e) {
+  async function handleCodeSubmit(e: FormEvent) {
     e.preventDefault();
-    const code = inviteCodeRef.current.value;
+    const code = inviteCodeRef.current?.value;
 
     if (!code || !user) return;
 
     setInviteStatus({ error: null, processingCode: true });
-    submitInviteCode(code, user)
-      .then((result) => {
-        if (get(result, "data.error")) throw new Error(result.data.error);
-        setInviteStatus({ error: null, processingCode: false });
-        firebase
-          .auth()
-          .currentUser.getIdToken(true)
-          .then(() => window.location.reload());
-      })
-      .catch((e) => {
-        setInviteStatus({ error: e.message, processingCode: false });
-      });
+    try {
+      const result = await submitInviteCode(code, user);
+      if (get(result, "data.error")) throw new Error(result.data.error);
+      setInviteStatus({ error: null, processingCode: false });
+      await firebase.auth().currentUser?.getIdToken(true);
+      window.location.reload();
+    } catch (e) {
+      setInviteStatus({ error: e.message, processingCode: false });
+    }
   }
 
-  if (user === "unknown" || (user && !claims)) {
+  if (user === undefined || (user && !claims)) {
     return (
       <div className="page-center">
         <div className="loader loader-big" />
@@ -129,7 +139,6 @@ const App = () => {
     return (
       <Router>
         <StyledFirebaseAuth
-          default
           uiConfig={uiConfig}
           firebaseAuth={firebase.auth()}
         />
@@ -152,8 +161,8 @@ const App = () => {
           ) : (
             <button className="btn btn-ok">ok</button>
           )}
-          {inviteStatus && inviteStatus.inviteError && (
-            <div className="invite-error">{inviteStatus.inviteError}</div>
+          {inviteStatus && inviteStatus.error && (
+            <div className="invite-error">{inviteStatus.error}</div>
           )}
         </form>
       </div>
@@ -229,7 +238,7 @@ const App = () => {
             <Help path="help" />
             <Profile path="profile" user={user} userSettings={userSettings} />
             <UserPage path="user/:userId" />
-            <Admin path="admin/*" user={user} />
+            <Admin path="admin/*" />
             <Invite path="invite" user={user} />
             <CreateAccount path="code/:code" user={user} claims={claims} />
             <NotFound default />

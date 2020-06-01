@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Router, Redirect, Link } from "@reach/router";
+import { Router, Redirect, Link, RouteComponentProps } from "@reach/router";
 import AdminInvites from "./AdminInvites";
 import AdminUsers from "./AdminUsers";
 import { getClaims } from "../../utils/dbhelpers";
 
-function Admin() {
+interface AdminProps extends RouteComponentProps {
+}
+
+function Admin(props: AdminProps) {
   const [userIsAdmin, setUserIsAdmin] = useState(false);
 
   useEffect(() => {
-    getClaims().then((claims) => setUserIsAdmin(claims.admin));
+    getClaims().then((claims) => setUserIsAdmin(!!claims.admin));
   }, []);
 
   if (!userIsAdmin) {
@@ -21,8 +24,8 @@ function Admin() {
 
   const tabClasses = "px-2 py-1 border-2 rounded";
 
-  function isActive({ isCurrent }) {
-    return isCurrent ? { className: tabClasses + " border-main" } : null;
+  function isActive({ isCurrent }: {isCurrent: boolean}) {
+    return isCurrent ? { className: tabClasses + " border-main" } : {};
   }
   return (
     <div className="container mx-auto">

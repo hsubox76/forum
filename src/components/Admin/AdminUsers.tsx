@@ -11,9 +11,11 @@ import {
 } from "../../utils/dbhelpers";
 import repeat from "lodash/repeat";
 import sortBy from "lodash/sortBy";
+import { RouteComponentProps } from "@reach/router";
+import { UserAdminView } from "../../utils/types";
 
-function AdminUsers(props) {
-  const [users, setUsers] = useState([]);
+function AdminUsers(props: RouteComponentProps) {
+  const [users, setUsers] = useState<UserAdminView[]>([]);
   const [sortField, setSortField] = useState("customClaims.validated");
   const [sortDirection, setSortDirection] = useState("desc");
   const [pageDisabled, setPageDisabled] = useState(false);
@@ -25,7 +27,7 @@ function AdminUsers(props) {
     );
   }, [sortField, sortDirection]);
 
-  function onBanClick(uid, isBanned) {
+  function onBanClick(uid: string, isBanned: boolean) {
     setPageDisabled(true);
     toggleBan(uid, !isBanned)
       .then(() => getAllUsers(true))
@@ -34,7 +36,7 @@ function AdminUsers(props) {
       .finally(() => setPageDisabled(false));
   }
 
-  function onModClick(uid, isMod) {
+  function onModClick(uid: string, isMod: boolean) {
     setPageDisabled(true);
     toggleMod(uid, !isMod)
       .then(() => getAllUsers(true))
@@ -43,7 +45,7 @@ function AdminUsers(props) {
       .finally(() => setPageDisabled(false));
   }
 
-  function onValidateClick(uid, shouldVal) {
+  function onValidateClick(uid: string, shouldVal: boolean) {
     setPageDisabled(true);
     toggleVal(uid, shouldVal)
       .then(() => getAllUsers(true))
@@ -56,7 +58,7 @@ function AdminUsers(props) {
     setShowEmails(!showEmails);
   }
 
-  function sortUsers(field, direction, usersToSort) {
+  function sortUsers(field: string, direction: string, usersToSort: UserAdminView[]) {
     let sortedUsers = sortBy(usersToSort, field);
     if (direction === "desc") {
       sortedUsers.reverse();
@@ -66,7 +68,7 @@ function AdminUsers(props) {
     setUsers(sortedUsers);
   }
 
-  function onSortClick(field) {
+  function onSortClick(field: string) {
     let direction = "desc";
     if (sortField === field && sortDirection === "desc") {
       console.log("go asc");
@@ -75,7 +77,7 @@ function AdminUsers(props) {
     sortUsers(field, direction, users);
   }
 
-  function SortButton(props) {
+  function SortButton(props: { field: string }) {
     let iconClass = "none";
     if (props.field === sortField) {
       iconClass = sortDirection === "asc" ? "up" : "down";
@@ -101,7 +103,7 @@ function AdminUsers(props) {
 
   return (
     <React.Fragment>
-      <div class="flex space-x-2">
+      <div className="flex space-x-2">
         <button className="btn btn-ok" onClick={() => verifyAllUsers(users)}>
           verify all users
         </button>
@@ -147,8 +149,8 @@ function AdminUsers(props) {
         </thead>
         <tbody>
           {users.map((user) => {
-            const isAdmin = user.customClaims.admin;
-            const isMod = user.customClaims.mod;
+            const isAdmin = !!user.customClaims.admin;
+            const isMod = !!user.customClaims.mod;
             const isBanned = user.disabled;
             return (
               <tr key={user.uid}>
