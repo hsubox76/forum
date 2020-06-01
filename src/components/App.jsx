@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Router, Link, LocationProvider, createHistory } from "@reach/router";
 import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
-import Dialog from "./Dialog.js";
+import Dialog from "./Dialog";
 import MergePopup from "./MergePopup";
 import ForumList from "./ForumList";
 import Help from "./Help";

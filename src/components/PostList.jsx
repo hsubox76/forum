@@ -215,7 +215,7 @@ function PostList(props) {
 
   if (status === LOADING_STATUS.DELETING) {
     return (
-      <div className="page-message-container">
+      <div className="page-center">
         <div>deleting</div>
         <div className="loader loader-med" />
       </div>
@@ -223,14 +223,14 @@ function PostList(props) {
   }
   if (status === LOADING_STATUS.LOADING) {
     return (
-      <div className="page-message-container">
+      <div className="page-center">
         <div className="loader loader-med" />
       </div>
     );
   }
   if (status === LOADING_STATUS.PERMISSIONS_ERROR) {
     return (
-      <div className="page-message-container">
+      <div className="page-center">
         <div>Sorry, you don't have permission to do that.</div>
         <div>
           <span
@@ -244,7 +244,7 @@ function PostList(props) {
   }
   if (status === LOADING_STATUS.DELETED || !thread) {
     return (
-      <div className="page-message-container">
+      <div className="page-center">
         <div>This thread has been deleted.</div>
         <div>
           <Link to="/">Back to top.</Link>

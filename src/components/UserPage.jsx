@@ -17,7 +17,7 @@ function UserPage(props) {
 
   if (!user) {
     return (
-      <div className="loading-page">
+      <div className="page-center">
         <div className="loader loader-big" />
       </div>
     );
@@ -28,7 +28,7 @@ function UserPage(props) {
     <div className="text-line">This user has not created a bio yet.</div>
   );
   return (
-    <div className="profile-container">
+    <div>
       <div className="flex items-end my-2">
         <img className="w-24 h-24" alt="User's Avatar" src={user.photoURL} />
         <div className="ml-2">

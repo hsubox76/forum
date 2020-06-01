@@ -278,9 +278,10 @@ export function getUser(uid, context, forceGet) {
   if (context.usersByUid[uid] && !forceGet) {
     return Promise.resolve(context.usersByUid[uid]);
   } else {
-    return getDoc(`usersPublic/${uid}`).then((user) =>
-      context.addUserByUid(uid, user)
-    );
+    return getDoc(`usersPublic/${uid}`).then((user) => {
+      context.addUserByUid(uid, user);
+      return user;
+    });
   }
 }
 

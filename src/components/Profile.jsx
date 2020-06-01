@@ -85,7 +85,7 @@ function Profile(props) {
       </div>
     </>
   ) : (
-    <div className="loading-more-data-container">
+    <div>
       <div>Loading rest of your profile data.</div>
       <div className="loader loader-sm" />
     </div>

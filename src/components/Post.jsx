@@ -134,7 +134,7 @@ function Post(props) {
   if (status === LOADING_STATUS.DELETED) {
     // this shouldn't happen... but just in case
     return (
-      <div key={props.postId} className="post-container">
+      <div key={props.postId} className="px-2 py-1 border-main border rounded my-2">
         This post has been deleted.
       </div>
     );
@@ -145,7 +145,7 @@ function Post(props) {
     status === LOADING_STATUS.DELETING
   ) {
     return (
-      <div key={props.postId} className="post-container">
+      <div key={props.postId} className="px-2 py-1 border-main border rounded my-2">
         <div className="loader loader-med" />
       </div>
     );

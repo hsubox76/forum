@@ -32,7 +32,7 @@ class Invite extends Component {
   render() {
     if (!this.state.invites) {
       return (
-        <div className="loading-page">
+        <div className="page-center">
           <div className="loader loader-big" />
         </div>
       );

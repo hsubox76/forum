@@ -37,7 +37,7 @@ function ForumList(props) {
 
   if (!forumList) {
     return (
-      <div className="forum-list-container">
+      <div className="page-center">
         <div className="loader loader-med" />
       </div>
     );

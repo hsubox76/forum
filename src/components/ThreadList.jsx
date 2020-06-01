@@ -97,7 +97,7 @@ function ThreadList(props) {
 
   if (status === LOADING_STATUS.LOADING) {
     return (
-      <div className="thread-list-container">
+      <div className="page-center">
         <div className="loader loader-med" />
       </div>
     );

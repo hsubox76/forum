@@ -88,7 +88,7 @@ function AdminUsers(props) {
   }
 
   if (pageDisabled) {
-    return <div className="admin-container">Updating the database.</div>;
+    return <div className="page-center">Updating the database.</div>;
   }
 
   console.log(
