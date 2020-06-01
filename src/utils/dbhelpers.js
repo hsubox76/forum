@@ -31,7 +31,7 @@ export function toggleVal(uid, shouldVal) {
 
 export function verifyAllUsers(users) {
   const setClaim = firebase.functions().httpsCallable("setClaim");
-  const promiseList = users.map(user =>
+  const promiseList = users.map((user) =>
     setClaim({ claim: "validated", uid: user.uid, isOn: true })
   );
   return Promise.all(promiseList);
@@ -39,7 +39,7 @@ export function verifyAllUsers(users) {
 
 export function pwotAllUsers(users) {
   const setClaim = firebase.functions().httpsCallable("setClaim");
-  const promiseList = users.map(user =>
+  const promiseList = users.map((user) =>
     setClaim({ claim: "pwot", uid: user.uid, isOn: true })
   );
   return Promise.all(promiseList);
@@ -50,9 +50,9 @@ export function migrateAllAvatars() {
   return db
     .collection("users")
     .get()
-    .then(querySnapshot => {
+    .then((querySnapshot) => {
       const setAvatar = firebase.functions().httpsCallable("setAvatar");
-      querySnapshot.forEach(doc => {
+      querySnapshot.forEach((doc) => {
         if (doc.data().avatarUrl) {
           setAvatar({ uid: doc.id, url: doc.data().avatarUrl });
         }
@@ -65,9 +65,9 @@ export async function migrateToTree() {
   await db
     .collection("threads")
     .get()
-    .then(q => {
+    .then((q) => {
       const promises = [];
-      q.forEach(thread => {
+      q.forEach((thread) => {
         const forumId = thread.data().forumId;
         promises.push(() =>
           db
@@ -82,14 +82,11 @@ export async function migrateToTree() {
     });
   db.collection("threads")
     .get()
-    .then(q => {
-      q.forEach(async thread => {
+    .then((q) => {
+      q.forEach(async (thread) => {
         const postIds = thread.data().postIds;
-        postIds.forEach(async postId => {
-          const post = await db
-            .collection("posts")
-            .doc(postId)
-            .get();
+        postIds.forEach(async (postId) => {
+          const post = await db.collection("posts").doc(postId).get();
           db.collection("forums")
             .doc(thread.data().forumId)
             .collection("threads")
@@ -102,8 +99,8 @@ export async function migrateToTree() {
     });
   db.collection("threads")
     .get()
-    .then(q => {
-      q.forEach(async thread => {
+    .then((q) => {
+      q.forEach(async (thread) => {
         updatePostCount(thread.data().forumId, thread.id);
       });
     });
@@ -118,7 +115,7 @@ export function addDoc(collectionPath, data) {
     .firestore()
     .collection(collectionPath)
     .add(data)
-    .catch(e => console.error(e));
+    .catch((e) => console.error(e));
 }
 
 export function getDoc(docPath) {
@@ -126,8 +123,8 @@ export function getDoc(docPath) {
     .firestore()
     .doc(docPath)
     .get()
-    .then(snap => Object.assign(snap.data(), { id: snap.id }))
-    .catch(e => console.error(e));
+    .then((snap) => Object.assign(snap.data(), { id: snap.id }))
+    .catch((e) => console.error(e));
 }
 
 export function getCollection(collectionPath) {
@@ -135,14 +132,11 @@ export function getCollection(collectionPath) {
     .firestore()
     .collection(collectionPath)
     .get()
-    .catch(e => console.error(e));
+    .catch((e) => console.error(e));
 }
 
 export async function updateDoc(docPath, data) {
-  const doc = await firebase
-    .firestore()
-    .doc(docPath)
-    .get();
+  const doc = await firebase.firestore().doc(docPath).get();
   if (!doc.exists) {
     console.warn(`Failed to update doc at ${docPath}: it does not exist.`);
     return Promise.resolve();
@@ -151,7 +145,7 @@ export async function updateDoc(docPath, data) {
     .firestore()
     .doc(docPath)
     .update(data)
-    .catch(e => console.error(e));
+    .catch((e) => console.error(e));
 }
 
 export function deleteDoc(docPath) {
@@ -160,7 +154,7 @@ export function deleteDoc(docPath) {
     .doc(docPath)
     .delete()
     .then(() => console.log(`${docPath} deleted`))
-    .catch(e => console.error(e));
+    .catch((e) => console.error(e));
 }
 
 export function deleteCollection(collectionPath) {
@@ -168,18 +162,20 @@ export function deleteCollection(collectionPath) {
     .firestore()
     .collection(collectionPath)
     .get()
-    .then(q => {
+    .then((q) => {
       const deletePromises = [];
-      q.forEach(doc => doc.ref.delete());
+      q.forEach((doc) => doc.ref.delete());
       return Promise.all(deletePromises);
     })
-    .catch(e => console.error(e));
+    .catch((e) => console.error(e));
 }
 
 export function updateReaction(uid, postPath, reactionType, shouldAdd) {
   const operation = shouldAdd ? "arrayUnion" : "arrayRemove";
   updateDoc(postPath, {
-    [`reactions.${reactionType}`]: firebase.firestore.FieldValue[operation](uid)
+    [`reactions.${reactionType}`]: firebase.firestore.FieldValue[operation](
+      uid
+    ),
   });
 }
 
@@ -189,20 +185,20 @@ export async function updatePostCount(forumId, threadId) {
     .collection(`forums/${forumId}/threads/${threadId}/posts`)
     .get();
   updateDoc(`forums/${forumId}/threads/${threadId}`, {
-    postCount: threadPosts.size
+    postCount: threadPosts.size,
   });
 }
 
 export function updateReadStatus(didRead, user, postId, threadId, forumId) {
   const operation = didRead ? "arrayRemove" : "arrayUnion";
   updateDoc(`forums/${forumId}/threads/${threadId}/posts/${postId}`, {
-    unreadBy: firebase.firestore.FieldValue[operation](user.uid)
+    unreadBy: firebase.firestore.FieldValue[operation](user.uid),
   });
   updateDoc(`forums/${forumId}/threads/${threadId}`, {
-    unreadBy: firebase.firestore.FieldValue[operation](user.uid)
+    unreadBy: firebase.firestore.FieldValue[operation](user.uid),
   });
   updateDoc(`forums/${forumId}`, {
-    unreadBy: firebase.firestore.FieldValue[operation](user.uid)
+    unreadBy: firebase.firestore.FieldValue[operation](user.uid),
   });
 }
 
@@ -214,18 +210,18 @@ export function addPost(content, forum, thread, user) {
     parentThread: thread.id,
     createdTime: now,
     updatedTime: now,
-    uid: user.uid
+    uid: user.uid,
   };
   return addDoc(`forums/${forum.id}/threads/${thread.id}/posts`, postData).then(
-    docRef => {
+    (docRef) => {
       updatePostCount(forum.id, thread.id);
       updateDoc(`forums/${forum.id}/threads/${thread.id}`, {
         updatedTime: now,
-        updatedBy: user.uid
+        updatedBy: user.uid,
       });
       updateDoc(`forums/${forum.id}`, {
         updatedBy: user.uid,
-        updatedTime: now
+        updatedTime: now,
       });
     }
   );
@@ -236,7 +232,7 @@ export function updatePost(content, postPath, user) {
   const postData = {
     content,
     updatedTime: now,
-    updatedBy: user.uid
+    updatedBy: user.uid,
   };
   return updateDoc(postPath, postData);
 }
@@ -250,7 +246,7 @@ export function getClaims() {
   return firebase
     .auth()
     .currentUser.getIdTokenResult()
-    .then(idTokenResult => {
+    .then((idTokenResult) => {
       return idTokenResult.claims || {};
     });
 }
@@ -263,26 +259,26 @@ export function getIsBanned() {
   }
   const checkIfBanned = firebase.functions().httpsCallable("checkIfBanned");
   checkingIfBannedPromise = checkIfBanned()
-    .then(response => {
+    .then((response) => {
       checkingIfBannedPromise = null;
       return response.data;
     })
-    .catch(e => console.error(e));
+    .catch((e) => console.error(e));
   return checkingIfBannedPromise;
 }
 
 export function getAllUsers(getAllData) {
   const fetchAllUsers = firebase.functions().httpsCallable("getAllUsers");
   return fetchAllUsers({ getAll: getAllData })
-    .then(response => response.data)
-    .catch(e => console.error(e));
+    .then((response) => response.data)
+    .catch((e) => console.error(e));
 }
 
 export function getUser(uid, context, forceGet) {
   if (context.usersByUid[uid] && !forceGet) {
     return Promise.resolve(context.usersByUid[uid]);
   } else {
-    return getDoc(`usersPublic/${uid}`).then(user =>
+    return getDoc(`usersPublic/${uid}`).then((user) =>
       context.addUserByUid(uid, user)
     );
   }
@@ -290,33 +286,37 @@ export function getUser(uid, context, forceGet) {
 
 export async function updateForumNotifications(uid, forumId, notificationsOn) {
   firebase
-      .firestore()
-      .collection('users')
-      .doc(uid)
-      .update({
-        "notifications.forums": notificationsOn
-          ? firebase.firestore.FieldValue.arrayRemove(forumId)
-          : firebase.firestore.FieldValue.arrayUnion(forumId),
-      });
+    .firestore()
+    .collection("users")
+    .doc(uid)
+    .update({
+      "notifications.forums": notificationsOn
+        ? firebase.firestore.FieldValue.arrayRemove(forumId)
+        : firebase.firestore.FieldValue.arrayUnion(forumId),
+    });
 }
 
-export async function updateThreadNotifications(uid, threadId, notificationsOn) {
+export async function updateThreadNotifications(
+  uid,
+  threadId,
+  notificationsOn
+) {
   firebase
-      .firestore()
-      .collection('users')
-      .doc(uid)
-      .update({
-        "notifications.threads": notificationsOn
-          ? firebase.firestore.FieldValue.arrayRemove(threadId)
-          : firebase.firestore.FieldValue.arrayUnion(threadId),
-      });
+    .firestore()
+    .collection("users")
+    .doc(uid)
+    .update({
+      "notifications.threads": notificationsOn
+        ? firebase.firestore.FieldValue.arrayRemove(threadId)
+        : firebase.firestore.FieldValue.arrayUnion(threadId),
+    });
 }
 
 export function getUsers(uids, context) {
   if (uids && uids.length > 0) {
     const foundUsers = {};
     const usersToFetch = [];
-    uids.forEach(uid => {
+    uids.forEach((uid) => {
       if (context.usersByUid[uid]) {
         foundUsers[uid] = context.usersByUid[uid];
       } else {
@@ -326,20 +326,20 @@ export function getUsers(uids, context) {
     if (usersToFetch.length > 0) {
       const trace = firebase.performance().trace("getUsersFromFirestore");
       trace.start();
-      let fetchPromises = usersToFetch.map(uid => {
+      let fetchPromises = usersToFetch.map((uid) => {
         return getDoc(`usersPublic/${uid}`);
       });
       return Promise.all(fetchPromises)
-        .then(results => {
+        .then((results) => {
           trace.stop();
           let newUsers = {};
-          results.forEach(user => {
+          results.forEach((user) => {
             foundUsers[user.id] = newUsers[user.id] = user;
           });
           context.mergeUsers(newUsers);
           return foundUsers;
         })
-        .catch(e => {
+        .catch((e) => {
           console.error(e);
           trace.stop();
           return Promise.resolve({});
@@ -359,9 +359,9 @@ export function getAllInvites() {
   return db
     .collection("invites")
     .get()
-    .then(querySnapshot => {
+    .then((querySnapshot) => {
       const invites = [];
-      querySnapshot.forEach(doc =>
+      querySnapshot.forEach((doc) =>
         invites.push(Object.assign(doc.data(), { id: doc.id }))
       );
       return invites;
@@ -374,9 +374,9 @@ export function getAllInvitesFor(uid) {
     .collection("invites")
     .where("createdByUid", "==", uid)
     .get()
-    .then(querySnapshot => {
+    .then((querySnapshot) => {
       const invites = [];
-      querySnapshot.forEach(doc =>
+      querySnapshot.forEach((doc) =>
         invites.push(Object.assign(doc.data(), { id: doc.id }))
       );
       return invites;
@@ -391,9 +391,9 @@ export function generateInviteCode(createdByName, createdByUid) {
       wasUsed: false,
       createdAt: Date.now(),
       createdByName: createdByName,
-      createdByUid: createdByUid
+      createdByUid: createdByUid,
     })
-    .then(docRef => {
+    .then((docRef) => {
       return docRef.id;
     });
 }
@@ -405,6 +405,6 @@ export function submitInviteCode(code, user, shouldCreate = false) {
   return processInviteCode({
     user: shouldCreate ? user : pick(user, ["uid", "displayName", "email"]),
     code,
-    shouldCreate
+    shouldCreate,
   });
 }

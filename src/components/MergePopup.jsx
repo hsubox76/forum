@@ -1,5 +1,4 @@
 import React, { useRef } from "react";
-import "../styles/Dialog.css";
 import { useSubscribeToCollection } from "../utils/hooks";
 import { format } from "date-fns";
 import { COMPACT_DATE_FORMAT } from "../utils/constants";
@@ -9,14 +8,14 @@ export default function MergePopup({
   threadId,
   okText = "ok",
   cancelText = "cancel",
-  okClass = "edit",
+  okClass = "danger",
   onClose = () => {},
   onOk = () => {},
-  onCancel = () => {}
+  onCancel = () => {},
 }) {
   const threads = useSubscribeToCollection(`forums/${forumId}/threads`, [
     { orderBy: ["priority", "desc"] },
-    { orderBy: ["updatedTime", "desc"] }
+    { orderBy: ["updatedTime", "desc"] },
   ]);
 
   const selectRef = useRef();
@@ -32,10 +31,10 @@ export default function MergePopup({
   }
 
   const selectBox = threads && (
-    <select name="thread-select" ref={selectRef}>
+    <select className="mx-1 p-1 border-2 border-main rounded" ref={selectRef}>
       {threads
-        .filter(thread => thread.id !== threadId)
-        .map(thread => (
+        .filter((thread) => thread.id !== threadId)
+        .map((thread) => (
           <option key={thread.id} value={thread.id}>
             {thread.title} ({thread.postCount} posts) (updated{" "}
             {format(thread.updatedTime, COMPACT_DATE_FORMAT)})
@@ -46,18 +45,18 @@ export default function MergePopup({
 
   return (
     <div className="dialog-container">
-      <div className="dialog-box merge-popup">
-        <div>
-          <label className="top" htmlFor="thread-select">
+      <div className="bg-white border-2 border-main rounded p-4">
+        <div className="my-4">
+          <label className="text-lg" htmlFor="thread-select">
             Merge this thread with:
           </label>
           {selectBox}
         </div>
-        <div className="dialog-buttons">
-          <button className="button-cancel" onClick={handleCancelClick}>
+        <div className="flex space-x-2">
+          <button className="btn btn-neutral" onClick={handleCancelClick}>
             {cancelText}
           </button>
-          <button className={"button-" + okClass} onClick={handleOkClick}>
+          <button className={"btn btn-" + okClass} onClick={handleOkClick}>
             {okText}
           </button>
         </div>

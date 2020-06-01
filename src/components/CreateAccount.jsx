@@ -4,7 +4,6 @@ import { navigate } from "@reach/router";
 import firebase from "firebase/app";
 import "firebase/auth";
 import get from "lodash/get";
-import "../styles/CreateAccount.css";
 
 function CreateAccount(props) {
   const codeRef = useRef();
@@ -40,11 +39,11 @@ function CreateAccount(props) {
     const userData = {
       email,
       displayName: get(displayNameRef, "current.value"),
-      password
+      password,
     };
     setSending(true);
     submitInviteCode(get(codeRef, "current.value"), userData, true)
-      .then(result => {
+      .then((result) => {
         if (get(result, "data.error")) {
           throw new Error(result.data.error);
         } else {
@@ -54,7 +53,7 @@ function CreateAccount(props) {
             .then(() => navigate("/"));
         }
       })
-      .catch(e => setErrorMessage(e.message))
+      .catch((e) => setErrorMessage(e.message))
       .finally(() => setSending(false));
   }
 
@@ -96,9 +95,9 @@ function CreateAccount(props) {
           <label>code</label>
           <input ref={codeRef} defaultValue={props.code || ""} />
         </div>
-          <button disabled={sending} className="btn btn-ok my-2">
-            create my account
-          </button>
+        <button disabled={sending} className="btn btn-ok my-2">
+          create my account
+        </button>
         {sending && <div className="loader" />}
       </form>
       {window.location.hostname === "localhost" && (

@@ -9,22 +9,22 @@ class Invite extends Component {
     this.state = {
       code: null,
       inviteError: null,
-      invites: null
+      invites: null,
     };
   }
   componentDidMount = () => {
-    getAllInvitesFor(this.props.user.uid).then(invites =>
+    getAllInvitesFor(this.props.user.uid).then((invites) =>
       this.setState({ invites })
     );
   };
-  onGenerateCode = e => {
+  onGenerateCode = (e) => {
     e.preventDefault();
     const createdByName = `${this.props.user.displayName} (${this.props.user.email})`;
-    generateInviteCode(createdByName, this.props.user.uid).then(code => {
+    generateInviteCode(createdByName, this.props.user.uid).then((code) => {
       this.setState({ code });
-      getAllInvitesFor(this.props.user.uid).then(invites =>
+      getAllInvitesFor(this.props.user.uid).then((invites) =>
         this.setState({
-          invites: invites.sort((a, b) => (a.usedAt || 0) > (b.usedAt || 0))
+          invites: invites.sort((a, b) => (a.usedAt || 0) > (b.usedAt || 0)),
         })
       );
     });
@@ -37,8 +37,10 @@ class Invite extends Component {
         </div>
       );
     }
-    const usedInvites = this.state.invites.filter(invite => invite.wasUsed);
-    const unusedInvites = this.state.invites.filter(invite => !invite.wasUsed);
+    const usedInvites = this.state.invites.filter((invite) => invite.wasUsed);
+    const unusedInvites = this.state.invites.filter(
+      (invite) => !invite.wasUsed
+    );
     const unusedInvitesTable = unusedInvites.length > 0 && (
       <table>
         <thead>
@@ -49,13 +51,13 @@ class Invite extends Component {
           </tr>
         </thead>
         <tbody>
-          {unusedInvites.map(invite => (
+          {unusedInvites.map((invite) => (
             <tr key={invite.id}>
               <td>{invite.id}</td>
               <td>
                 <input
-                  onClick={e => e.target.select()}
-                  onChange={e => e.preventDefault()}
+                  onClick={(e) => e.target.select()}
+                  onChange={(e) => e.preventDefault()}
                   value={`https://${window.location.host}/code/${invite.id}`}
                   className="invite-code"
                 />
@@ -80,7 +82,7 @@ class Invite extends Component {
           </tr>
         </thead>
         <tbody>
-          {usedInvites.map(invite => (
+          {usedInvites.map((invite) => (
             <tr key={invite.id}>
               <td>{invite.id}</td>
               <td>{invite.usedBy}</td>
@@ -99,12 +101,15 @@ class Invite extends Component {
     );
     return (
       <div className="container mx-auto">
-        <form className="flex flex-col items-start p-2 border border-neutral rounded my-2" onSubmit={this.onGenerateCode}>
+        <form
+          className="flex flex-col items-start p-2 border border-neutral rounded my-2"
+          onSubmit={this.onGenerateCode}
+        >
           <button className="btn btn-ok">generate invite code</button>
           {this.state.code && (
             <input
-              onClick={e => e.target.select()}
-              onChange={e => e.preventDefault()}
+              onClick={(e) => e.target.select()}
+              onChange={(e) => e.preventDefault()}
               value={`https://${window.location.host}/code/${this.state.code}`}
               className="invite-code"
             />

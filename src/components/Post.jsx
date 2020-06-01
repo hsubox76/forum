@@ -9,14 +9,14 @@ import UserContext from "./UserContext";
 import {
   LOADING_STATUS,
   STANDARD_DATE_FORMAT,
-  reactions
+  reactions,
 } from "../utils/constants";
 import {
   deleteDoc,
   updatePost,
   getClaims,
   updateReadStatus,
-  updatePostCount
+  updatePostCount,
 } from "../utils/dbhelpers";
 import ReactionButton from "./ReactionButton";
 
@@ -75,15 +75,15 @@ function Post(props) {
       .then(() => {
         console.log(`Successfully deleted post ${props.postId}`);
       })
-      .catch(e => setStatus(LOADING_STATUS.PERMISSIONS_ERROR));
+      .catch((e) => setStatus(LOADING_STATUS.PERMISSIONS_ERROR));
   }
 
   function handleDeletePost() {
     props.setDialog({
       message: "Sure you want to delete this post?",
       okText: "delete",
-      okClass: "delete",
-      onOk: deletePost
+      okClass: "danger",
+      onOk: deletePost,
     });
   }
 
@@ -152,14 +152,14 @@ function Post(props) {
   }
   let currentReaction = null;
   if (post.reactions) {
-    currentReaction = findKey(post.reactions, uids =>
+    currentReaction = findKey(post.reactions, (uids) =>
       uids.includes(props.user.uid)
     );
   }
   const footer = (
     <div className="flex justify-between">
-      <div className="flex">
-        {reactions.map(reaction => (
+      <div className="flex space-x-1">
+        {reactions.map((reaction) => (
           <ReactionButton
             key={post.postId + "_" + reaction.faName}
             currentReaction={currentReaction}
@@ -169,7 +169,7 @@ function Post(props) {
           />
         ))}
       </div>
-      <div>{renderAdminButtons()}</div>
+      <div className="space-x-2">{renderAdminButtons()}</div>
     </div>
   );
   const classes = ["px-2 py-1 border-main border rounded my-2"];

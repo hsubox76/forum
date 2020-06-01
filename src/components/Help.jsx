@@ -46,13 +46,21 @@ const Help = () => (
     </div>
     <div className="help-row">
       <div className="label">link</div>
-      <div className="example"><span className="underline text-highlight">check this out</span></div>
+      <div className="example">
+        <span className="underline text-highlight">check this out</span>
+      </div>
       <div className="text">[url="http://website.com"]check this out[/url]</div>
     </div>
     <div className="help-row">
       <div className="label">plain url</div>
-      <div className="example"><span className="underline text-highlight">http://www.whatever.com</span></div>
-      <div className="text">paste any url and it will be clickable (not a tag)</div>
+      <div className="example">
+        <span className="underline text-highlight">
+          http://www.whatever.com
+        </span>
+      </div>
+      <div className="text">
+        paste any url and it will be clickable (not a tag)
+      </div>
     </div>
   </div>
 );

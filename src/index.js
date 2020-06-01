@@ -1,7 +1,5 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import "./styles/main.css";
-import App from "./components/App";
 // import SiteDown from './components/SiteDown';
 import firebase from "firebase/app";
 import "firebase/performance";
@@ -17,6 +15,11 @@ import {
   faThumbsUp,
   faThumbsDown,
 } from "@fortawesome/free-solid-svg-icons";
+
+import "./styles/index.generated.css";
+import "./styles/loaders.css";
+
+import App from "./components/App";
 
 library.add(faThumbtack);
 library.add(faComment);

@@ -54,7 +54,7 @@ function ForumList(props) {
 
   return (
     <div className="container mx-auto w-4/5">
-      <div className="list-head">All Forums</div>
+      <h1>All Forums</h1>
       {forumList
         .filter(
           (forum) =>
@@ -75,18 +75,18 @@ function ForumList(props) {
               key={forum.id}
               className={classes.join(" ")}
             >
-              <div className="text-xl font-medium">
+              <div className="text-xl font-medium space-x-2">
                 {isUnread && (
-                  <FontAwesomeIcon
-                    className="icon icon-comment"
-                    icon="comment"
-                  />
+                  <FontAwesomeIcon className="text-main" icon="comment" />
                 )}
                 <span className="title-text">{forum.name}</span>
               </div>
               <div className="flex space-x-1">
                 <span>last updated by</span>
-                <span className="font-semibold text-ok hover:text-highlight truncate" style={{ maxWidth: 100 }}>
+                <span
+                  className="font-semibold text-ok hover:text-highlight truncate"
+                  style={{ maxWidth: 100 }}
+                >
                   <UserData user={userMap[forum.updatedBy]} />
                 </span>
                 {!isMobile && <span>at</span>}

@@ -24,7 +24,7 @@ function Profile(props) {
       setProfileChangeState("sending");
       await props.user.updateProfile({
         displayName: displayNameRef.current.value,
-      });     
+      });
       setProfileChangeState("sent");
     } else {
       setProfileChangeState("nochanges");
@@ -93,7 +93,10 @@ function Profile(props) {
 
   let passwordResetEl = (
     <div>
-      <span className="text-main underline text-lg" onClick={handleResetPassword}>
+      <span
+        className="text-main underline text-lg"
+        onClick={handleResetPassword}
+      >
         Reset password
       </span>
     </div>
@@ -103,7 +106,10 @@ function Profile(props) {
       <div>
         <div>Password reset link sent to {props.user.email}.</div>
         <div>
-          <span className="text-main underline text-lg" onClick={handleResetPassword}>
+          <span
+            className="text-main underline text-lg"
+            onClick={handleResetPassword}
+          >
             Send again
           </span>
         </div>
@@ -116,7 +122,9 @@ function Profile(props) {
     <form className="container">
       <h1 className="text-main text-2xl">Your Profile</h1>
       <div className="border-t border-main py-2 flex flex-col items-start">
-        <label className="text-lg text-main" htmlFor="displayName">Change display name:</label>
+        <label className="text-lg text-main" htmlFor="displayName">
+          Change display name:
+        </label>
         <div className="flex">
           <input
             ref={displayNameRef}

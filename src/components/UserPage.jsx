@@ -8,11 +8,11 @@ function UserPage(props) {
   useEffect(() => {
     if (user || context.usersByUid[props.userId]) {
       if (!user) {
-        setUser(context.usersByUid[props.userId])
+        setUser(context.usersByUid[props.userId]);
       }
       return;
-    };
-    getUser(props.userId, context, true).then(userData => setUser(userData));
+    }
+    getUser(props.userId, context, true).then((userData) => setUser(userData));
   }, [props.userId, context, user]);
 
   if (!user) {
@@ -23,18 +23,14 @@ function UserPage(props) {
     );
   }
   const bio = user.bio ? (
-    user.bio.split("\n").map(line => <div className="text-line">{line}</div>)
+    user.bio.split("\n").map((line) => <div className="text-line">{line}</div>)
   ) : (
     <div className="text-line">This user has not created a bio yet.</div>
   );
   return (
     <div className="profile-container">
       <div className="flex items-end my-2">
-        <img
-          className="w-24 h-24"
-          alt="User's Avatar"
-          src={user.photoURL}
-        />
+        <img className="w-24 h-24" alt="User's Avatar" src={user.photoURL} />
         <div className="ml-2">
           <div className="text-xl text-main">{user.displayName}</div>
           {user.mod && <div className="text-lg">moderator</div>}

@@ -13,7 +13,7 @@ const TAG_TYPES = {
   b: { className: "bold" },
   i: { className: "italic" },
   quote: { className: "quote" },
-  normal: { className: "normal" }
+  normal: { className: "normal" },
 };
 
 function linkifyAndLineBreak(text, tokenIndex, classes, currentUrl) {
@@ -30,7 +30,7 @@ function linkifyAndLineBreak(text, tokenIndex, classes, currentUrl) {
         contentEls.push(<span key={`${tokenIndex}-${lineIndex}`}>{line}</span>);
       } else {
         const options = {
-          className: "text-highlight underline"
+          className: "text-highlight underline",
         };
         const linkifiedLine = (
           <Linkify
@@ -77,7 +77,7 @@ function extractTag(tag) {
 function getTagAttrs(tagString) {
   const tagParts = trim(tagString, "[]").split(" ");
   const tagAttrs = {};
-  tagParts.forEach(part => {
+  tagParts.forEach((part) => {
     if (part.includes("=")) {
       const pair = part.split(/=(.+)/, 2);
       tagAttrs[pair[0]] = trim(pair[1], '"');
@@ -86,7 +86,7 @@ function getTagAttrs(tagString) {
   return tagAttrs;
 }
 
-const TextContent = props => {
+const TextContent = (props) => {
   const context = useContext(UserContext);
 
   if (!props.content || typeof props.content !== "string") {
@@ -99,7 +99,7 @@ const TextContent = props => {
     level: 0,
     tagType: null,
     children: [],
-    parent: null
+    parent: null,
   };
   let currentNode = root;
   const tagLevels = Object.keys(TAG_TYPES).reduce((obj, tagType) => {
@@ -111,7 +111,7 @@ const TextContent = props => {
     b: false,
     i: false,
     spoiler: false,
-    currentUrl: null
+    currentUrl: null,
   };
   let currentUrl = null;
 
@@ -135,7 +135,7 @@ const TextContent = props => {
           children: [],
           parent: currentNode,
           ...tagStates,
-          tagAttrs
+          tagAttrs,
         };
         currentNode.children.push(newNode);
         currentNode = newNode;
@@ -172,7 +172,7 @@ const TextContent = props => {
         level: tagLevels[tagType],
         text: token,
         ...tagStates,
-        currentUrl
+        currentUrl,
       });
     }
   }
@@ -216,7 +216,9 @@ const TextContent = props => {
     return (
       <div key={node.level + "-" + k++} className={classes.join(" ")}>
         {node.tagType === "quote" && (
-          <div className="font-medium text-sm bg-gray-300 p-1 mb-1">{quoteAuthor} said:</div>
+          <div className="font-medium text-sm bg-gray-300 p-1 mb-1">
+            {quoteAuthor} said:
+          </div>
         )}
         {node.children.map((child, childIndex) => {
           if (child.tagType === "text") {
@@ -236,7 +238,7 @@ const TextContent = props => {
             }
             const props = {
               key: node.level + "-" + k + "-" + childIndex,
-              className: classes.join(" ")
+              className: classes.join(" "),
             };
             if (child.currentUrl) {
               elementType = "a";

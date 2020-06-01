@@ -13,15 +13,15 @@ import {
   getClaims,
   getUsers,
   addDoc,
-  updateThreadNotifications
+  updateThreadNotifications,
 } from "../utils/dbhelpers";
 import { getParams, getPostRange } from "../utils/utils";
 import {
   useSubscribeToDocumentPath,
-  useSubscribeToCollection
+  useSubscribeToCollection,
 } from "../utils/hooks";
 import UserContext from "./UserContext";
-import PaginationControl from './pagination-control';
+import PaginationControl from "./pagination-control";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSquare, faCheckSquare } from "@fortawesome/free-regular-svg-icons";
 
@@ -51,12 +51,12 @@ function PostList(props) {
   }
 
   useEffect(() => {
-    getClaims().then(claims => setClaims(claims));
+    getClaims().then((claims) => setClaims(claims));
   }, [props.user]);
 
   useEffect(() => {
     if (posts) {
-      let uids = posts.map(post => {
+      let uids = posts.map((post) => {
         let uids = [post.uid, post.updatedBy];
         if (post.reactions) {
           const reactionIds = Object.values(post.reactions);
@@ -65,9 +65,9 @@ function PostList(props) {
         return uids;
       });
       uids = uniq(flatten(uids))
-        .filter(uid => uid)
+        .filter((uid) => uid)
         .sort();
-      getUsers(uids, context).then(users => setUserMap(users));
+      getUsers(uids, context).then((users) => setUserMap(users));
     }
   }, [posts, context]);
 
@@ -76,8 +76,8 @@ function PostList(props) {
       type: "dialog",
       message: "Sure you want to delete thread: " + thread.title + "?",
       okText: "delete",
-      okClass: "delete",
-      onOk: deleteThread
+      okClass: "danger",
+      onOk: deleteThread,
     });
   }
 
@@ -86,7 +86,7 @@ function PostList(props) {
       type: "merge",
       forumId: props.forumId,
       threadId: props.threadId,
-      onOk: mergeThread
+      onOk: mergeThread,
     });
   }
 
@@ -116,10 +116,10 @@ function PostList(props) {
   function handleSubmitTitle() {
     if (titleRef.current.value === thread.title) return;
     updateDoc(`forums/${props.forumId}/threads/${props.threadId}`, {
-      title: titleRef.current.value
+      title: titleRef.current.value,
     })
       .then(() => setThreadTitleEditing(false))
-      .catch(e => console.error(e));
+      .catch((e) => console.error(e));
   }
 
   function handleToggleEditPost(postId) {
@@ -146,20 +146,20 @@ function PostList(props) {
       .then(() => {
         setStatus(LOADING_STATUS.DELETED);
       })
-      .catch(e => setStatus(LOADING_STATUS.PERMISSIONS_ERROR));
+      .catch((e) => setStatus(LOADING_STATUS.PERMISSIONS_ERROR));
   }
 
   function mergeThread(threadToMerge) {
     // setStatus(LOADING_STATUS.LOADING);
     getCollection(`forums/${props.forumId}/threads/${threadToMerge}/posts`)
-      .then(listSnap => {
+      .then((listSnap) => {
         let newPosts = [];
         let mergedPosts = [];
-        listSnap.forEach(postSnap =>
+        listSnap.forEach((postSnap) =>
           newPosts.push(Object.assign(postSnap.data(), { id: postSnap.id }))
         );
         mergedPosts = newPosts
-          .concat(posts.map(post => Object.assign(post)))
+          .concat(posts.map((post) => Object.assign(post)))
           .sort((a, b) => {
             if (a.createdTime < b.createdTime) {
               return -1;
@@ -169,7 +169,7 @@ function PostList(props) {
             return 0;
           });
         // add second thread's posts to this thread
-        const postAddPromises = newPosts.map(post => {
+        const postAddPromises = newPosts.map((post) => {
           if (!post.updatedByUser) {
             post.updatedByUser = post.uid;
           }
@@ -181,11 +181,11 @@ function PostList(props) {
         return Promise.all(postAddPromises).then(() => ({
           postCount: posts.length + newPosts.length,
           createdTime: mergedPosts[0].createdTime,
-          createdBy: mergedPosts[0].uid
+          createdBy: mergedPosts[0].uid,
         }));
       })
       // update thread's post count
-      .then(postUpdates => {
+      .then((postUpdates) => {
         updateDoc(
           `forums/${props.forumId}/threads/${props.threadId}`,
           postUpdates
@@ -207,7 +207,7 @@ function PostList(props) {
       .then(() => {
         setStatus(LOADING_STATUS.LOADED);
       })
-      .catch(e => {
+      .catch((e) => {
         console.error(e);
         setStatus(LOADING_STATUS.LOADED);
       });
@@ -268,20 +268,21 @@ function PostList(props) {
           createdByUser: userMap[post.uid],
           updatedByUser: post.updatedBy
             ? userMap[post.updatedBy]
-            : userMap[post.uid]
+            : userMap[post.uid],
         })
       )
     : [];
   //TODO: should be able to pass postdata straight to post and not have to reload it
 
-  const paginationBox = 
-  <PaginationControl
-    linkRoot={`/forum/${props.forumId}/thread/${props.threadId}`}
-    type="post"
-    numPages={numPages}
-    itemsPerPage={postsPerPage}
-    page={page}
-  />
+  const paginationBox = (
+    <PaginationControl
+      linkRoot={`/forum/${props.forumId}/thread/${props.threadId}`}
+      type="post"
+      numPages={numPages}
+      itemsPerPage={postsPerPage}
+      page={page}
+    />
+  );
 
   function toggleNotifications() {
     if (!props.userSettings) return;
@@ -312,21 +313,15 @@ function PostList(props) {
   return (
     <div className="container w-4/5 mx-auto">
       <div className="flex justify-between items-center">
-        <div className="list-head">
-            <Link to="/">
-              Home
-            </Link>
-            <span className="mx-2">&gt;</span>
-            <Link to={`/forum/${props.forumId}`}>
-              {forum && forum.name}
-            </Link>
-            <span className="mx-2">&gt;</span>
-          <div className="font-normal">
-            {threadTitle}
-          </div>
-        </div>
+        <h1>
+          <Link to="/">Home</Link>
+          <span className="mx-2">&gt;</span>
+          <Link to={`/forum/${props.forumId}`}>{forum && forum.name}</Link>
+          <span className="mx-2">&gt;</span>
+          <span className="font-normal">{threadTitle}</span>
+        </h1>
         {(claims.admin || claims.mod) && !threadTitleEditing && (
-          <div className="thread-buttons">
+          <div className="flex space-x-2">
             <button className="btn btn-neutral" onClick={handleMergeThread}>
               merge
             </button>
@@ -353,7 +348,7 @@ function PostList(props) {
       {paginationBox}
       {!posts && "loading"}
       {postList &&
-        postList.map(post => (
+        postList.map((post) => (
           <Post
             key={post.id}
             postId={post.id}
@@ -377,7 +372,9 @@ function PostList(props) {
         onSubmit={handleSubmitPost}
       >
         <div className="flex flex-col my-1">
-          <label className="list-head" htmlFor="postContent">Add a post</label>
+          <h1>
+            <label htmlFor="postContent">Add a post</label>
+          </h1>
           <textarea
             ref={contentRef}
             id="postContent"

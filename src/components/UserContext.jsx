@@ -2,7 +2,7 @@ import React from "react";
 
 const UserContext = React.createContext({
   usersByUid: {},
-  addUserByUid: () => {}
+  addUserByUid: () => {},
 });
 
 export default UserContext;

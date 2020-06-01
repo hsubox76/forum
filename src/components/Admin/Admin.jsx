@@ -8,12 +8,14 @@ function Admin() {
   const [userIsAdmin, setUserIsAdmin] = useState(false);
 
   useEffect(() => {
-    getClaims().then(claims => setUserIsAdmin(claims.admin));
+    getClaims().then((claims) => setUserIsAdmin(claims.admin));
   }, []);
 
   if (!userIsAdmin) {
     return (
-      <div className="container mx-auto">Sorry! You don't have permissions!</div>
+      <div className="container mx-auto">
+        Sorry! You don't have permissions!
+      </div>
     );
   }
 

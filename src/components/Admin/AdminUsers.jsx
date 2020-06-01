@@ -7,7 +7,7 @@ import {
   toggleBan,
   toggleMod,
   toggleVal,
-  migrateToTree
+  migrateToTree,
 } from "../../utils/dbhelpers";
 import repeat from "lodash/repeat";
 import sortBy from "lodash/sortBy";
@@ -20,15 +20,17 @@ function AdminUsers(props) {
   const [showEmails, setShowEmails] = useState(false);
 
   useEffect(() => {
-    getAllUsers(true).then(users => sortUsers(sortField, sortDirection, users));
+    getAllUsers(true).then((users) =>
+      sortUsers(sortField, sortDirection, users)
+    );
   }, [sortField, sortDirection]);
 
   function onBanClick(uid, isBanned) {
     setPageDisabled(true);
     toggleBan(uid, !isBanned)
       .then(() => getAllUsers(true))
-      .then(users => sortUsers(sortField, sortDirection, users))
-      .catch(e => console.error(e))
+      .then((users) => sortUsers(sortField, sortDirection, users))
+      .catch((e) => console.error(e))
       .finally(() => setPageDisabled(false));
   }
 
@@ -36,8 +38,8 @@ function AdminUsers(props) {
     setPageDisabled(true);
     toggleMod(uid, !isMod)
       .then(() => getAllUsers(true))
-      .then(users => sortUsers(sortField, sortDirection, users))
-      .catch(e => console.error(e))
+      .then((users) => sortUsers(sortField, sortDirection, users))
+      .catch((e) => console.error(e))
       .finally(() => setPageDisabled(false));
   }
 
@@ -45,8 +47,8 @@ function AdminUsers(props) {
     setPageDisabled(true);
     toggleVal(uid, shouldVal)
       .then(() => getAllUsers(true))
-      .then(users => sortUsers(sortField, sortDirection, users))
-      .catch(e => console.error(e))
+      .then((users) => sortUsers(sortField, sortDirection, users))
+      .catch((e) => console.error(e))
       .finally(() => setPageDisabled(false));
   }
 
@@ -92,8 +94,8 @@ function AdminUsers(props) {
   console.log(
     "Moderator list: ",
     users
-      .filter(user => user.customClaims.mod)
-      .map(user => user.displayName)
+      .filter((user) => user.customClaims.mod)
+      .map((user) => user.displayName)
       .join(", ")
   );
 
@@ -144,7 +146,7 @@ function AdminUsers(props) {
           </tr>
         </thead>
         <tbody>
-          {users.map(user => {
+          {users.map((user) => {
             const isAdmin = user.customClaims.admin;
             const isMod = user.customClaims.mod;
             const isBanned = user.disabled;

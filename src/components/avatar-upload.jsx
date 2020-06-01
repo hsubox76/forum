@@ -1,7 +1,11 @@
-import React, {useState, useRef} from 'react';
-import firebase from 'firebase/app';
+import React, { useState, useRef } from "react";
+import firebase from "firebase/app";
 
-export default function AvatarUpload({user, profileChangeState, setProfileChangeState }) {
+export default function AvatarUpload({
+  user,
+  profileChangeState,
+  setProfileChangeState,
+}) {
   const [avatarError, setAvatarError] = useState(null);
   const [avatarBlocking, setAvatarBlocking] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(false);
@@ -20,7 +24,7 @@ export default function AvatarUpload({user, profileChangeState, setProfileChange
         setProfileChangeState("sent");
         setPreviewUrl(null);
         setFileToUpload(null);
-      } catch(e) {
+      } catch (e) {
         setAvatarError(e);
       }
     } else {
@@ -77,11 +81,7 @@ export default function AvatarUpload({user, profileChangeState, setProfileChange
     <div className="border-t border-main py-2 flex flex-col items-start">
       <label className="text-main text-lg">Current avatar:</label>
       {user.photoURL ? (
-        <img
-          className="w-32 h-32"
-          alt="User's Avatar"
-          src={user.photoURL}
-        />
+        <img className="w-32 h-32" alt="User's Avatar" src={user.photoURL} />
       ) : (
         "none"
       )}
@@ -118,5 +118,6 @@ export default function AvatarUpload({user, profileChangeState, setProfileChange
           <input ref={fileInputRef} type="file" onChange={onAvatarSelect} />
         </div>
       )}
-    </div>);
+    </div>
+  );
 }

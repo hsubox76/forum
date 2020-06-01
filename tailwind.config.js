@@ -8,7 +8,9 @@ const colors = {
   text: "#555"
 }
 module.exports = {
-  purge: [],
+  purge: [
+    './src/**/*.jsx'
+  ],
   theme: {
     fontFamily: {
       sans: ['Roboto', 'sans-serif']

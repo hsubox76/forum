@@ -7,7 +7,7 @@ function AdminInvites(props) {
   const [invites, setInvites] = useState([]);
 
   useEffect(() => {
-    getAllInvites().then(invites => setInvites(invites));
+    getAllInvites().then((invites) => setInvites(invites));
   }, []);
 
   return (
@@ -22,7 +22,7 @@ function AdminInvites(props) {
         </tr>
       </thead>
       <tbody>
-        {invites.map(invite => (
+        {invites.map((invite) => (
           <tr key={invite.id}>
             <td>{invite.id}</td>
             <td>{invite.wasUsed ? "yes" : "no"}</td>

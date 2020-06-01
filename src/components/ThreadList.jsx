@@ -11,7 +11,12 @@ import {
   THREADS_PER_PAGE,
 } from "../utils/constants";
 import UserData from "./UserData";
-import { addDoc, updateDoc, getUsers, updateForumNotifications } from "../utils/dbhelpers";
+import {
+  addDoc,
+  updateDoc,
+  getUsers,
+  updateForumNotifications,
+} from "../utils/dbhelpers";
 import {
   useSubscribeToCollection,
   useSubscribeToDocumentPath,
@@ -137,13 +142,13 @@ function ThreadList(props) {
 
   return (
     <div className="container w-4/5 mx-auto">
-      <div className="list-head">
+      <h1>
         <div className="flex space-x-2">
           <Link to="/">Home</Link>
           <span>&gt;</span>
           <span className="font-normal">{(forum && forum.name) || ""}</span>
         </div>
-      </div>
+      </h1>
       <div className="my-2 flex space-x-2 items-center text-lg border-2 border-ok px-2 rounded">
         <button onClick={toggleNotifications}>
           {props.userSettings &&
@@ -185,9 +190,11 @@ function ThreadList(props) {
             <div>
               <div className="flex items-center space-x-1">
                 {thread.priority > 0 && (
-                  <FontAwesomeIcon className="icon" icon="thumbtack" />
+                  <FontAwesomeIcon className="text-main" icon="thumbtack" />
                 )}
-                {isUnread && <FontAwesomeIcon icon="comment" />}
+                {isUnread && (
+                  <FontAwesomeIcon className="text-main" icon="comment" />
+                )}
                 <Link to={link} className="text-main font-medium">
                   {thread.title}
                 </Link>
@@ -235,7 +242,7 @@ function ThreadList(props) {
         className="container mt-4 border-t-2 border-main"
         onSubmit={handleSubmitThread}
       >
-        <div className="list-head">Start a new thread:</div>
+        <h1>Start a new thread:</h1>
         <div className="flex flex-col my-1">
           <label htmlFor="threadTitle">Thread title</label>
           <input

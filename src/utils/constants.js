@@ -11,7 +11,7 @@ export const LOADING_STATUS = {
   DELETED: "deleted",
   EDITING: "editing",
   SUBMITTING: "submitting",
-  PERMISSIONS_ERROR: "permissions-error"
+  PERMISSIONS_ERROR: "permissions-error",
 };
 
 export const reactions = [
@@ -21,11 +21,11 @@ export const reactions = [
   { faName: "sad-tear", desc: "sad" },
   { faName: "heart", desc: "love" },
   { faName: "thumbs-up", desc: "thumbs up" },
-  { faName: "thumbs-down", desc: "thumbs down" }
+  { faName: "thumbs-down", desc: "thumbs down" },
 ];
 
 export const ROLE_PROP = {
   admins: "isAdmin",
   moderators: "isMod",
-  bannedUsers: "isBanned"
+  bannedUsers: "isBanned",
 };

@@ -121,7 +121,7 @@ const App = () => {
 
   if (user === "unknown" || (user && !claims)) {
     return (
-      <div className="loading-page">
+      <div className="page-center">
         <div className="loader loader-big" />
       </div>
     );
@@ -137,19 +137,22 @@ const App = () => {
       </Router>
     );
   } else if (claims && claims.banned) {
-    return <div className="loading-page">this user has been banned</div>;
+    return <div className="page-center">this user has been banned</div>;
   } else if (claims && !claims.validated) {
     return (
-      <div className="App">
-        <form className="invite-code-container" onSubmit={handleCodeSubmit}>
-          <label>enter code</label>
-          <input className="invite-input" ref={inviteCodeRef} />
-          {inviteStatus.processingCode ? (
+      <div className="container mx-auto">
+        <form
+          className="flex flex-col space-y-2 mx-auto w-4/5 my-4 items-start"
+          onSubmit={handleCodeSubmit}
+        >
+          <label className="text-lg">enter invite code</label>
+          <input className="p-1 self-stretch" ref={inviteCodeRef} />
+          {inviteStatus && inviteStatus.processingCode ? (
             <div className="loader" />
           ) : (
-            <button className="button-edit">ok</button>
+            <button className="btn btn-ok">ok</button>
           )}
-          {inviteStatus.inviteError && (
+          {inviteStatus && inviteStatus.inviteError && (
             <div className="invite-error">{inviteStatus.inviteError}</div>
           )}
         </form>

@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import UserContext from "./UserContext";
 import get from "lodash/get";
 
-const ReactionButton = props => {
+const ReactionButton = (props) => {
   const context = useContext(UserContext);
   const post = props.post;
   const postPath = `forums/${props.forumId}/threads/${props.threadId}/posts/${props.postId}`;
@@ -21,24 +21,26 @@ const ReactionButton = props => {
     }
   }
   const responses = get(post, ["reactions", props.reaction.faName]) || [];
-  const classes = ["reaction-button relative rounded-full w-8 h-8 focus:outline-none"];
+  const classes = [
+    "reaction-button relative rounded-full w-8 h-8 focus:outline-none",
+  ];
   const userSelected = props.currentReaction === props.reaction.faName;
   if (responses.length) {
     classes.push("w-12");
     if (!userSelected) {
-      classes.push('bg-main');
+      classes.push("bg-main");
     } else {
-      classes.push('bg-ok');
+      classes.push("bg-ok");
     }
   } else {
-    classes.push('bg-neutral');
+    classes.push("bg-neutral");
   }
   const tooltip = (
     <div className="reaction-tooltip text-left">
       <div>{props.reaction.desc}</div>
       {responses && responses.length > 0 && (
         <div className="border-t border-light">
-          {responses.map(response => {
+          {responses.map((response) => {
             const user = get(context.usersByUid, response);
             if (user) {
               return (
