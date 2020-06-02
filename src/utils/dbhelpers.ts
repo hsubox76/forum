@@ -294,7 +294,9 @@ export async function addPost(
     updatedTime: now,
     uid: user.uid,
     unreadBy: [],
-    reactions: {}
+    reactions: {},
+    parentForum: forum.id,
+    parentThread: thread.id
   };
   await addDoc<PostWriteFirestoreData>(
     `forums/${forum.id}/threads/${thread.id}/posts`,

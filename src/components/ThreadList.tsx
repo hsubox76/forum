@@ -110,6 +110,8 @@ function ThreadList(props: ThreadListProps) {
         content: contentRef.current.value,
         createdTime: time,
         unreadBy: [],
+        parentForum: props.forumId,
+        parentThread: threadRef.id
       }
     );
     contentRef.current.value = "";
@@ -213,8 +215,8 @@ function ThreadList(props: ThreadListProps) {
         if (isUnread) {
           threadClasses.push("unread");
         }
-        const firstPageLink = (link += `?posts=${POSTS_PER_PAGE}&page=0`);
-        const lastPageLink = (link += `?posts=${POSTS_PER_PAGE}&page=last`);
+        const firstPageLink = link + `?posts=${POSTS_PER_PAGE}&page=0`;
+        const lastPageLink = link + `?posts=${POSTS_PER_PAGE}&page=last`;
         if (isUnread) {
           link = lastPageLink;
         }

@@ -38,14 +38,6 @@ const uiConfig = {
   ],
 };
 
-const logoutIfBanned = () => {
-  getIsBanned().then((isBanned) => {
-    if (isBanned) {
-      firebase.auth().signOut();
-    }
-  });
-};
-
 const App = () => {
   const [user, setUser] = useState<firebase.User | undefined | null>();
   const [claims, setClaims] = useState<Claims>();
@@ -63,9 +55,6 @@ const App = () => {
 
   // On mount
   useEffect(() => {
-    history.listen(() => {
-      logoutIfBanned();
-    });
     unregisterAuthObserver.current = firebase
       .auth()
       .onAuthStateChanged((user) => {
@@ -73,7 +62,11 @@ const App = () => {
         if (user) {
           // Force get new token (temp while modding lots of people?)
           user.getIdToken(true).then(() => {
-            logoutIfBanned();
+            getIsBanned().then((isBanned) => {
+              if (isBanned) {
+                firebase.auth().signOut();
+              }
+            });
             getClaims().then((claims) => setClaims(claims));
           });
         }
@@ -81,7 +74,6 @@ const App = () => {
     // On unmount??
     return () => {
       unregisterAuthObserver.current && unregisterAuthObserver.current();
-      window.removeEventListener("popstate", logoutIfBanned);
     };
   }, []);
 

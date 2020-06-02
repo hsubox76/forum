@@ -10,7 +10,7 @@ const {
   clearClaims,
   revokeTokens,
   sendMail
-} = require('./utils.js');
+} = require('./utils');
 
 exports.setAvatar = functions.https.onCall(async (data, context) => {
   await checkIfAdmin(context);
@@ -152,5 +152,5 @@ exports.showUsers = functions.https.onCall(async (data, context) => {
     }
     setPromises.push(firestore.collection("usersPublic").doc(user.uid).set(profileData));
   })
-  await Promise.all(setPromises);
+  return Promise.all(setPromises);
 });

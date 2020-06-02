@@ -331,8 +331,8 @@ function PostList(props: PostListProps) {
 
   return (
     <div className="container w-4/5 mx-auto">
-      <div className="flex justify-between items-center">
-        <h1>
+      <div className="flex justify-between items-center my-2">
+        <h1 className="m-0">
           <Link to="/">Home</Link>
           <span className="mx-2">&gt;</span>
           <Link to={`/forum/${props.forumId}`}>{forum && forum.name}</Link>

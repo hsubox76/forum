@@ -42,6 +42,8 @@ export interface PostWriteFirestoreData {
   createdTime: number;
   uid: string;
   unreadBy: string[];
+  parentThread: string;
+  parentForum: string;
   updatedTime?: number;
   updatedBy?: string;
   reactions?: { [key: string]: string[] };
