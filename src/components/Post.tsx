@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { Link } from "@reach/router";
 import get from "lodash/get";
 import findKey from "lodash/findKey";
 import TextContent from "./TextContent";
 import UserData from "./UserData";
-import UserContext from "./UserContext";
 import { STANDARD_DATE_FORMAT, reactions } from "../utils/constants";
 import {
   deleteDoc,
@@ -16,11 +15,9 @@ import {
 } from "../utils/dbhelpers";
 import ReactionButton from "./ReactionButton";
 import {
-  PostFirestoreData,
   LOADING_STATUS,
   DialogData,
   Claims,
-  UserPublic,
   PostDisplayData,
   ReactionType,
 } from "../utils/types";
@@ -43,7 +40,6 @@ function Post(props: PostProps) {
   const [status, setStatus] = useState<LOADING_STATUS | null>(null);
   const [claims, setClaims] = useState<Claims | null>(null);
   const [scrolledOnce, setScrolledOnce] = useState(false);
-  const context = useContext(UserContext);
   const postRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -99,6 +95,7 @@ function Post(props: PostProps) {
 
   function handleDeletePost() {
     props.setDialog({
+      type: "dialog",
       message: "Sure you want to delete this post?",
       okText: "delete",
       okClass: "danger",
@@ -243,21 +240,19 @@ function Post(props: PostProps) {
       </div>
       <div className="text-text my-3 overflow-x-auto">
         {status === LOADING_STATUS.EDITING ? (
-          <form className="edit-post-container" onSubmit={handleEditPost}>
+          <form className="w-full" onSubmit={handleEditPost}>
             <textarea
               ref={contentRef}
-              className="content-input"
+              className="w-full p-2"
               defaultValue={post.content}
             />
           </form>
         ) : (
-          <TextContent
-            content={post.content}
-          />
+          <TextContent content={post.content} />
         )}
       </div>
-      {post.updatedTime && (
-        <div className="flex space-x-1 text-sm">
+      {post.updatedTime && post.updatedTime > post.createdTime && (
+        <div className="flex space-x-1 text-sm my-2">
           <span>Last edited</span>
           <span className="text-ok font-medium">
             {format(post.updatedTime, STANDARD_DATE_FORMAT)}

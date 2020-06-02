@@ -1,11 +1,17 @@
 import React, { useEffect, useState, useContext } from "react";
 import UserContext from "./UserContext";
 import { getUser } from "../utils/dbhelpers";
+import { UserPublic } from "../utils/types";
+import { RouteComponentProps } from "@reach/router";
 
-function UserPage(props) {
+interface UserPageProps extends RouteComponentProps<{ userId: string }> {
+}
+
+function UserPage(props: UserPageProps) {
   const context = useContext(UserContext);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<UserPublic | undefined>();
   useEffect(() => {
+    if (!props.userId) return;
     if (user || context.usersByUid[props.userId]) {
       if (!user) {
         setUser(context.usersByUid[props.userId]);

@@ -204,15 +204,15 @@ const TextContent = (props: { content: string }) => {
   }
 
   let k = 0;
-  function renderNode(node: { [key:string]: any }) {
+  function renderNode(node: TextNode) {
     const classes = [];
     let quoteAuthor = "";
     if (node.tagType === "quote") {
       classes.push("border border-highlight mx-2 my-1 bg-light p-2");
-      if (node.tagAttrs.name) {
+      if (node.tagAttrs?.name) {
         quoteAuthor = node.tagAttrs.name;
       }
-      if (node.tagAttrs.uid) {
+      if (node.tagAttrs?.uid) {
         if (context.usersByUid[node.tagAttrs.uid]) {
           quoteAuthor = context.usersByUid[node.tagAttrs.uid].displayName;
         } else {
@@ -226,15 +226,15 @@ const TextContent = (props: { content: string }) => {
     } else if (node.tagType === "italic") {
       classes.push("italic");
     } else if (node.tagType === "img") {
-      if (node.children[0]) {
-        const url = encodeURI(node.children[0].text);
+      if (node.children[0]?.text) {
+        const url = encodeURI(node.children[0].text.trim());
         return (
           <img
             alt="user inserted"
             key={"image-" + k++}
             src={url}
-            width={node.tagAttrs.width || null}
-            height={node.tagAttrs.height || null}
+            width={node.tagAttrs?.width || undefined}
+            height={node.tagAttrs?.height || undefined}
           />
         );
       }

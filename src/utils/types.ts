@@ -7,7 +7,7 @@ export enum LOADING_STATUS {
   SUBMITTING = "submitting",
   PERMISSIONS_ERROR = "permissions-error",
 };
-export interface Forum {
+export interface ForumFirestoreData {
   id: string;
   name: string;
   order: number;
@@ -19,8 +19,7 @@ export interface Forum {
   updatedTime: number;
 }
 
-export interface Thread {
-  id: string;
+export interface ThreadWriteFirestoreData {
   createdBy: string;
   createdTime: number;
   updatedBy: string;
@@ -28,27 +27,31 @@ export interface Thread {
   forumId: string;
   isSticky: boolean;
   postCount: number;
-  postIds: string[];
   priority: number;
-  readBy: { [uid: string]: number };
+  readBy?: { [uid: string]: number };
   title: string;
-  unreadBy: string[];
+  unreadBy?: string[];
 }
 
-export interface PostFirestoreData {
+export interface ThreadReadFirestoreData extends ThreadWriteFirestoreData {
   id: string;
+}
+
+export interface PostWriteFirestoreData {
   content: string;
   createdTime: number;
-  parentForum: string;
-  parentThread: string;
   uid: string;
   unreadBy: string[];
   updatedTime?: number;
   updatedBy?: string;
-  reactions: { [key: string]: string[] };
+  reactions?: { [key: string]: string[] };
 }
 
-export interface PostDisplayData extends PostFirestoreData {
+export interface PostReadFirestoreData extends PostWriteFirestoreData {
+  id: string;
+}
+
+export interface PostDisplayData extends PostReadFirestoreData {
   createdByUser: UserPublic;
   updatedByUser: UserPublic;
   index: number;

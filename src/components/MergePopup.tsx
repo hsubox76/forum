@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { useSubscribeToCollection } from "../utils/hooks";
 import { format } from "date-fns";
 import { COMPACT_DATE_FORMAT } from "../utils/constants";
-import { DialogData, Thread } from "../utils/types";
+import { DialogData, ThreadReadFirestoreData } from "../utils/types";
 
 interface MergePopupTypes extends DialogData {
   onClose: () => void;
@@ -18,7 +18,7 @@ export default function MergePopup({
   onOk = () => {},
   onCancel = () => {},
 }: MergePopupTypes) {
-  const threads: Thread[] | null = useSubscribeToCollection<Thread>(
+  const threads: ThreadReadFirestoreData[] | null = useSubscribeToCollection<ThreadReadFirestoreData>(
     `forums/${forumId}/threads`,
     [{ orderBy: ["priority", "desc"] }, { orderBy: ["updatedTime", "desc"] }]
   );

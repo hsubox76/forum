@@ -8,9 +8,9 @@ export function useSubscribeToDocumentPath<T extends { id: string }>(
   docPath: string
 ) {
   const [doc, updateDoc] = useState<T | null>(null);
-  const converter = createConverter<T>();
 
   useEffect(() => {
+    const converter = createConverter<T>();
     const unsub = firebase
       .firestore()
       .doc(docPath)
@@ -33,26 +33,33 @@ export function useSubscribeToCollection<T extends { id: string }>(
 ) {
   const [collection, updateCollection] = useState<T[] | null>(null);
   const stringifiedOptions = JSON.stringify(options);
-  const converter = createConverter<T>();
 
   useEffect(() => {
-    if (collectionName.includes('undefined')) return;
-    let ref = firebase.firestore().collection(collectionName);
+    const converter = createConverter<T>();
+    if (collectionName.includes("undefined")) return;
+    const ref:
+      | firebase.firestore.CollectionReference = firebase
+      .firestore()
+      .collection(collectionName);
+    let query: firebase.firestore.Query | null = null;
     if (stringifiedOptions) {
       const opts: QueryOption[] = JSON.parse(stringifiedOptions);
-      for (const key in opts) {
-        const val = opts[key];
-        if (Array.isArray(val)) {
-          // @ts-ignore
-          ref = ref[prop](...val);
-        } else {
-          // @ts-ignore
-          ref = ref[prop](val);
+      for (const opt of opts) {
+        for (const key in opt) {
+          const args = opt[key as keyof QueryOption];
+          if (Array.isArray(args)) {
+            // @ts-ignore
+            query = ref[key as keyof QueryOption](...args).withConverter(converter);
+          } else {
+            query = ref[key as keyof QueryOption](args).withConverter(converter);
+          }
         }
       }
     }
-    ref = ref.withConverter(converter);
-    const unsub = ref.onSnapshot((querySnapshot) => {
+    if (!query) {
+      query = ref.withConverter(converter);
+    }
+    const unsub = query.onSnapshot((querySnapshot) => {
       const docList: T[] = [];
       querySnapshot.forEach((doc) => {
         if (doc) {
@@ -68,10 +75,10 @@ export function useSubscribeToCollection<T extends { id: string }>(
 
 export function useUserSettings(uid?: string) {
   const [userSettings, setUserSettings] = useState<UserAdminView | null>(null);
-  const converter = createConverter<UserAdminView>();
 
   useEffect(() => {
     if (!uid) return;
+    const converter = createConverter<UserAdminView>();
     const unsub = firebase
       .firestore()
       .doc(`users/${uid}`)

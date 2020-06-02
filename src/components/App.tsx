@@ -4,7 +4,6 @@ import {
   Link,
   LocationProvider,
   createHistory,
-  HistorySource,
 } from "@reach/router";
 import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
 import Dialog from "./Dialog";
@@ -105,10 +104,6 @@ const App = () => {
 
   function handleSetDialog(dialog: DialogData) {
     setPopup({ ...dialog, type: "dialog" });
-  }
-
-  function handleSetPopup(popup: DialogData) {
-    setPopup(popup);
   }
 
   async function handleCodeSubmit(e: FormEvent) {

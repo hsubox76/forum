@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useContext } from "react";
 import { format } from "date-fns";
 import flatten from "lodash/flatten";
 import uniq from "lodash/uniq";
-import { Link, navigate } from "@reach/router";
+import { Link, navigate, RouteComponentProps } from "@reach/router";
 import {
   COMPACT_DATE_FORMAT,
   STANDARD_DATE_FORMAT,
@@ -25,18 +25,35 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSquare, faCheckSquare } from "@fortawesome/free-regular-svg-icons";
 import UserContext from "./UserContext";
 import PaginationControl from "./pagination-control";
-import { Forum, Thread, LOADING_STATUS } from "../utils/types";
+import {
+  ForumFirestoreData,
+  ThreadWriteFirestoreData,
+  LOADING_STATUS,
+  PostWriteFirestoreData,
+  ThreadReadFirestoreData,
+  UserAdminView,
+  UserPublic,
+} from "../utils/types";
 
-function ThreadList(props) {
+interface ThreadListProps extends RouteComponentProps<{ forumId: string }> {
+  user: firebase.User;
+  userSettings: UserAdminView | null;
+}
+
+function ThreadList(props: ThreadListProps) {
   const [status, setStatus] = useState(LOADING_STATUS.LOADING);
-  const [userMap, setUserMap] = useState({});
-  const contentRef = useRef<HTMLTextAreaElement|undefined>();
-  const titleRef = useRef<HTMLInputElement|undefined>();
+  const [userMap, setUserMap] = useState<{ [uid: string]: UserPublic}>({});
+  const contentRef = useRef<HTMLTextAreaElement | null>(null);
+  const titleRef = useRef<HTMLInputElement | null>(null);
   const context = useContext(UserContext);
 
-  const forum: Forum = useSubscribeToDocumentPath(`forums/${props.forumId}`);
+  const forum: ForumFirestoreData | null = useSubscribeToDocumentPath(
+    `forums/${props.forumId}`
+  );
 
-  const threads: Thread[] = useSubscribeToCollection(`forums/${props.forumId}/threads`, [
+  const threads:
+    | ThreadReadFirestoreData[]
+    | null = useSubscribeToCollection(`forums/${props.forumId}/threads`, [
     { orderBy: ["priority", "desc"] },
     { orderBy: ["updatedTime", "desc"] },
   ]);
@@ -56,30 +73,45 @@ function ThreadList(props) {
     };
   }, [threads, context]);
 
-  async function handleSubmitThread(e) {
+  async function handleSubmitThread(e: React.FormEvent) {
     e.preventDefault();
-    const time = Date.now();
-    const threadRef = await addDoc(`forums/${props.forumId}/threads`, {
-      createdBy: props.user.uid,
-      title: titleRef.current?.value,
-      updatedBy: props.user.uid,
-      postCount: 1,
-      createdTime: time,
-      updatedTime: time,
-      forumId: props.forumId,
-      priority: 0,
-      isSticky: false,
-    });
-    if (!threadRef) {
+    if (!contentRef.current?.value || !titleRef.current?.value) {
       //TODO: Make visible.
-      console.error('Error creating thread.')
+      console.error("Missing content.");
       return;
     }
-    await addDoc(`forums/${props.forumId}/threads/${threadRef.id}/posts`, {
-      uid: props.user.uid,
-      content: contentRef.current.value,
-      createdTime: time,
-    });
+    if (!props.forumId) {
+      return;
+    }
+    const time = Date.now();
+    const threadRef = await addDoc<ThreadWriteFirestoreData>(
+      `forums/${props.forumId}/threads`,
+      {
+        createdBy: props.user.uid,
+        title: titleRef.current?.value || "",
+        updatedBy: props.user.uid,
+        postCount: 1,
+        createdTime: time,
+        updatedTime: time,
+        forumId: props.forumId,
+        priority: 0,
+        isSticky: false,
+      }
+    );
+    if (!threadRef) {
+      //TODO: Make visible.
+      console.error("Error creating thread.");
+      return;
+    }
+    await addDoc<PostWriteFirestoreData>(
+      `forums/${props.forumId}/threads/${threadRef.id}/posts`,
+      {
+        uid: props.user.uid,
+        content: contentRef.current.value,
+        createdTime: time,
+        unreadBy: [],
+      }
+    );
     contentRef.current.value = "";
     titleRef.current.value = "";
     //TODO: Update updated times with cloud functions
@@ -90,9 +122,9 @@ function ThreadList(props) {
     navigate(`/forum/${props.forumId}/thread/${threadRef.id}`);
   }
 
-  function handleClickThread(e, link) {
-    if (e.target.tagName !== "A") {
-      props.navigate(link);
+  function handleClickThread(e: React.MouseEvent, link: string) {
+    if ((e.target as HTMLElement).tagName !== "A") {
+      props.navigate?.(link);
     }
   }
 
@@ -110,13 +142,13 @@ function ThreadList(props) {
   const isMobile = window.matchMedia("(max-width: 767px)").matches;
   const dateFormat = isMobile ? COMPACT_DATE_FORMAT : STANDARD_DATE_FORMAT;
 
-  const params = getParams(props.location.search);
+  const params = getParams(props.location?.search);
   const threadsPerPage = params.threads || THREADS_PER_PAGE;
   const pageString = params.page || 0;
   const { start, end, numPages, page } = getPostRange(
     pageString,
     threadsPerPage,
-    threads.length
+    threads?.length || 0
   );
   const threadList = threads
     ? threads.slice(start, end).map((thread, index) =>
@@ -138,10 +170,10 @@ function ThreadList(props) {
   );
 
   function toggleNotifications() {
-    if (!props.userSettings) return;
-    const notificationsOn = props.userSettings.notifications.forums.includes(
+    if (!props.userSettings || !props.forumId) return;
+    const notificationsOn = props.userSettings.notifications?.forums?.includes(
       props.forumId
-    );
+    ) || false;
     updateForumNotifications(props.user.uid, props.forumId, notificationsOn);
   }
 
@@ -156,8 +188,8 @@ function ThreadList(props) {
       </h1>
       <div className="my-2 flex space-x-2 items-center text-lg border-2 border-ok px-2 rounded">
         <button onClick={toggleNotifications}>
-          {props.userSettings &&
-          props.userSettings.notifications.forums.includes(props.forumId) ? (
+          {props.userSettings && props.forumId &&
+          props.userSettings.notifications?.forums?.includes(props.forumId) ? (
             <FontAwesomeIcon className="text-ok" icon={faCheckSquare} />
           ) : (
             <FontAwesomeIcon className="text-ok" icon={faSquare} />
@@ -166,10 +198,10 @@ function ThreadList(props) {
         <div>Send me an email on any new post in this forum.</div>
       </div>
       {paginationBox}
-      {threadList.map((thread) => {
+      {threadList.map((thread, index) => {
         if (!thread) {
           return (
-            <div key={thread.id} className="row-item">
+            <div key={index} className="row-item">
               <div className="loader loader-med" />
             </div>
           );
@@ -249,7 +281,7 @@ function ThreadList(props) {
       >
         <h1>Start a new thread:</h1>
         <div className="flex flex-col my-1">
-          <label htmlFor="threadTitle">Thread title</label>
+          <label htmlFor="threadTitle">ThreadWriteFirestoreData title</label>
           <input
             id="threadTitle"
             ref={titleRef}
@@ -267,7 +299,9 @@ function ThreadList(props) {
           />
         </div>
         <div className="my-2">
-          <button className="btn btn-ok">Post New Thread</button>
+          <button className="btn btn-ok">
+            Post New ThreadWriteFirestoreData
+          </button>
         </div>
       </form>
     </div>

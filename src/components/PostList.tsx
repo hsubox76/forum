@@ -25,9 +25,9 @@ import PaginationControl from "./pagination-control";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSquare, faCheckSquare } from "@fortawesome/free-regular-svg-icons";
 import {
-  PostFirestoreData,
-  Thread,
-  Forum,
+  PostReadFirestoreData,
+  ThreadReadFirestoreData,
+  ForumFirestoreData,
   Claims,
   DialogData,
   LOADING_STATUS,
@@ -53,12 +53,12 @@ function PostList(props: PostListProps) {
   const [userMap, setUserMap] = useState<{ [uid: string]: any }>({});
   const [threadTitleEditing, setThreadTitleEditing] = useState(false);
 
-  const forum = useSubscribeToDocumentPath<Forum>(`forums/${props.forumId}`);
-  const thread = useSubscribeToDocumentPath<Thread>(
+  const forum = useSubscribeToDocumentPath<ForumFirestoreData>(`forums/${props.forumId}`);
+  const thread = useSubscribeToDocumentPath<ThreadReadFirestoreData>(
     `forums/${props.forumId}/threads/${props.threadId}`
   );
 
-  let posts = useSubscribeToCollection<PostFirestoreData>(
+  let posts = useSubscribeToCollection<PostReadFirestoreData>(
     `forums/${props.forumId}/threads/${props.threadId}/posts`,
     [{ orderBy: "createdTime" }]
   );
@@ -201,12 +201,12 @@ function PostList(props: PostListProps) {
   async function mergeThread(threadIdToMerge: string) {
     if (!posts) return;
     try {
-      const listSnap = await getCollection<PostFirestoreData>(
+      const listSnap = await getCollection<PostReadFirestoreData>(
         `forums/${props.forumId}/threads/${threadIdToMerge}/posts`
       );
 
-      let newPosts: PostFirestoreData[] = [];
-      let mergedPosts: PostFirestoreData[] = [];
+      let newPosts: PostReadFirestoreData[] = [];
+      let mergedPosts: PostReadFirestoreData[] = [];
       listSnap &&
         listSnap.forEach((postSnap) => newPosts.push(postSnap.data()));
       mergedPosts = newPosts

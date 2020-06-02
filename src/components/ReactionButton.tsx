@@ -31,7 +31,7 @@ const ReactionButton = (props: ReactionButtonProps) => {
       updateReaction(props.user.uid, postPath, props.currentReaction, false);
     }
   }
-  const responses = get(post, ["reactions", props.reaction.faName]) || [];
+  const responses: string[] = get(post, ["reactions", props.reaction.faName]) || [];
   const classes = [
     "reaction-button relative rounded-full w-8 h-8 focus:outline-none",
   ];

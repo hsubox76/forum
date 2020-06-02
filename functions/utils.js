@@ -137,7 +137,7 @@ function revokeTokens(uid) {
 async function sendMail(data) {
   const msg = {
     to: data.to,
-    from: 'PWOT2 Forum <support@pwot2.com>',
+    from: 'PWOT2 ForumFirestoreData <support@pwot2.com>',
     subject: data.subject || '',
     text: data.content || '',
   };

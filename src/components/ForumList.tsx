@@ -8,7 +8,7 @@ import { useSubscribeToCollection } from "../utils/hooks";
 import { getClaims, getUsers } from "../utils/dbhelpers";
 import UserData from "./UserData";
 import UserContext from "./UserContext";
-import { Forum, Claims, UserPublic } from "../utils/types";
+import { ForumFirestoreData, Claims, UserPublic } from "../utils/types";
 import { RouteComponentProps } from "@reach/router";
 
 interface ForumListProps extends RouteComponentProps {
@@ -24,7 +24,7 @@ function ForumList({ user, navigate }: ForumListProps) {
     getClaims().then((result) => setClaims(result));
   }, [user]);
 
-  const forumList: Forum[] | null = useSubscribeToCollection("forums", [{ orderBy: "order" }]);
+  const forumList: ForumFirestoreData[] | null = useSubscribeToCollection("forums", [{ orderBy: "order" }]);
 
   useEffect(() => {
     let unmounting = false;

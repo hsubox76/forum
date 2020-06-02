@@ -10,10 +10,12 @@ import {
   UserPublic,
   Claims,
   ReactionType,
-  PostFirestoreData,
-  Forum,
-  Thread,
+  PostReadFirestoreData,
+  ForumFirestoreData,
+  ThreadReadFirestoreData,
+  ThreadWriteFirestoreData,
   Invite,
+  PostWriteFirestoreData,
 } from "./types";
 
 let checkingIfBannedPromise: Promise<boolean> | null = null;
@@ -135,11 +137,24 @@ export function createConverter<T extends { id: string }>() {
   };
 }
 
-export async function addDoc<T extends { id: string }>(
+export function createWriteConverter<T extends { [key:string]: any }>() {
+  return {
+    toFirestore(data: T): firebase.firestore.DocumentData {
+      return omit(data, "id");
+    },
+    // Don't use.
+    fromFirestore(snapshot: firebase.firestore.QueryDocumentSnapshot): T {
+      return { ...snapshot.data() } as T;
+    },
+  };
+}
+
+
+export async function addDoc<T extends {}>(
   collectionPath: string,
   data: T
 ) {
-  const converter = createConverter<T>();
+  const converter = createWriteConverter<T>();
   try {
     return firebase
       .firestore()
@@ -180,7 +195,7 @@ export async function getCollection<T extends { id: string }>(
   }
 }
 
-export async function updateDoc<T extends { id: string }>(
+export async function updateDoc<T extends { }>(
   docPath: string,
   data: { [key: string]: any }
 ) {
@@ -189,7 +204,7 @@ export async function updateDoc<T extends { id: string }>(
     console.warn(`Failed to update doc at ${docPath}: it does not exist.`);
     return Promise.resolve();
   }
-  const converter = createConverter<T>();
+  const converter = createWriteConverter<T>();
   return firebase
     .firestore()
     .doc(docPath)
@@ -239,7 +254,7 @@ export async function updatePostCount(forumId: string, threadId: string) {
     .firestore()
     .collection(`forums/${forumId}/threads/${threadId}/posts`)
     .get();
-  updateDoc<Thread>(`forums/${forumId}/threads/${threadId}`, {
+  updateDoc<ThreadWriteFirestoreData>(`forums/${forumId}/threads/${threadId}`, {
     postCount: threadPosts.size,
   });
 }
@@ -252,51 +267,48 @@ export function updateReadStatus(
   forumId: string
 ) {
   const operation = didRead ? "arrayRemove" : "arrayUnion";
-  updateDoc<PostFirestoreData>(
+  updateDoc<PostReadFirestoreData>(
     `forums/${forumId}/threads/${threadId}/posts/${postId}`,
     {
       unreadBy: firebase.firestore.FieldValue[operation](user.uid),
     }
   );
-  updateDoc<Thread>(`forums/${forumId}/threads/${threadId}`, {
+  updateDoc<ThreadWriteFirestoreData>(`forums/${forumId}/threads/${threadId}`, {
     unreadBy: firebase.firestore.FieldValue[operation](user.uid),
   });
-  updateDoc<Forum>(`forums/${forumId}`, {
+  updateDoc<ForumFirestoreData>(`forums/${forumId}`, {
     unreadBy: firebase.firestore.FieldValue[operation](user.uid),
   });
 }
 
 export async function addPost(
   content: string,
-  forum: Forum,
-  thread: Thread,
+  forum: ForumFirestoreData,
+  thread: ThreadReadFirestoreData,
   user: firebase.User
 ) {
   const now = Date.now();
   const postData = {
-    id: "?",
     content,
-    parentForum: forum.id,
-    parentThread: thread.id,
     createdTime: now,
     updatedTime: now,
     uid: user.uid,
     unreadBy: [],
     reactions: {}
   };
-  await addDoc<PostFirestoreData>(
+  await addDoc<PostWriteFirestoreData>(
     `forums/${forum.id}/threads/${thread.id}/posts`,
     postData
   );
   const postCountPromise = updatePostCount(forum.id, thread.id);
-  const threadPromise = updateDoc<Thread>(
+  const threadPromise = updateDoc<ThreadWriteFirestoreData>(
     `forums/${forum.id}/threads/${thread.id}`,
     {
       updatedTime: now,
       updatedBy: user.uid,
     }
   );
-  const forumPromise = updateDoc<Forum>(`forums/${forum.id}`, {
+  const forumPromise = updateDoc<ForumFirestoreData>(`forums/${forum.id}`, {
     updatedBy: user.uid,
     updatedTime: now,
   });
@@ -314,7 +326,7 @@ export function updatePost(
     updatedTime: now,
     updatedBy: user.uid,
   };
-  return updateDoc<PostFirestoreData>(postPath, postData);
+  return updateDoc<PostReadFirestoreData>(postPath, postData);
 }
 
 // ******************************************************************
