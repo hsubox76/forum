@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, ReactNode } from "react";
 import Linkify from "linkifyjs/react";
 import escape from "lodash/escape";
 import startsWith from "lodash/startsWith";
@@ -16,8 +16,29 @@ const TAG_TYPES = {
   normal: { className: "normal" },
 };
 
-function linkifyAndLineBreak(text, tokenIndex, classes, currentUrl) {
-  let contentEls = [];
+interface TagStates {
+  b?: boolean,
+  i?: boolean,
+  spoiler?: boolean,
+  currentUrl?: string | null,
+};
+interface TextNode extends TagStates {
+  tagType : string | null;
+  level: number;
+  children: TextNode[];
+  parent?: TextNode |null;
+  text?: string;
+  tagAttrs?: { [key: string]: string };
+}
+
+
+function linkifyAndLineBreak(
+  text: string,
+  tokenIndex: number,
+  classes: string[],
+  currentUrl?: string | null
+) {
+  let contentEls: ReactNode[] = [];
   let lines = [];
   if (text.includes("\n")) {
     lines = text.split("\n");
@@ -35,6 +56,7 @@ function linkifyAndLineBreak(text, tokenIndex, classes, currentUrl) {
         const linkifiedLine = (
           <Linkify
             key={`${tokenIndex}-${lineIndex}`}
+            // @ts-ignore
             className={classes.join(" ")}
             tagName="span"
             options={options}
@@ -62,7 +84,7 @@ const tagRE = tagList.join("|");
 
 const tagsWithProperties = ["img", "url", "quote"];
 
-function extractTag(tag) {
+function extractTag(tag: string) {
   for (let i = 0; i < tagsWithProperties.length; i++) {
     if (startsWith(tag, tagsWithProperties[i])) {
       return tagsWithProperties[i];
@@ -74,9 +96,9 @@ function extractTag(tag) {
   return tag;
 }
 
-function getTagAttrs(tagString) {
+function getTagAttrs(tagString: string) {
   const tagParts = trim(tagString, "[]").split(" ");
-  const tagAttrs = {};
+  const tagAttrs: { [key: string]: string } = {};
   tagParts.forEach((part) => {
     if (part.includes("=")) {
       const pair = part.split(/=(.+)/, 2);
@@ -86,7 +108,7 @@ function getTagAttrs(tagString) {
   return tagAttrs;
 }
 
-const TextContent = (props) => {
+const TextContent = (props: { content: string }) => {
   const context = useContext(UserContext);
 
   if (!props.content || typeof props.content !== "string") {
@@ -95,19 +117,22 @@ const TextContent = (props) => {
   const tokenDelimiterRE = new RegExp(`(\\[\\/?(?:${tagRE})\\])`);
   const tokens = props.content.split(tokenDelimiterRE);
 
-  const root = {
+  const root: TextNode = {
     level: 0,
     tagType: null,
     children: [],
     parent: null,
   };
   let currentNode = root;
-  const tagLevels = Object.keys(TAG_TYPES).reduce((obj, tagType) => {
-    obj[tagType] = 0;
-    return obj;
-  }, {});
+  const tagLevels = Object.keys(TAG_TYPES).reduce(
+    (obj: { [tagType: string]: number }, tagType) => {
+      obj[tagType] = 0;
+      return obj;
+    },
+    {}
+  );
 
-  const tagStates = {
+  const tagStates: { [key:string]: any} = {
     b: false,
     i: false,
     spoiler: false,
@@ -129,7 +154,7 @@ const TextContent = (props) => {
 
     if (isBlockTag) {
       if (!isClose) {
-        const newNode = {
+        const newNode: TextNode = {
           tagType,
           level: ++tagLevels[tagType],
           children: [],
@@ -171,6 +196,7 @@ const TextContent = (props) => {
         tagType: "text",
         level: tagLevels[tagType],
         text: token,
+        children: [],
         ...tagStates,
         currentUrl,
       });
@@ -178,7 +204,7 @@ const TextContent = (props) => {
   }
 
   let k = 0;
-  function renderNode(node) {
+  function renderNode(node: { [key:string]: any }) {
     const classes = [];
     let quoteAuthor = "";
     if (node.tagType === "quote") {
@@ -192,7 +218,7 @@ const TextContent = (props) => {
         } else {
           quoteAuthor = "?";
           // and fetch
-          getUser(node.tagAttrs.uid, context);
+          getUser(node.tagAttrs.uid, context, false);
         }
       }
     } else if (node.tagType === "bold") {
@@ -220,7 +246,7 @@ const TextContent = (props) => {
             {quoteAuthor} said:
           </div>
         )}
-        {node.children.map((child, childIndex) => {
+        {node.children.map((child: TextNode, childIndex: number) => {
           if (child.tagType === "text") {
             if (!child.text) {
               return null;
@@ -236,9 +262,9 @@ const TextContent = (props) => {
             if (child.spoiler) {
               classes.push("spoiler");
             }
-            const props = {
+            const props: { key: string, className: string, href?: string } = {
               key: node.level + "-" + k + "-" + childIndex,
-              className: classes.join(" "),
+              className: classes.join(" ")
             };
             if (child.currentUrl) {
               elementType = "a";

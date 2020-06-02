@@ -8,18 +8,23 @@ import { useSubscribeToCollection } from "../utils/hooks";
 import { getClaims, getUsers } from "../utils/dbhelpers";
 import UserData from "./UserData";
 import UserContext from "./UserContext";
-import { Forum } from "../utils/types";
+import { Forum, Claims, UserPublic } from "../utils/types";
+import { RouteComponentProps } from "@reach/router";
 
-function ForumList(props) {
-  const [claims, setClaims] = useState(null);
-  const [userMap, setUserMap] = useState({});
+interface ForumListProps extends RouteComponentProps {
+  user: firebase.User
+}
+
+function ForumList({ user, navigate }: ForumListProps) {
+  const [claims, setClaims] = useState<Claims|null>(null);
+  const [userMap, setUserMap] = useState<{ [uid: string]: UserPublic}>({});
   const context = useContext(UserContext);
 
   useEffect(() => {
     getClaims().then((result) => setClaims(result));
-  }, [props.user]);
+  }, [user]);
 
-  const forumList: Forum[] = useSubscribeToCollection("forums", [{ orderBy: "order" }]);
+  const forumList: Forum[] | null = useSubscribeToCollection("forums", [{ orderBy: "order" }]);
 
   useEffect(() => {
     let unmounting = false;
@@ -47,9 +52,9 @@ function ForumList(props) {
   const isMobile = window.matchMedia("(max-width: 767px)").matches;
   const dateFormat = isMobile ? COMPACT_DATE_FORMAT : STANDARD_DATE_FORMAT;
 
-  function handleClickForum(e, forumId) {
-    if (e.target.tagName !== "A") {
-      props.navigate(`/forum/${forumId}`);
+  function handleClickForum(e: React.MouseEvent, forumId: string) {
+    if ((e.target as HTMLElement).tagName !== "A") {
+      navigate && navigate(`/forum/${forumId}`);
     }
   }
 
@@ -61,12 +66,12 @@ function ForumList(props) {
           (forum) =>
             forum &&
             (!forum.requiresClaims ||
-              forum.requiresClaims.some((reqClaim) => claims[reqClaim]))
+              forum.requiresClaims.some((reqClaim) => claims?.[reqClaim as keyof Claims]))
         )
         .map((forum) => {
           const classes = ["row-item"];
           const isUnread =
-            forum.unreadBy && forum.unreadBy.includes(props.user.uid);
+            forum.unreadBy && forum.unreadBy.includes(user.uid);
           if (isUnread) {
             classes.push("unread");
           }

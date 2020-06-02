@@ -6,7 +6,6 @@ import { Link, navigate } from "@reach/router";
 import {
   COMPACT_DATE_FORMAT,
   STANDARD_DATE_FORMAT,
-  LOADING_STATUS,
   POSTS_PER_PAGE,
   THREADS_PER_PAGE,
 } from "../utils/constants";
@@ -26,7 +25,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSquare, faCheckSquare } from "@fortawesome/free-regular-svg-icons";
 import UserContext from "./UserContext";
 import PaginationControl from "./pagination-control";
-import { Forum, Thread } from "../utils/types";
+import { Forum, Thread, LOADING_STATUS } from "../utils/types";
 
 function ThreadList(props) {
   const [status, setStatus] = useState(LOADING_STATUS.LOADING);

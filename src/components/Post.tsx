@@ -6,11 +6,7 @@ import findKey from "lodash/findKey";
 import TextContent from "./TextContent";
 import UserData from "./UserData";
 import UserContext from "./UserContext";
-import {
-  LOADING_STATUS,
-  STANDARD_DATE_FORMAT,
-  reactions,
-} from "../utils/constants";
+import { STANDARD_DATE_FORMAT, reactions } from "../utils/constants";
 import {
   deleteDoc,
   updatePost,
@@ -19,14 +15,37 @@ import {
   updatePostCount,
 } from "../utils/dbhelpers";
 import ReactionButton from "./ReactionButton";
+import {
+  PostFirestoreData,
+  LOADING_STATUS,
+  DialogData,
+  Claims,
+  UserPublic,
+  PostDisplayData,
+  ReactionType,
+} from "../utils/types";
+interface PostProps {
+  forumId: string;
+  threadId: string;
+  postId: string;
+  post: PostDisplayData;
+  isDisabled: boolean;
+  isOnlyPost: boolean;
+  toggleEditPost: (postId: string) => void;
+  setDialog: (data: DialogData) => void;
+  handleQuote: (post: PostDisplayData) => void;
+  deleteThread: () => void;
+  scrollToMe: boolean;
+  user: firebase.User;
+}
 
-function Post(props) {
-  const [status, setStatus] = useState(null);
-  const [claims, setClaims] = useState(false);
+function Post(props: PostProps) {
+  const [status, setStatus] = useState<LOADING_STATUS | null>(null);
+  const [claims, setClaims] = useState<Claims | null>(null);
   const [scrolledOnce, setScrolledOnce] = useState(false);
   const context = useContext(UserContext);
-  const postRef = useRef();
-  const contentRef = useRef();
+  const postRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLTextAreaElement | null>(null);
 
   const postPath = `forums/${props.forumId}/threads/${props.threadId}/posts/${props.postId}`;
 
@@ -89,17 +108,24 @@ function Post(props) {
 
   function handleEditPost() {
     setStatus(LOADING_STATUS.SUBMITTING);
-    updatePost(contentRef.current.value, postPath, props.user).then(() => {
-      //TODO: update thread "last updated" info
-      setStatus(LOADING_STATUS.LOADED);
-      props.toggleEditPost(props.postId);
-    });
+    if (contentRef.current?.value) {
+      updatePost(contentRef.current.value, postPath, props.user).then(() => {
+        //TODO: update thread "last updated" info
+        setStatus(LOADING_STATUS.LOADED);
+        props.toggleEditPost(props.postId);
+      });
+    }
   }
 
   function renderAdminButtons() {
-    const adminButtons = [];
+    const adminButtons: React.ReactNodeArray = [];
 
-    function addButton(name, buttonType, action, disabledCondition = false) {
+    function addButton(
+      name: string,
+      buttonType: string,
+      action: () => void,
+      disabledCondition = false
+    ) {
       adminButtons.push(
         <button
           key={name}
@@ -115,7 +141,7 @@ function Post(props) {
     if (status !== LOADING_STATUS.EDITING) {
       addButton("quote", "neutral", () => props.handleQuote(post));
     }
-    if (claims.admin || claims.mod || props.user.uid === post.uid) {
+    if (claims?.admin || claims?.mod || props.user.uid === post.uid) {
       if (status === LOADING_STATUS.EDITING) {
         addButton("cancel", "neutral", toggleEditMode);
         addButton("ok", "ok", handleEditPost);
@@ -134,7 +160,10 @@ function Post(props) {
   if (status === LOADING_STATUS.DELETED) {
     // this shouldn't happen... but just in case
     return (
-      <div key={props.postId} className="px-2 py-1 border-main border rounded my-2">
+      <div
+        key={props.postId}
+        className="px-2 py-1 border-main border rounded my-2"
+      >
         This post has been deleted.
       </div>
     );
@@ -145,12 +174,15 @@ function Post(props) {
     status === LOADING_STATUS.DELETING
   ) {
     return (
-      <div key={props.postId} className="px-2 py-1 border-main border rounded my-2">
+      <div
+        key={props.postId}
+        className="px-2 py-1 border-main border rounded my-2"
+      >
         <div className="loader loader-med" />
       </div>
     );
   }
-  let currentReaction = null;
+  let currentReaction: string | undefined = undefined;
   if (post.reactions) {
     currentReaction = findKey(post.reactions, (uids) =>
       uids.includes(props.user.uid)
@@ -161,10 +193,9 @@ function Post(props) {
       <div className="flex space-x-1">
         {reactions.map((reaction) => (
           <ReactionButton
-            key={post.postId + "_" + reaction.faName}
-            currentReaction={currentReaction}
+            key={props.postId + "_" + reaction.faName}
+            currentReaction={currentReaction as ReactionType}
             reaction={reaction}
-            post={post}
             {...props}
           />
         ))}
@@ -204,7 +235,7 @@ function Post(props) {
           {get(postUser, "mod") && <div className="role-icon">M</div>}
         </div>
         <div className="flex flex-col items-end self-stretch justify-between">
-          <div>#{props.index}</div>
+          <div>#{post.index}</div>
           <div className="text-sm">
             {format(post.createdTime, STANDARD_DATE_FORMAT)}
           </div>
@@ -222,13 +253,10 @@ function Post(props) {
         ) : (
           <TextContent
             content={post.content}
-            user={props.user}
-            usersByUid={context.usersByUid}
-            addUserByUid={context.addUserByUid}
           />
         )}
       </div>
-      {post.updatedBy && (
+      {post.updatedTime && (
         <div className="flex space-x-1 text-sm">
           <span>Last edited</span>
           <span className="text-ok font-medium">

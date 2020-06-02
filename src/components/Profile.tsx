@@ -5,22 +5,28 @@ import "firebase/storage";
 import UserContext from "./UserContext";
 import { updateDoc, getUser } from "../utils/dbhelpers";
 import AvatarUpload from "./avatar-upload";
+import { RouteComponentProps } from "@reach/router";
+import { UserPublic } from "../utils/types";
 
-function Profile(props) {
-  const displayNameRef = useRef();
-  const bioRef = useRef();
+interface ProfileProps extends RouteComponentProps {
+  user: firebase.User
+}
+
+function Profile(props: ProfileProps) {
+  const displayNameRef = useRef<HTMLInputElement|null>(null);
+  const bioRef = useRef<HTMLTextAreaElement|null>(null);
   const [passwordEmailState, setPasswordEmailState] = useState("start");
   const [profileChangeState, setProfileChangeState] = useState("start");
-  const [publicData, setPublicData] = useState();
+  const [publicData, setPublicData] = useState<UserPublic | undefined>();
   const context = useContext(UserContext);
 
   useEffect(() => {
     getUser(props.user.uid, context, true).then(setPublicData);
   }, [props.user.uid, context]);
 
-  async function handleSubmitUsername(e) {
+  async function handleSubmitUsername(e: React.MouseEvent) {
     e.preventDefault();
-    if (displayNameRef.current.value !== props.user.displayName) {
+    if (displayNameRef.current?.value && displayNameRef.current.value !== props.user.displayName) {
       setProfileChangeState("sending");
       await props.user.updateProfile({
         displayName: displayNameRef.current.value,
@@ -31,8 +37,8 @@ function Profile(props) {
     }
   }
 
-  async function handleSubmitBio(e) {
-    if (publicData && bioRef.current.value !== publicData.bio) {
+  async function handleSubmitBio(e: React.MouseEvent) {
+    if (publicData && bioRef.current?.value && bioRef.current.value !== publicData.bio) {
       setProfileChangeState("sending");
       await updateDoc(`usersPublic/${props.user.uid}`, {
         bio: bioRef.current.value,
@@ -44,6 +50,10 @@ function Profile(props) {
   }
 
   function handleResetPassword() {
+    if (!props.user.email) {
+      setPasswordEmailState("error");
+      return;
+    }
     setPasswordEmailState("sending");
     firebase
       .auth()
@@ -52,7 +62,7 @@ function Profile(props) {
         // Password reset email sent.
         setPasswordEmailState("sent");
       })
-      .catch((error) => {
+      .catch(() => {
         setPasswordEmailState("error");
       });
   }
@@ -131,7 +141,7 @@ function Profile(props) {
             id="displayName"
             disabled={profileChangeState === "sending"}
             className="px-2 py-1 w-64"
-            defaultValue={props.user.displayName}
+            defaultValue={props.user.displayName || ''}
           />
           <button
             className="btn btn-ok w-20 ml-4 disabled:opacity-50"

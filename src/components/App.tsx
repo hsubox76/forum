@@ -232,15 +232,14 @@ const App = () => {
               path="forum/:forumId/thread/:threadId"
               user={user}
               setDialog={handleSetDialog}
-              setPopup={handleSetPopup}
               userSettings={userSettings}
             />
             <Help path="help" />
-            <Profile path="profile" user={user} userSettings={userSettings} />
+            <Profile path="profile" user={user} />
             <UserPage path="user/:userId" />
             <Admin path="admin/*" />
             <Invite path="invite" user={user} />
-            <CreateAccount path="code/:code" user={user} claims={claims} />
+            <CreateAccount path="code/:code" />
             <NotFound default />
           </Router>
           {popupElement}

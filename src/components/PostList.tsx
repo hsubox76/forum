@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useContext } from "react";
 import Post from "./Post";
-import { Link, navigate } from "@reach/router";
-import { LOADING_STATUS, POSTS_PER_PAGE } from "../utils/constants";
+import { Link, navigate, RouteComponentProps } from "@reach/router";
+import { POSTS_PER_PAGE } from "../utils/constants";
 import flatten from "lodash/flatten";
 import uniq from "lodash/uniq";
 import {
@@ -24,15 +24,31 @@ import UserContext from "./UserContext";
 import PaginationControl from "./pagination-control";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSquare, faCheckSquare } from "@fortawesome/free-regular-svg-icons";
-import { PostInterface, Thread, Forum, Claims } from "../utils/types";
+import {
+  PostFirestoreData,
+  Thread,
+  Forum,
+  Claims,
+  DialogData,
+  LOADING_STATUS,
+  PostDisplayData,
+  UserAdminView,
+} from "../utils/types";
 
-function PostList(props) {
-  const contentRef = useRef<HTMLTextAreaElement|undefined>();
-  const newPostRef = useRef<HTMLFormElement|undefined>();
-  const titleRef = useRef<HTMLInputElement|undefined>();
+interface PostListProps
+  extends RouteComponentProps<{ forumId: string; threadId: string }> {
+  user: firebase.User;
+  setDialog: (data: DialogData) => void;
+  userSettings: UserAdminView | null;
+}
+
+function PostList(props: PostListProps) {
+  const contentRef = useRef<HTMLTextAreaElement | null>(null);
+  const newPostRef = useRef<HTMLFormElement | null>(null);
+  const titleRef = useRef<HTMLInputElement | null>(null);
   const context = useContext(UserContext);
   const [status, setStatus] = useState(LOADING_STATUS.LOADING);
-  const [postBeingEdited, setPostBeingEdited] = useState(null);
+  const [postBeingEdited, setPostBeingEdited] = useState<string | null>(null);
   const [claims, setClaims] = useState<Claims>({});
   const [userMap, setUserMap] = useState<{ [uid: string]: any }>({});
   const [threadTitleEditing, setThreadTitleEditing] = useState(false);
@@ -42,7 +58,7 @@ function PostList(props) {
     `forums/${props.forumId}/threads/${props.threadId}`
   );
 
-  let posts = useSubscribeToCollection<PostInterface>(
+  let posts = useSubscribeToCollection<PostFirestoreData>(
     `forums/${props.forumId}/threads/${props.threadId}/posts`,
     [{ orderBy: "createdTime" }]
   );
@@ -57,23 +73,31 @@ function PostList(props) {
 
   useEffect(() => {
     if (posts) {
-      let uids = posts.map((post) => {
-        let uids = [post.uid, post.updatedBy];
+      const nestedUids: string[][] = posts.map((post) => {
+        let uids: string[] = [post.uid];
+        if (post.updatedBy) {
+          uids.push(post.updatedBy);
+        }
         if (post.reactions) {
           const reactionIds = Object.values(post.reactions);
           uids = uids.concat(flatten(reactionIds));
         }
-        return uids;
+        return uids || [];
       });
-      uids = uniq(flatten(uids))
+      const uids = uniq(flatten(nestedUids))
         .filter((uid) => uid)
         .sort();
       getUsers(uids, context).then((users) => setUserMap(users));
     }
   }, [posts, context]);
 
+  if (!props.forumId || !props.threadId) {
+    return null;
+  }
+
   function handleDeleteThread() {
-    props.setPopup({
+    if (!thread) return;
+    props.setDialog({
       type: "dialog",
       message: "Sure you want to delete thread: " + thread.title + "?",
       okText: "delete",
@@ -83,7 +107,7 @@ function PostList(props) {
   }
 
   function handleMergeThread() {
-    props.setPopup({
+    props.setDialog({
       type: "merge",
       forumId: props.forumId,
       threadId: props.threadId,
@@ -95,27 +119,30 @@ function PostList(props) {
     setThreadTitleEditing(!threadTitleEditing);
   }
 
-  function handleQuote({ content, uid }) {
+  function handleQuote({ content, uid }: { content: string; uid: string }) {
+    if (!contentRef.current || !newPostRef.current) return;
     contentRef.current.value =
       `[quote uid=${uid}]${content}[/quote]\n` + contentRef.current.value;
     newPostRef.current.scrollIntoView({ behavior: "smooth" });
   }
 
-  function handleSubmitPost(e) {
+  async function handleSubmitPost(e: React.FormEvent) {
     e.preventDefault();
-    addPost(contentRef.current.value, forum, thread, props.user).then(() => {
-      contentRef.current.value = "";
-      navigate(
-        `/forum/${props.forumId}` +
-          `/thread/${props.threadId}` +
-          `?page=last&posts=${POSTS_PER_PAGE}`
-      );
-      newPostRef.current.scrollIntoView({ behavior: "smooth" });
-    });
+    if (!contentRef.current || !forum || !thread) return;
+    await addPost(contentRef.current.value, forum, thread, props.user);
+    if (!contentRef.current || !newPostRef.current) return;
+    contentRef.current.value = "";
+    navigate(
+      `/forum/${props.forumId}` +
+        `/thread/${props.threadId}` +
+        `?page=last&posts=${POSTS_PER_PAGE}`
+    );
+    newPostRef.current.scrollIntoView({ behavior: "smooth" });
   }
 
   function handleSubmitTitle() {
-    if (titleRef.current.value === thread.title) return;
+    if (!titleRef.current || !thread || titleRef.current.value === thread.title)
+      return;
     updateDoc(`forums/${props.forumId}/threads/${props.threadId}`, {
       title: titleRef.current.value,
     })
@@ -123,7 +150,7 @@ function PostList(props) {
       .catch((e) => console.error(e));
   }
 
-  function handleToggleEditPost(postId) {
+  function handleToggleEditPost(postId: string) {
     if (!postBeingEdited) {
       setPostBeingEdited(postId);
     } else {
@@ -150,68 +177,82 @@ function PostList(props) {
       .catch((e) => setStatus(LOADING_STATUS.PERMISSIONS_ERROR));
   }
 
-  function mergeThread(threadToMerge) {
-    // setStatus(LOADING_STATUS.LOADING);
-    getCollection<PostInterface>(`forums/${props.forumId}/threads/${threadToMerge}/posts`)
-      .then((listSnap) => {
-        let newPosts = [];
-        let mergedPosts = [];
-        listSnap && listSnap.forEach((postSnap) =>
-          newPosts.push(Object.assign(postSnap.data(), { id: postSnap.id }))
-        );
-        mergedPosts = newPosts
-          .concat(posts.map((post) => Object.assign(post)))
-          .sort((a, b) => {
-            if (a.createdTime < b.createdTime) {
-              return -1;
-            } else if (a.createdTime > b.createdTime) {
-              return 1;
-            }
-            return 0;
-          });
-        // add second thread's posts to this thread
-        const postAddPromises = newPosts.map((post) => {
-          if (!post.updatedByUser) {
-            post.updatedByUser = post.uid;
+  const params = getParams(props.location?.search);
+  const postsPerPage = params.posts || POSTS_PER_PAGE;
+  const pageString = params.page || 0;
+  const { start, end, numPages, page } = getPostRange(
+    pageString,
+    postsPerPage,
+    posts?.length || 0
+  );
+  const postList: PostDisplayData[] = posts
+    ? posts.slice(start, end).map((post, index) =>
+        Object.assign(post, {
+          index: index + start,
+          createdByUser: userMap[post.uid],
+          updatedByUser: post.updatedBy
+            ? userMap[post.updatedBy]
+            : userMap[post.uid],
+        })
+      )
+    : [];
+  //TODO: should be able to pass postdata straight to post and not have to reload it
+
+  async function mergeThread(threadIdToMerge: string) {
+    if (!posts) return;
+    try {
+      const listSnap = await getCollection<PostFirestoreData>(
+        `forums/${props.forumId}/threads/${threadIdToMerge}/posts`
+      );
+
+      let newPosts: PostFirestoreData[] = [];
+      let mergedPosts: PostFirestoreData[] = [];
+      listSnap &&
+        listSnap.forEach((postSnap) => newPosts.push(postSnap.data()));
+      mergedPosts = newPosts
+        .concat(posts.map((post) => Object.assign(post)))
+        .sort((a, b) => {
+          if (a.createdTime < b.createdTime) {
+            return -1;
+          } else if (a.createdTime > b.createdTime) {
+            return 1;
           }
-          return addDoc(
-            `forums/${props.forumId}/threads/${props.threadId}/posts`,
-            post
-          );
+          return 0;
         });
-        return Promise.all(postAddPromises).then(() => ({
-          postCount: posts.length + newPosts.length,
-          createdTime: mergedPosts[0].createdTime,
-          createdBy: mergedPosts[0].uid,
-        }));
-      })
-      // update thread's post count
-      .then((postUpdates) => {
-        updateDoc(
-          `forums/${props.forumId}/threads/${props.threadId}`,
-          postUpdates
+      // add second thread's posts to this thread
+      const postAddPromises = newPosts.map((post) => {
+        if (!post.updatedBy) {
+          post.updatedBy = post.uid;
+        }
+        return addDoc(
+          `forums/${props.forumId}/threads/${props.threadId}/posts`,
+          post
         );
-      })
-      .then(() => {
-        // delete second thread
-        const deletePromises = [];
-        deletePromises.push(
-          deleteCollection(
-            `forums/${props.forumId}/threads/${threadToMerge}/posts`
-          )
-        );
-        deletePromises.push(
-          deleteDoc(`forums/${props.forumId}/threads/${threadToMerge}`)
-        );
-        return Promise.all(deletePromises);
-      })
-      .then(() => {
-        setStatus(LOADING_STATUS.LOADED);
-      })
-      .catch((e) => {
-        console.error(e);
-        setStatus(LOADING_STATUS.LOADED);
       });
+      const postUpdates = await Promise.all(postAddPromises).then(() => ({
+        postCount: (posts?.length || 0) + newPosts.length,
+        createdTime: mergedPosts[0].createdTime,
+        createdBy: mergedPosts[0].uid,
+      }));
+      await updateDoc(
+        `forums/${props.forumId}/threads/${props.threadId}`,
+        postUpdates
+      );
+      // delete second thread
+      const deletePromises = [];
+      deletePromises.push(
+        deleteCollection(
+          `forums/${props.forumId}/threads/${threadIdToMerge}/posts`
+        )
+      );
+      deletePromises.push(
+        deleteDoc(`forums/${props.forumId}/threads/${threadIdToMerge}`)
+      );
+      await Promise.all(deletePromises);
+    } catch (e) {
+      console.error(e);
+    }
+    setStatus(LOADING_STATUS.LOADED);
   }
 
   if (status === LOADING_STATUS.DELETING) {
@@ -234,9 +275,7 @@ function PostList(props) {
       <div className="page-center">
         <div>Sorry, you don't have permission to do that.</div>
         <div>
-          <span
-            onClick={() => this.setState({ status: LOADING_STATUS.LOADED })}
-          >
+          <span onClick={() => setStatus(LOADING_STATUS.LOADED)}>
             Back to thread.
           </span>
         </div>
@@ -254,27 +293,6 @@ function PostList(props) {
     );
   }
 
-  const params = getParams(props.location.search);
-  const postsPerPage = params.posts || POSTS_PER_PAGE;
-  const pageString = params.page || 0;
-  const { start, end, numPages, page } = getPostRange(
-    pageString,
-    postsPerPage,
-    posts.length
-  );
-  const postList = posts
-    ? posts.slice(start, end).map((post, index) =>
-        Object.assign(post, {
-          index: index + start,
-          createdByUser: userMap[post.uid],
-          updatedByUser: post.updatedBy
-            ? userMap[post.updatedBy]
-            : userMap[post.uid],
-        })
-      )
-    : [];
-  //TODO: should be able to pass postdata straight to post and not have to reload it
-
   const paginationBox = (
     <PaginationControl
       linkRoot={`/forum/${props.forumId}/thread/${props.threadId}`}
@@ -286,10 +304,10 @@ function PostList(props) {
   );
 
   function toggleNotifications() {
-    if (!props.userSettings) return;
-    const notificationsOn = props.userSettings.notifications.threads.includes(
-      props.threadId
-    );
+    if (!props.userSettings || !props.threadId) return;
+    const notificationsOn =
+      props.userSettings.notifications?.threads?.includes(props.threadId) ||
+      false;
     updateThreadNotifications(props.user.uid, props.threadId, notificationsOn);
   }
 
@@ -337,8 +355,10 @@ function PostList(props) {
       </div>
       <div className="my-2 flex space-x-2 items-center text-lg border-2 border-ok px-2 rounded">
         <button onClick={toggleNotifications}>
-          {props.userSettings &&
-          props.userSettings.notifications.threads.includes(props.threadId) ? (
+          {props.userSettings && props.threadId &&
+          props.userSettings.notifications?.threads?.includes(
+            props.threadId
+          ) ? (
             <FontAwesomeIcon className="text-ok" icon={faCheckSquare} />
           ) : (
             <FontAwesomeIcon className="text-ok" icon={faSquare} />
@@ -354,16 +374,16 @@ function PostList(props) {
             key={post.id}
             postId={post.id}
             post={post}
-            threadId={props.threadId}
-            forumId={props.forumId}
+            threadId={props.threadId!}
+            forumId={props.forumId!}
             user={props.user}
-            index={post.index}
-            isDisabled={postBeingEdited && postBeingEdited !== post.id}
+            isDisabled={postBeingEdited !== null && postBeingEdited !== post.id}
             isOnlyPost={thread.postCount === 1}
             toggleEditPost={handleToggleEditPost}
             setDialog={props.setDialog}
             handleQuote={handleQuote}
             scrollToMe={pageString === "last" && post.index === end - 1}
+            deleteThread={deleteThread}
           />
         ))}
       {paginationBox}

@@ -1,3 +1,12 @@
+export enum LOADING_STATUS {
+  LOADING = "loading",
+  LOADED = "loaded",
+  DELETING = "deleting",
+  DELETED = "deleted",
+  EDITING = "editing",
+  SUBMITTING = "submitting",
+  PERMISSIONS_ERROR = "permissions-error",
+};
 export interface Forum {
   id: string;
   name: string;
@@ -26,8 +35,23 @@ export interface Thread {
   unreadBy: string[];
 }
 
-export interface PostInterface {
+export interface PostFirestoreData {
   id: string;
+  content: string;
+  createdTime: number;
+  parentForum: string;
+  parentThread: string;
+  uid: string;
+  unreadBy: string[];
+  updatedTime?: number;
+  updatedBy?: string;
+  reactions: { [key: string]: string[] };
+}
+
+export interface PostDisplayData extends PostFirestoreData {
+  createdByUser: UserPublic;
+  updatedByUser: UserPublic;
+  index: number;
 }
 
 export interface UserPublic {
@@ -35,7 +59,7 @@ export interface UserPublic {
   displayName: string;
   mod?: boolean;
   admin?: boolean;
-  photoUrl?: string;
+  photoURL?: string;
   pwot?: boolean;
   bio?: string;
 }
@@ -50,6 +74,11 @@ export interface UserAdminView {
   verifiedDate: number;
   photoURL: string;
   customClaims: Claims;
+  notifications?: {
+    forums?: string[];
+    threads?: string[];
+    all?: boolean;
+  }
 }
 
 export interface Invite {
@@ -71,13 +100,13 @@ export interface Claims {
 }
 
 export interface DialogData {
-  type: string,
-  message: string,
-  okText: string,
-  cancelText: string,
-  okClass: string,
+  type?: string,
+  message?: string,
+  okText?: string,
+  cancelText?: string,
+  okClass?: string,
   onOk: (...args: any[]) => void,
-  onCancel: () => void,
+  onCancel?: () => void,
   forumId?: string,
   threadId?: string
 }
@@ -92,3 +121,8 @@ export type ReactionType =
   | "heart"
   | "thumbs-up"
   | "thumbs-down";
+
+  export interface Reaction {
+    faName: ReactionType;
+    desc: string;
+  }

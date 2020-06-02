@@ -1,29 +1,32 @@
 import trim from "lodash/trim";
 
-export function getParams(queryString) {
+export function getParams(
+  queryString: string | undefined
+): { [key: string]: any } {
   if (!queryString) return {};
   return trim(queryString, "?")
     .split("&")
-    .reduce((lookup, pairString) => {
+    .reduce((lookup: { [key: string]: any }, pairString) => {
       const [key, value] = pairString.split("=");
       lookup[key] = value;
       return lookup;
     }, {});
 }
 
-export function getPostRange(page, posts, postCount) {
+export function getPostRange(page: string, posts: number, postCount: number) {
   let start;
   let end;
   const numPages = Math.ceil(postCount / posts);
+  let pageNum = 0;
   if (page === "last") {
     // get last page
     start = posts * (numPages - 1);
     end = Math.min(posts * numPages, postCount);
-    page = numPages - 1;
+    pageNum = numPages - 1;
   } else {
-    page = parseInt(page, 10);
-    start = posts * page;
-    end = Math.min(posts * (page + 1), postCount);
+    pageNum = parseInt(page, 10);
+    start = posts * pageNum;
+    end = Math.min(posts * (pageNum + 1), postCount);
   }
-  return { start, end, page, numPages };
+  return { start, end, page: pageNum, numPages };
 }

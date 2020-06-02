@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import firebase from "firebase/app";
 import "firebase/firestore";
 import { createConverter } from "./dbhelpers";
-import { QueryOption } from "./types";
+import { QueryOption, UserAdminView } from "./types";
 
 export function useSubscribeToDocumentPath<T extends { id: string }>(
   docPath: string
@@ -67,15 +67,15 @@ export function useSubscribeToCollection<T extends { id: string }>(
 }
 
 export function useUserSettings(uid?: string) {
-  const [userSettings, setUserSettings] = useState<{
-    notifications: { forums: string[]; threads: string[]; all: boolean };
-  } | null>(null);
+  const [userSettings, setUserSettings] = useState<UserAdminView | null>(null);
+  const converter = createConverter<UserAdminView>();
 
   useEffect(() => {
     if (!uid) return;
     const unsub = firebase
       .firestore()
       .doc(`users/${uid}`)
+      .withConverter(converter)
       .onSnapshot((docRef) => {
         const docData = docRef.data();
         if (!docData) {

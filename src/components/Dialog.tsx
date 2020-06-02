@@ -1,21 +1,9 @@
 import React from "react";
-// static propTypes = {
-//   message: PropTypes.string,
-//   okText: PropTypes.string,
-//   cancelText: PropTypes.string,
-//   onClose: PropTypes.func,
-//   onOk: PropTypes.func,
-//   onCancel: PropTypes.func
-// };
-// static defaultProps = {
-//   message: "default message",
-//   okText: "ok",
-//   cancelText: "cancel",
-//   okClass: "edit",
-//   onClose: () => {},
-//   onOk: () => {},
-//   onCancel: () => {}
-// };
+import { DialogData } from "../utils/types";
+
+interface DialogProps extends DialogData {
+  onClose: () => {}
+}
 
 export default function Dialog({
   message = "default message",

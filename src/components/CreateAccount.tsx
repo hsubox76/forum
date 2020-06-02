@@ -1,20 +1,23 @@
 import React, { useRef, useState } from "react";
 import { submitInviteCode } from "../utils/dbhelpers";
-import { navigate } from "@reach/router";
+import { navigate, RouteComponentProps } from "@reach/router";
 import firebase from "firebase/app";
 import "firebase/auth";
 import get from "lodash/get";
 
-function CreateAccount(props) {
-  const codeRef = useRef();
-  const emailRef = useRef();
-  const displayNameRef = useRef();
-  const passwordRef = useRef();
-  const confirmPasswordRef = useRef();
-  const [errorMessage, setErrorMessage] = useState(null);
+interface CreateAccountProps extends RouteComponentProps<{ code: string }> {
+}
+
+function CreateAccount(props: CreateAccountProps) {
+  const codeRef = useRef<HTMLInputElement | null>(null);
+  const emailRef = useRef<HTMLInputElement | null>(null);
+  const displayNameRef = useRef<HTMLInputElement | null>(null);
+  const passwordRef = useRef<HTMLInputElement | null>(null);
+  const confirmPasswordRef = useRef<HTMLInputElement | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
-  function onForumSubmit(e) {
+  function onForumSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage(null);
     const password = get(passwordRef, "current.value");
@@ -58,10 +61,17 @@ function CreateAccount(props) {
   }
 
   function fill() {
-    passwordRef.current.value = "password";
-    confirmPasswordRef.current.value = "password";
-    emailRef.current.value = "test@testing.com";
-    displayNameRef.current.value = "Test Name";
+    if (
+      passwordRef.current &&
+      confirmPasswordRef.current &&
+      emailRef.current &&
+      displayNameRef.current
+    ) {
+      passwordRef.current.value = "password";
+      confirmPasswordRef.current.value = "password";
+      emailRef.current.value = "test@testing.com";
+      displayNameRef.current.value = "Test Name";
+    }
   }
 
   // if (props.user && props.claims.validated) {

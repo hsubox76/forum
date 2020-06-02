@@ -3,13 +3,24 @@ import { updateReaction } from "../utils/dbhelpers";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import UserContext from "./UserContext";
 import get from "lodash/get";
+import { PostDisplayData, Reaction, ReactionType } from "../utils/types";
 
-const ReactionButton = (props) => {
+interface ReactionButtonProps {
+  user: firebase.User;
+  post: PostDisplayData;
+  forumId: string;
+  threadId: string;
+  postId: string;
+  reaction: Reaction;
+  currentReaction: ReactionType;
+}
+
+const ReactionButton = (props: ReactionButtonProps) => {
   const context = useContext(UserContext);
   const post = props.post;
   const postPath = `forums/${props.forumId}/threads/${props.threadId}/posts/${props.postId}`;
 
-  function handleClick(userSelected) {
+  function handleClick(userSelected: boolean) {
     updateReaction(
       props.user.uid,
       postPath,

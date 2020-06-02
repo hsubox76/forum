@@ -10,7 +10,7 @@ import {
   UserPublic,
   Claims,
   ReactionType,
-  PostInterface,
+  PostFirestoreData,
   Forum,
   Thread,
   Invite,
@@ -252,7 +252,7 @@ export function updateReadStatus(
   forumId: string
 ) {
   const operation = didRead ? "arrayRemove" : "arrayUnion";
-  updateDoc<PostInterface>(
+  updateDoc<PostFirestoreData>(
     `forums/${forumId}/threads/${threadId}/posts/${postId}`,
     {
       unreadBy: firebase.firestore.FieldValue[operation](user.uid),
@@ -281,8 +281,10 @@ export async function addPost(
     createdTime: now,
     updatedTime: now,
     uid: user.uid,
+    unreadBy: [],
+    reactions: {}
   };
-  await addDoc<PostInterface>(
+  await addDoc<PostFirestoreData>(
     `forums/${forum.id}/threads/${thread.id}/posts`,
     postData
   );
@@ -312,7 +314,7 @@ export function updatePost(
     updatedTime: now,
     updatedBy: user.uid,
   };
-  return updateDoc<PostInterface>(postPath, postData);
+  return updateDoc<PostFirestoreData>(postPath, postData);
 }
 
 // ******************************************************************
@@ -486,9 +488,12 @@ export function generateInviteCode(
     });
 }
 
+interface NewUserFields {
+  email: string; displayName: string; password: string
+}
 export function submitInviteCode(
   code: string,
-  user: firebase.User,
+  user: NewUserFields | firebase.User,
   shouldCreate = false
 ) {
   const processInviteCode = firebase

@@ -1,9 +1,9 @@
 import React from "react";
-import { Link } from "@reach/router";
+import { Link, RouteComponentProps } from "@reach/router";
 
-const NotFound = (props) => (
+const NotFound = (props: RouteComponentProps) => (
   <div className="container flex mx-auto items-center justify-center my-20">
-    <div>Page "{props.location.href}" not found.</div>
+    <div>Page "{props.location?.href}" not found.</div>
     <div>
       <Link to="/">Back to top.</Link>
     </div>
