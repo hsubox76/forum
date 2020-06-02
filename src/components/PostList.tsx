@@ -399,7 +399,7 @@ function PostList(props: PostListProps) {
           <textarea
             ref={contentRef}
             id="postContent"
-            className="border border-neutral p-2 rounded"
+            className="border border-neutral p-2 rounded h-64"
             placeholder="Type new post here"
           />
         </div>

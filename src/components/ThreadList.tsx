@@ -283,7 +283,7 @@ function ThreadList(props: ThreadListProps) {
       >
         <h1>Start a new thread:</h1>
         <div className="flex flex-col my-1">
-          <label htmlFor="threadTitle">ThreadWriteFirestoreData title</label>
+          <label htmlFor="threadTitle">Thread title</label>
           <input
             id="threadTitle"
             ref={titleRef}
@@ -302,7 +302,7 @@ function ThreadList(props: ThreadListProps) {
         </div>
         <div className="my-2">
           <button className="btn btn-ok">
-            Post New ThreadWriteFirestoreData
+            Post New Thread
           </button>
         </div>
       </form>
