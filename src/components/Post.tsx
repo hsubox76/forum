@@ -243,7 +243,7 @@ function Post(props: PostProps) {
           <form className="w-full" onSubmit={handleEditPost}>
             <textarea
               ref={contentRef}
-              className="w-full p-2"
+              className="w-full p-2 h-48"
               defaultValue={post.content}
             />
           </form>
