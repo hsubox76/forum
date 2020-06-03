@@ -203,13 +203,13 @@ function Post(props: PostProps) {
   );
   const classes = ["px-2 py-1 border-main border rounded my-2"];
   if (status === LOADING_STATUS.EDITING) {
-    classes.push("editing");
+    classes.push("bg-green-100");
   }
   if (props.isDisabled) {
-    classes.push("disabled");
+    classes.push("bg-gray-300");
   }
   if (post.unreadBy && post.unreadBy.includes(props.user.uid)) {
-    classes.push("unread");
+    classes.push("shadow-unread");
   }
   const dateFormat = isMobile ? COMPACT_DATE_FORMAT : STANDARD_DATE_FORMAT;
   return (

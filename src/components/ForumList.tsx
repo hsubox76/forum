@@ -73,7 +73,7 @@ function ForumList({ user, navigate }: ForumListProps) {
           const isUnread =
             forum.unreadBy && forum.unreadBy.includes(user.uid);
           if (isUnread) {
-            classes.push("unread");
+            classes.push("shadow-unread");
           }
           return (
             <div

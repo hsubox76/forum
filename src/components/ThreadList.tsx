@@ -213,7 +213,7 @@ function ThreadList(props: ThreadListProps) {
         const threadClasses = ["row-item"];
         let link = `/forum/${props.forumId}/thread/${thread.id}`;
         if (isUnread) {
-          threadClasses.push("unread");
+          threadClasses.push("shadow-unread");
         }
         const firstPageLink = link + `?posts=${POSTS_PER_PAGE}&page=0`;
         const lastPageLink = link + `?posts=${POSTS_PER_PAGE}&page=last`;

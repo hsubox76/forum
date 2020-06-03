@@ -18,7 +18,8 @@ module.exports = {
     extend: {
       colors,
       boxShadow: {
-        highlight: 'inset 0 0 0 50px rgba(255, 255, 255, 0.2)'
+        highlight: 'inset 0 0 0 50px rgba(255, 255, 255, 0.2)',
+        unread: `inset 0 0 0 2px ${colors.highlight}`
       }
     },
   },
