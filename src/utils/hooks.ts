@@ -43,20 +43,23 @@ export function useSubscribeToCollection<T extends { id: string }>(
       .collection(collectionName);
     let query: firebase.firestore.Query | null = null;
     if (stringifiedOptions) {
+      query = ref;
       const opts: QueryOption[] = JSON.parse(stringifiedOptions);
       for (const opt of opts) {
         for (const key in opt) {
           const args = opt[key as keyof QueryOption];
           if (Array.isArray(args)) {
             // @ts-ignore
-            query = ref[key as keyof QueryOption](...args).withConverter(converter);
+            query = query[key as keyof QueryOption](...args);
           } else {
-            query = ref[key as keyof QueryOption](args).withConverter(converter);
+            query = query[key as keyof QueryOption](args);
           }
         }
       }
     }
-    if (!query) {
+    if (query) {
+      query = query.withConverter(converter);
+    } else {
       query = ref.withConverter(converter);
     }
     const unsub = query.onSnapshot((querySnapshot) => {
