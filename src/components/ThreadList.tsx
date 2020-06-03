@@ -180,7 +180,7 @@ function ThreadList(props: ThreadListProps) {
   }
 
   return (
-    <div className="container w-4/5 mx-auto">
+    <div className="container w-full px-2 lg:px-0 lg:w-4/5 mx-auto">
       <h1>
         <div className="flex space-x-2">
           <Link to="/">Home</Link>
@@ -188,7 +188,7 @@ function ThreadList(props: ThreadListProps) {
           <span className="font-normal">{(forum && forum.name) || ""}</span>
         </div>
       </h1>
-      <div className="my-2 flex space-x-2 items-center text-lg border-2 border-ok px-2 rounded">
+      <div className="my-2 flex space-x-2 items-start lg:items-center text-lg border-2 border-ok px-2 rounded">
         <button onClick={toggleNotifications}>
           {props.userSettings && props.forumId &&
           props.userSettings.notifications?.forums?.includes(props.forumId) ? (
@@ -226,35 +226,35 @@ function ThreadList(props: ThreadListProps) {
             key={thread.id}
             className={threadClasses.join(" ")}
           >
-            <div>
-              <div className="flex items-center space-x-1">
+            <div className="flex flex-col items-start justify-start">
+              <div className="inline-block">
                 {thread.priority > 0 && (
-                  <FontAwesomeIcon className="text-main" icon="thumbtack" />
+                  <FontAwesomeIcon className="text-main mr-1" icon="thumbtack" />
                 )}
                 {isUnread && (
-                  <FontAwesomeIcon className="text-main" icon="comment" />
+                  <FontAwesomeIcon className="text-main mr-1" icon="comment" />
                 )}
                 <Link to={link} className="text-main font-medium">
                   {thread.title}
                 </Link>
                 <Link
                   to={firstPageLink}
-                  className="text-sm text-main underline"
+                  className="text-sm text-main underline mx-1"
                 >
                   start
                 </Link>
-                <Link to={lastPageLink} className="text-sm text-main underline">
+                <Link to={lastPageLink} className="text-sm text-main underline mx-1">
                   end
                 </Link>
               </div>
-              <div className="flex text-sm space-x-1">
-                <span>started by</span>
+              <div className="flex text-sm flex-wrap lg:flex-no-wrap">
+                <span className="mr-1">started by</span>
                 <span className="text-ok font-medium truncate">
                   <UserData user={userMap[thread.createdBy]} />
                 </span>
               </div>
             </div>
-            <div className="flex flex-col items-end text-sm">
+            <div className="flex flex-col items-start lg:items-end text-sm">
               {thread.postCount && (
                 <div>
                   <span className="text-main font-medium">
@@ -263,13 +263,13 @@ function ThreadList(props: ThreadListProps) {
                   posts
                 </div>
               )}
-              <div className="flex space-x-1">
+              <div className="flex flex-col text-xs lg:text-sm lg:flex-row lg:space-x-1">
                 <span>last updated by</span>
-                <span className="text-ok font-medium">
+                <span className="text-ok font-medium my-0">
                   <UserData user={userMap[thread.updatedBy]} />
                 </span>
                 {!isMobile && <span>at</span>}
-                <span className="text-main font-medium">
+                <span className="text-main font-medium whitespace-no-wrap">
                   {format(thread.updatedTime, dateFormat)}
                 </span>
               </div>

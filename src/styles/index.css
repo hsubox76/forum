@@ -71,7 +71,13 @@ img {
 @tailwind utilities;
 
 .row-item {
-  @apply px-2 py-1 border-main border flex rounded justify-between my-2 cursor-pointer items-center;
+  @apply px-2 py-1 border-main border flex rounded justify-between my-2 cursor-pointer;
+}
+
+@media only screen and (min-width: 768px) {
+  .row-item {
+    @apply items-center;
+  }
 }
 
 .row-item:hover {
@@ -140,4 +146,8 @@ img {
 .dialog-container {
   @apply fixed h-screen w-screen flex items-center justify-center top-0 left-0;
   background-color: rgba(255, 255, 255, 0.4);
+}
+
+.breadcrumbs > * {
+  @apply leading-tight;
 }

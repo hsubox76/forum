@@ -5,7 +5,7 @@ import get from "lodash/get";
 import findKey from "lodash/findKey";
 import TextContent from "./TextContent";
 import UserData from "./UserData";
-import { STANDARD_DATE_FORMAT, reactions } from "../utils/constants";
+import { STANDARD_DATE_FORMAT, reactions, COMPACT_DATE_FORMAT } from "../utils/constants";
 import {
   deleteDoc,
   updatePost,
@@ -48,6 +48,7 @@ function Post(props: PostProps) {
   const post = props.post;
 
   const postUser = post.createdByUser;
+  const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
   // scroll to bottom if/when post updates and is last post
   useEffect(() => {
@@ -186,7 +187,7 @@ function Post(props: PostProps) {
     );
   }
   const footer = (
-    <div className="flex justify-between">
+    <div className="flex flex-col lg:flex-row lg:justify-between">
       <div className="flex space-x-1">
         {reactions.map((reaction) => (
           <ReactionButton
@@ -197,7 +198,7 @@ function Post(props: PostProps) {
           />
         ))}
       </div>
-      <div className="space-x-2">{renderAdminButtons()}</div>
+      <div className="space-x-2 my-2 lg:my-0">{renderAdminButtons()}</div>
     </div>
   );
   const classes = ["px-2 py-1 border-main border rounded my-2"];
@@ -210,10 +211,11 @@ function Post(props: PostProps) {
   if (post.unreadBy && post.unreadBy.includes(props.user.uid)) {
     classes.push("unread");
   }
+  const dateFormat = isMobile ? COMPACT_DATE_FORMAT : STANDARD_DATE_FORMAT;
   return (
     <div key={post.id} ref={postRef} className={classes.join(" ")}>
-      <div className="flex justify-between items-center">
-        <div className="flex items-baseline space-x-2">
+      <div className="flex justify-between items-start">
+        <div className="flex flex-col lg:flex-row lg:items-baseline lg:space-x-2">
           {postUser && postUser.photoURL && (
             <img
               className="w-16 h-16"
@@ -222,19 +224,19 @@ function Post(props: PostProps) {
             />
           )}
           {postUser ? (
-            <Link className="font-medium text-ok" to={`/user/${postUser.id}`}>
-              {postUser.displayName}
+            <Link className="flex font-medium text-ok" to={`/user/${postUser.id}`}>
+              <span>{postUser.displayName}</span>
+              {get(postUser, "admin") && <div className="role-icon ml-1">A</div>}
+              {get(postUser, "mod") && <div className="role-icon ml-1">M</div>}
             </Link>
           ) : (
             <div className="loader loader-small" />
           )}
-          {get(postUser, "admin") && <div className="role-icon">A</div>}
-          {get(postUser, "mod") && <div className="role-icon">M</div>}
         </div>
-        <div className="flex flex-col items-end self-stretch justify-between">
+        <div className="flex flex-col items-end lg:self-stretch lg:justify-between">
           <div>#{post.index}</div>
-          <div className="text-sm">
-            {format(post.createdTime, STANDARD_DATE_FORMAT)}
+          <div className="text-xs lg:text-sm">
+            {format(post.createdTime, dateFormat)}
           </div>
         </div>
       </div>
@@ -255,7 +257,7 @@ function Post(props: PostProps) {
         <div className="flex space-x-1 text-sm my-2">
           <span>Last edited</span>
           <span className="text-ok font-medium">
-            {format(post.updatedTime, STANDARD_DATE_FORMAT)}
+            {format(post.updatedTime, dateFormat)}
           </span>
           <span>by</span>
           <span className="text-ok font-medium">

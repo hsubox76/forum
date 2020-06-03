@@ -59,7 +59,7 @@ function ForumList({ user, navigate }: ForumListProps) {
   }
 
   return (
-    <div className="container mx-auto w-4/5">
+    <div className="container mx-auto w-full px-2 lg:px-0 lg:w-4/5">
       <h1>All Forums</h1>
       {forumList
         .filter(
@@ -87,7 +87,7 @@ function ForumList({ user, navigate }: ForumListProps) {
                 )}
                 <span className="title-text">{forum.name}</span>
               </div>
-              <div className="flex space-x-1">
+              <div className="flex lg:space-x-1 flex-col lg:flex-row">
                 <span>last updated by</span>
                 <span
                   className="font-semibold text-ok hover:text-highlight truncate"

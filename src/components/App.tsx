@@ -1,10 +1,5 @@
 import React, { useState, useEffect, useRef, FormEvent } from "react";
-import {
-  Router,
-  Link,
-  LocationProvider,
-  createHistory,
-} from "@reach/router";
+import { Router, Link, LocationProvider, createHistory } from "@reach/router";
 import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
 import Dialog from "./Dialog";
 import MergePopup from "./MergePopup";
@@ -44,7 +39,7 @@ const App = () => {
   const [popup, setPopup] = useState<DialogData | null>(null);
   const [inviteStatus, setInviteStatus] = useState({
     error: null,
-    processingCode: false
+    processingCode: false,
   });
   const inviteCodeRef = useRef<HTMLInputElement | null>(null);
   const [usersByUid, setUsersByUid] = useState<{ [uid: string]: UserPublic }>(
@@ -126,6 +121,8 @@ const App = () => {
     return (
       <Router>
         <StyledFirebaseAuth
+          //@ts-ignore
+          path="/"
           uiConfig={uiConfig}
           firebaseAuth={firebase.auth()}
         />
@@ -179,33 +176,31 @@ const App = () => {
         }}
       >
         <div className="container mx-auto">
-          <div className="bg-main text-white flex items-center justify-between p-2">
+          <div className="bg-main text-white flex flex-col items-start lg:flex-row lg:items-center justify-between p-2">
             <div>
-              <Link to="/" className="text-lg">
+              <Link to="/" className="m-2 lg:m-0 text-lg">
                 Home
               </Link>
-            </div>
-            <div className="flex">
               <span className="font-bold px-2 mx-2 border rounded py-1">
                 {user.displayName}
               </span>
-              <div className="flex divide-x items-center">
-                <Link to="/help" className="px-2">
-                  Help
-                </Link>
-                <Link to="/invite" className="px-2">
-                  Invite
-                </Link>
-                <Link to="/profile" className="px-2">
-                  Edit profile
-                </Link>
-                <button
-                  className="px-2"
-                  onClick={() => firebase.auth().signOut()}
-                >
-                  Logout
-                </button>
-              </div>
+            </div>
+            <div className="flex flex-wrap divide-x items-center mt-2 lg:mt-0">
+              <Link to="/help" className="px-2">
+                Help
+              </Link>
+              <Link to="/invite" className="px-2">
+                Invite
+              </Link>
+              <Link to="/profile" className="px-2">
+                Edit profile
+              </Link>
+              <button
+                className="px-2"
+                onClick={() => firebase.auth().signOut()}
+              >
+                Logout
+              </button>
             </div>
           </div>
           <Router primary={false}>

@@ -53,7 +53,9 @@ function PostList(props: PostListProps) {
   const [userMap, setUserMap] = useState<{ [uid: string]: any }>({});
   const [threadTitleEditing, setThreadTitleEditing] = useState(false);
 
-  const forum = useSubscribeToDocumentPath<ForumFirestoreData>(`forums/${props.forumId}`);
+  const forum = useSubscribeToDocumentPath<ForumFirestoreData>(
+    `forums/${props.forumId}`
+  );
   const thread = useSubscribeToDocumentPath<ThreadReadFirestoreData>(
     `forums/${props.forumId}/threads/${props.threadId}`
   );
@@ -330,17 +332,21 @@ function PostList(props: PostListProps) {
   );
 
   return (
-    <div className="container w-4/5 mx-auto">
-      <div className="flex justify-between items-center my-2">
-        <h1 className="m-0">
-          <Link to="/">Home</Link>
-          <span className="mx-2">&gt;</span>
-          <Link to={`/forum/${props.forumId}`}>{forum && forum.name}</Link>
-          <span className="mx-2">&gt;</span>
+    <div className="container w-full px-2 lg:px-0 lg:w-4/5 mx-auto">
+      <div className="flex justify-between items-start my-2 flex-col lg:items-center lg:flex-row">
+        <h1 className="flex flex-wrap breadcrumbs m-0">
+          <Link to="/">
+            Home
+            <span className="mx-2">&gt;</span>
+          </Link>
+          <Link to={`/forum/${props.forumId}`}>
+            {forum && forum.name}
+            <span className="mx-2">&gt;</span>
+          </Link>
           <span className="font-normal">{threadTitle}</span>
         </h1>
         {(claims.admin || claims.mod) && !threadTitleEditing && (
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 my-2 lg:my-0">
             <button className="btn btn-neutral" onClick={handleMergeThread}>
               merge
             </button>
@@ -353,9 +359,10 @@ function PostList(props: PostListProps) {
           </div>
         )}
       </div>
-      <div className="my-2 flex space-x-2 items-center text-lg border-2 border-ok px-2 rounded">
+      <div className="my-2 flex space-x-2 items-start lg:items-center text-lg border-2 border-ok px-2 rounded">
         <button onClick={toggleNotifications}>
-          {props.userSettings && props.threadId &&
+          {props.userSettings &&
+          props.threadId &&
           props.userSettings.notifications?.threads?.includes(
             props.threadId
           ) ? (
