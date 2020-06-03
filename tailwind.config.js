@@ -8,12 +8,22 @@ const colors = {
   text: "#555"
 }
 module.exports = {
-  purge: [],
+  purge: [
+    './src/**/*.jsx'
+  ],
   theme: {
+    fontFamily: {
+      sans: ['Roboto', 'sans-serif']
+    },
     extend: {
-      colors
+      colors,
+      boxShadow: {
+        highlight: 'inset 0 0 0 50px rgba(255, 255, 255, 0.2)'
+      }
     },
   },
-  variants: {},
+  variants: {
+    opacity: ['hover', 'focus', 'disabled']
+  },
   plugins: [],
 }

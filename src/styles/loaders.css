@@ -1,0 +1,55 @@
+/* https://loading.io/css/ */
+.loader {
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+}
+.loader:after {
+  content: " ";
+  display: block;
+  width: 36px;
+  height: 36px;
+  margin: 1px;
+  border-radius: 50%;
+  border: 5px solid rgba(100, 100, 100, 0.5);
+  border-color: rgba(100, 100, 100, 0.5) rgba(200, 200, 200, 0.5)
+    rgba(100, 100, 100, 0.5) transparent;
+  animation: loader-anim 1.2s linear infinite;
+}
+@keyframes loader-anim {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loader-big {
+  width: 100px;
+  height: 100px;
+}
+
+.loader-big:after {
+  width: 78px;
+  height: 78px;
+  border-width: 10px;
+}
+
+.loader-small {
+  width: 14px;
+  height: 14px;
+}
+
+.loader-small:after {
+  width: 11px;
+  height: 11px;
+  border-width: 2px;
+}
+
+.forum-row .loader,
+.thread-row .loader,
+.post-container .loader {
+  display: block;
+  margin: auto;
+}

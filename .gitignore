@@ -22,3 +22,5 @@ yarn-debug.log*
 yarn-error.log*
 functions/serviceAccountKey.json
 firebase-debug.log
+
+/src/styles/*generated.css

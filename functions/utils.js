@@ -2,7 +2,6 @@ const functions = require('firebase-functions');
 const firestore = require('./firestore');
 const admin = require('./admin');
 const sgMail = require('@sendgrid/mail');
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 async function getUser(uid) {
   let user;
@@ -19,8 +18,6 @@ function checkIfAdmin(context) {
     throw new functions.https.HttpsError('permission-denied',
       'User is not an admin. Only admins can set moderators.');
   }
-  throwIfBanned(context);
-  throwIfNotValidated(context);
 }
 
 async function checkIfBanned(uid) {
@@ -141,8 +138,18 @@ async function sendMail(data) {
     subject: data.subject || '',
     text: data.content || '',
   };
+  if (!functions.config().sendgrid.id) {
+    throw new Error('sendgrid.id env var is empty.');
+  }
+  sgMail.setApiKey(functions.config().sendgrid.id);
   return sgMail.send(msg)
-    .then(() => console.log('Sent message to ' + msg.to));
+    .then(() => console.log('Sent message to ' + msg.to))
+    .catch(e => {
+      console.error(e);
+      if (e.response) {
+        console.error(e.response.body);
+      }
+    });
 }
 
 module.exports = {

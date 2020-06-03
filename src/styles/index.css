@@ -1,13 +1,143 @@
 @tailwind base;
 
+h1 {
+  @apply text-2xl text-main mt-2 font-medium;
+}
+
+th,
+td {
+  @apply text-left p-2;
+}
+
+td {
+  @apply border border-main;
+}
+
+input,
+textarea {
+  @apply border border-neutral rounded;
+}
+
+button:hover > .reaction-tooltip {
+  @apply opacity-100;
+}
+
+button:hover {
+  @apply shadow-highlight;
+}
+
+img {
+  max-width: 300px;
+  max-height: 250px;
+}
+
+@media only screen and (min-width: 768px) {
+  img {
+    max-width: 600px;
+    max-height: 400px;
+  }
+}
+
 @tailwind components;
+
+.btn {
+  @apply py-1 px-2 rounded;
+}
+
+.btn-ok {
+  @apply bg-ok text-light;
+}
+
+.btn-danger {
+  @apply bg-danger text-light;
+}
+
+.btn-neutral {
+  @apply border border-neutral;
+}
+
+.btn:hover {
+  @apply shadow-highlight;
+}
+
+.btn-neutral:hover {
+  @apply bg-gray-300;
+}
+
+.page-center {
+  @apply flex items-center justify-center h-screen w-screen;
+}
 
 @tailwind utilities;
 
 .row-item {
-  @apply px-2 py-1 border-main border flex rounded justify-between m-2 cursor-pointer;
+  @apply px-2 py-1 border-main border flex rounded justify-between my-2 cursor-pointer items-center;
 }
 
 .row-item:hover {
   @apply bg-light;
+}
+
+.row-item.unread {
+  box-shadow: inset 0 0 0 2px #028090;
+}
+
+.role-icon {
+  @apply w-5 h-5 border-2 border-main text-main text-xs rounded flex items-center justify-center;
+}
+
+.reaction-tooltip {
+  @apply absolute bg-main p-2 z-10 whitespace-no-wrap opacity-0 pointer-events-none rounded text-white;
+  top: 25px;
+  left: 0;
+}
+
+.reaction-button:focus {
+  @apply border-4 border-ok;
+}
+
+.help-row {
+  @apply flex text-lg border-b border-neutral;
+}
+
+.help-row > div {
+  @apply p-2;
+}
+
+.help-row .label {
+  @apply text-white bg-main w-20;
+}
+
+.help-row .example {
+  @apply w-64 border-r-2 border-neutral;
+}
+
+.spoiler {
+  @apply text-text bg-text;
+}
+
+.spoiler:hover {
+  @apply text-text bg-light;
+}
+
+.invite-code {
+  @apply p-1 border border-neutral rounded text-ok my-1 text-sm;
+  width: 350px;
+}
+
+.form-row {
+  @apply flex my-2;
+}
+
+.form-row label {
+  width: 100px;
+}
+
+.form-row input {
+  @apply flex-1 p-1;
+}
+
+.dialog-container {
+  @apply fixed h-screen w-screen flex items-center justify-center top-0 left-0;
+  background-color: rgba(255, 255, 255, 0.4);
 }
