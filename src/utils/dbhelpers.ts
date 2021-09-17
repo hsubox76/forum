@@ -42,7 +42,8 @@ export function toggleVal(uid: string, shouldVal: boolean) {
 // ADMIN SPECIAL CASE
 // ******************************************************************
 
-export function verifyAllUsers(users: Array<{ uid: string }>) {
+export function verifyAllUsers(users: Array<{ uid: string }> | null) {
+  if (!users) return;
   const setClaim = firebase.functions().httpsCallable("setClaim");
   const promiseList = users.map((user) =>
     setClaim({ claim: "validated", uid: user.uid, isOn: true })
@@ -50,7 +51,8 @@ export function verifyAllUsers(users: Array<{ uid: string }>) {
   return Promise.all(promiseList);
 }
 
-export function pwotAllUsers(users: Array<{ uid: string }>) {
+export function pwotAllUsers(users: Array<{ uid: string }> | null) {
+  if (!users) return;
   const setClaim = firebase.functions().httpsCallable("setClaim");
   const promiseList = users.map((user) =>
     setClaim({ claim: "pwot", uid: user.uid, isOn: true })

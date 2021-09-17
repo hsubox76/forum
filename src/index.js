@@ -14,6 +14,9 @@ import {
   faHeart,
   faThumbsUp,
   faThumbsDown,
+  faCaretUp,
+  faCaretDown,
+  faSquare
 } from "@fortawesome/free-solid-svg-icons";
 
 import "./styles/index.generated.css";
@@ -30,6 +33,9 @@ library.add(faSadTear);
 library.add(faHeart);
 library.add(faThumbsUp);
 library.add(faThumbsDown);
+library.add(faCaretUp);
+library.add(faCaretDown);
+library.add(faSquare);
 
 const config = {
   apiKey: process.env.REACT_APP_FORUM_API_KEY,

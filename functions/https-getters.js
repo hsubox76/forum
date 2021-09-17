@@ -57,7 +57,7 @@ function getWhitelistedProperties(data, context) {
 
 exports.getAllUsers = functions.https.onCall(async (data, context) => {
   await throwIfNotValidated(context);
-  const { userProperties, customClaimsProperties } = getWhitelistedProperties();
+  const { userProperties, customClaimsProperties } = getWhitelistedProperties(data, context);
   const listUsersResult = await admin.auth().listUsers();
   return listUsersResult.users.map(userRecord => {
     const newRecord = pick(userRecord, userProperties);
@@ -73,7 +73,7 @@ exports.getUsers = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('invalid-argument',
       'No uids array provided.');
   }
-  const { userProperties, customClaimsProperties } = getWhitelistedProperties();
+  const { userProperties, customClaimsProperties } = getWhitelistedProperties(data, context);
   const userFetches = data.uids.map(uid => {
     return getUser(uid).then(userRecord => {
       console.log('userRecord for', uid, userRecord);
@@ -91,7 +91,7 @@ exports.getUsers = functions.https.onCall(async (data, context) => {
 exports.getUser = functions.https.onCall(async (data, context) => {
   await throwIfNotValidated(context);
   await checkIfUid(data);
-  const { userProperties, customClaimsProperties } = getWhitelistedProperties();
+  const { userProperties, customClaimsProperties } = getWhitelistedProperties(data, context);
   const userRecordPromise = getUser(data.uid);
   const userDataPromise = firestore.doc(`users/${data.uid}`).get().then(doc => doc.data());
   return Promise.all([userRecordPromise, userDataPromise])

@@ -37,7 +37,7 @@ function Admin(props: AdminProps) {
           Invites
         </Link>
       </div>
-      <Router basepath="/admin">
+      <Router basepath="/admin" primary={false}>
         <AdminInvites path="/invites" />
         <AdminUsers path="/users" />
         <Redirect noThrow from="/" to="/admin/users" />

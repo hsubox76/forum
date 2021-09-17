@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ReactNode } from "react";
 import {
   getAllUsers,
   verifyAllUsers,
@@ -13,25 +13,24 @@ import repeat from "lodash/repeat";
 import sortBy from "lodash/sortBy";
 import { RouteComponentProps } from "@reach/router";
 import { UserAdminView } from "../../utils/types";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCaretDown, faCaretUp } from "@fortawesome/free-solid-svg-icons";
 
 function AdminUsers(props: RouteComponentProps) {
-  const [users, setUsers] = useState<UserAdminView[]>([]);
+  const [users, setUsers] = useState<UserAdminView[] | null>(null);
   const [sortField, setSortField] = useState("customClaims.validated");
   const [sortDirection, setSortDirection] = useState("desc");
   const [pageDisabled, setPageDisabled] = useState(false);
   const [showEmails, setShowEmails] = useState(false);
 
   useEffect(() => {
-    getAllUsers(true).then((users) =>
-      sortUsers(sortField, sortDirection, users)
-    );
-  }, [sortField, sortDirection]);
+    getAllUsers(true).then((users) => setUsers(users));
+  }, []);
 
   function onBanClick(uid: string, isBanned: boolean) {
     setPageDisabled(true);
     toggleBan(uid, !isBanned)
       .then(() => getAllUsers(true))
-      .then((users) => sortUsers(sortField, sortDirection, users))
       .catch((e) => console.error(e))
       .finally(() => setPageDisabled(false));
   }
@@ -40,7 +39,6 @@ function AdminUsers(props: RouteComponentProps) {
     setPageDisabled(true);
     toggleMod(uid, !isMod)
       .then(() => getAllUsers(true))
-      .then((users) => sortUsers(sortField, sortDirection, users))
       .catch((e) => console.error(e))
       .finally(() => setPageDisabled(false));
   }
@@ -49,7 +47,6 @@ function AdminUsers(props: RouteComponentProps) {
     setPageDisabled(true);
     toggleVal(uid, shouldVal)
       .then(() => getAllUsers(true))
-      .then((users) => sortUsers(sortField, sortDirection, users))
       .catch((e) => console.error(e))
       .finally(() => setPageDisabled(false));
   }
@@ -58,14 +55,17 @@ function AdminUsers(props: RouteComponentProps) {
     setShowEmails(!showEmails);
   }
 
-  function sortUsers(field: string, direction: string, usersToSort: UserAdminView[]) {
+  function sortUsers(
+    field: string,
+    direction: string,
+    usersToSort: UserAdminView[] | null
+  ) {
+    if (!usersToSort) return;
     let sortedUsers = sortBy(usersToSort, field);
     if (direction === "desc") {
       sortedUsers.reverse();
     }
-    setSortField(field);
-    setSortDirection(direction);
-    setUsers(sortedUsers);
+    return sortedUsers;
   }
 
   function onSortClick(field: string) {
@@ -74,18 +74,28 @@ function AdminUsers(props: RouteComponentProps) {
       console.log("go asc");
       direction = "asc";
     }
-    sortUsers(field, direction, users);
+    setSortField(field);
+    setSortDirection(direction);
   }
 
-  function SortButton(props: { field: string }) {
-    let iconClass = "none";
-    if (props.field === sortField) {
-      iconClass = sortDirection === "asc" ? "up" : "down";
+  function SortableHeader({text, field}: { text?: string; field: string }) {
+    let icon: ReactNode = null;
+    if (field === sortField) {
+      icon = (
+        <span className="px-2">
+          <FontAwesomeIcon
+          className="text-ok"
+            icon={sortDirection === "asc" ? faCaretUp : faCaretDown}
+            size="lg"
+          />
+        </span>
+      );
     }
     return (
-      <button className="button-sort" onClick={() => onSortClick(props.field)}>
-        <div className={"sort-icon " + iconClass} />
-      </button>
+      <th onClick={() => onSortClick(field)} className="cursor-pointer">
+        <span className={field === sortField ? 'text-ok' : 'text-main'}>{text || field}</span>
+        {icon}
+      </th>
     );
   }
 
@@ -93,13 +103,7 @@ function AdminUsers(props: RouteComponentProps) {
     return <div className="page-center">Updating the database.</div>;
   }
 
-  console.log(
-    "Moderator list: ",
-    users
-      .filter((user) => user.customClaims.mod)
-      .map((user) => user.displayName)
-      .join(", ")
-  );
+  const sortedUsers = sortUsers(sortField, sortDirection, users);
 
   return (
     <React.Fragment>
@@ -120,94 +124,87 @@ function AdminUsers(props: RouteComponentProps) {
           {showEmails ? "hide" : "show"} user personal info
         </button>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>
-              Display Name <SortButton field="displayName" />
-            </th>
-            <th>
-              Email <SortButton field="email" />
-            </th>
-            <th>
-              UserID <SortButton field="uid" />
-            </th>
-            <th>Has Avatar</th>
-            <th>
-              Validated <SortButton field="customClaims.validated" />
-            </th>
-            <th>
-              PWOT <SortButton field="customClaims.pwot" />
-            </th>
-            <th>
-              Is Mod <SortButton field="customClaims.mod" />
-            </th>
-            <th>
-              Banned <SortButton field="disabled" />
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => {
-            const isAdmin = !!user.customClaims.admin;
-            const isMod = !!user.customClaims.mod;
-            const isBanned = user.disabled;
-            return (
-              <tr key={user.uid}>
-                <td>
-                  {showEmails
-                    ? user.displayName
-                    : user.displayName[0] +
-                      repeat("*", user.displayName.length - 1)}
-                </td>
-                <td>
-                  {showEmails
-                    ? user.email
-                    : "--------------------------------------"}
-                </td>
-                <td>{user.uid}</td>
-                <td>{user.photoURL ? "av" : "no av"}</td>
-                <td>
-                  <div className="action-cell">
-                    {user.customClaims.validated ? "V" : "-"}
-                    {!isAdmin && (
-                      <button
-                        onClick={() =>
-                          onValidateClick(
-                            user.uid,
-                            !user.customClaims.validated
-                          )
-                        }
-                      >
-                        {user.customClaims.validated ? "undo" : "val"}
+      {!sortedUsers && (
+        <div className="page-center">
+          <div className="loader loader-big" />
+        </div>
+      )}
+      {sortedUsers && (
+        <table>
+          <thead>
+            <tr>
+              <SortableHeader text="Display Name" field="displayName" />
+              <SortableHeader field="email" />
+              <SortableHeader text="User ID" field="uid" />
+              <th>Has Avatar</th>
+              <SortableHeader text="validated" field="customClaims.validated" />
+              <SortableHeader text="pwot" field="customClaims.pwot" />
+              <SortableHeader text="mod" field="customClaims.mod" />
+              <SortableHeader text="banned" field="disabled" />
+            </tr>
+          </thead>
+          <tbody>
+            {sortedUsers.map((user) => {
+              const isAdmin = !!user.customClaims.admin;
+              const isMod = !!user.customClaims.mod;
+              const isBanned = user.disabled;
+              return (
+                <tr key={user.uid}>
+                  <td>
+                    {showEmails
+                      ? user.displayName
+                      : user.displayName[0] +
+                        repeat("*", user.displayName.length - 1)}
+                  </td>
+                  <td>
+                    {showEmails
+                      ? user.email
+                      : "--------------------------------------"}
+                  </td>
+                  <td>{user.uid}</td>
+                  <td>{user.photoURL ? "av" : "no av"}</td>
+                  <td>
+                    <div className="flex">
+                      {user.customClaims.validated ? "V" : "-"}
+                      {!isAdmin && (
+                        <button  className="btn btn-ok ml-1"
+                          onClick={() =>
+                            onValidateClick(
+                              user.uid,
+                              !user.customClaims.validated
+                            )
+                          }
+                        >
+                          {user.customClaims.validated ? "undo" : "val"}
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                  <td>{user.customClaims.pwot ? "V" : "-"}</td>
+                  <td>
+                    <div className="flex">
+                      <div className="w-5">{isMod ? "M" : "-"}</div>
+                      {!isAdmin && (
+                        <button className="btn btn-ok ml-1" onClick={() => onModClick(user.uid, isMod)}>
+                          {isMod ? "unmod" : "mod"}
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="flex">
+                      {isBanned ? "V" : "-"}
+                      <button className="btn btn-ok ml-1" onClick={() => onBanClick(user.uid, isBanned)}>
+                        {isBanned ? "unban" : "ban"}
                       </button>
-                    )}
-                  </div>
-                </td>
-                <td>{user.customClaims.pwot ? "V" : "-"}</td>
-                <td>
-                  <div className="action-cell">
-                    {isMod ? "M" : "-"}
-                    {!isAdmin && (
-                      <button onClick={() => onModClick(user.uid, isMod)}>
-                        {isMod ? "unmod" : "mod"}
-                      </button>
-                    )}
-                  </div>
-                </td>
-                <td>
-                  <div className="action-cell">
-                    {isBanned ? "V" : "-"}
-                    <button onClick={() => onBanClick(user.uid, isBanned)}>
-                      {isBanned ? "unban" : "ban"}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
     </React.Fragment>
   );
 }
